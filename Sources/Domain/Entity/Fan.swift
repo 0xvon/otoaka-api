@@ -5,9 +5,9 @@
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
 
-import Vapor
+import Foundation
 
-public struct Fan: Content {
+public struct Fan {
     public let id: UUID?
     public let displayName: String
     

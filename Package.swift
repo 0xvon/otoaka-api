@@ -10,7 +10,8 @@ let package = Package(
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
-        .package(url: "https://github.com/vapor/fluent-mysql-driver.git", from: "4.0.0")
+        .package(url: "https://github.com/vapor/fluent-mysql-driver.git", from: "4.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.18.0"),
     ],
     targets: [
         .target(
@@ -31,8 +32,8 @@ let package = Package(
         ]),
         .target(name: "Data", dependencies: [
             .product(name: "Fluent", package: "fluent"),
+            .product(name: "NIO", package: "swift-nio"),
             .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
-            .product(name: "Vapor", package: "vapor"),
             .target(name: "Domain")
         ]),
         .target(name: "Run", dependencies: [.target(name: "App")]),
