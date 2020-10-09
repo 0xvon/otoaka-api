@@ -21,7 +21,7 @@ final class Fan: Model {
 
 extension Fan {
     var toDomain: Domain.Fan {
-        return Domain.Fan(
+        Domain.Fan(
             id: id,
             displayName: displayName
         )
@@ -30,7 +30,7 @@ extension Fan {
 
 extension Domain.Fan {
     var toData: Fan {
-        return Fan(
+        Fan(
             id: id,
             displayName: displayName
         )

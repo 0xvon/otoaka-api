@@ -1,6 +1,6 @@
-import Persistance
 import Fluent
 import FluentMySQLDriver
+import Persistance
 import Vapor
 
 // configures your application

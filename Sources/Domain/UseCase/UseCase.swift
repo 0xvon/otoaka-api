@@ -23,6 +23,6 @@ public struct AnyUseCase<Request, Response>: UseCase {
     }
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        return try _callAsFunction(request)
+        try _callAsFunction(request)
     }
 }
