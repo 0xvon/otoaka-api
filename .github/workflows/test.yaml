@@ -15,7 +15,7 @@ jobs:
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
           export SWIFTENV_ROOT="$HOME/.swiftenv"
-          echo "::set-env name=PATH::$SWIFTENV_ROOT/bin:$PATH"
+          echo "$SWIFTENV_ROOT/bin" >> $GITHUB_PATH
       - name: Install Swift
         run: swiftenv install
       - name: Build and test
