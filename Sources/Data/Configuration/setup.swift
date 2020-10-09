@@ -23,6 +23,6 @@ public func setup(_ app: Application) throws {
     ), as: .mysql)
     
     app.migrations.add(CreateFan())
-    try app.autoMigrate().wait()
+//    try app.autoMigrate().wait()
 }
 

@@ -1,4 +1,5 @@
 import Vapor
+import Domain
 
 func routes(_ app: Application) throws {
     app.get { req in
@@ -9,5 +10,6 @@ func routes(_ app: Application) throws {
         return "Hello, world!"
     }
     
-    try app.register(collection: FanController())
+    let fanProvider = FanProvider.self
+    try app.register(collection: FanController(fanProvider))
 }
