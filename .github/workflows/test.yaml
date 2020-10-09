@@ -19,4 +19,4 @@ jobs:
       - name: Install Swift
         run: swiftenv install
       - name: Build and test
-        run: swiftenv exec swift test
+        run: swiftenv exec swift test --enable-test-discovery
