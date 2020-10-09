@@ -1,4 +1,4 @@
-import Data
+import Persistance
 import Fluent
 import FluentMySQLDriver
 import Vapor
@@ -8,6 +8,6 @@ public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
-    try setup(app)
+    try Persistance.setup(app)
     try routes(app)
 }
