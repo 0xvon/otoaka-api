@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
@@ -8,24 +8,21 @@
 import Foundation
 import NIO
 
-public typealias Future = EventLoopFuture
-
-public protocol AnyUseCase {
+public protocol UseCase {
     associatedtype Request
     associatedtype Response
-    
-    func execute(request: Request) throws -> Future<Response>
+
+    func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response>
 }
 
-public struct UseCase<Request, Response>: AnyUseCase {
-    
-    private let _execute: (_ request: Request) throws -> Future<Response>
-    
-    public init<U: AnyUseCase>(_ useCase: U) where U.Request == Request, U.Response == Response {
-        _execute = useCase.execute
+public struct AnyUseCase<Request, Response>: UseCase {
+    private let _callAsFunction: (_ request: Request) throws -> EventLoopFuture<Response>
+
+    public init<U: UseCase>(_ useCase: U) where U.Request == Request, U.Response == Response {
+        _callAsFunction = useCase.callAsFunction
     }
-    
-    public func execute(request: Request) throws -> Future<Response> {
-        return try _execute(request)
+
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        try _callAsFunction(request)
     }
 }

@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/09.
 //
@@ -21,8 +21,7 @@ public func setup(_ app: Application) throws {
         database: Environment.get("DATABASE_NAME") ?? "vapor_database",
         tlsConfiguration: .forClient(certificateVerification: .none)
     ), as: .mysql)
-    
+
     app.migrations.add(CreateFan())
 //    try app.autoMigrate().wait()
 }
-

@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
@@ -9,13 +9,13 @@ import Fluent
 
 struct CreateFan: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema("fans")
+        database.schema("fans")
             .id()
             .field("display_name", .string, .required)
             .create()
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema("fans").delete()
+        database.schema("fans").delete()
     }
 }

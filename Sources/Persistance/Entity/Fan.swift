@@ -1,13 +1,6 @@
-//
-//  File.swift
-//  
-//
-//  Created by Masato TSUTSUMI on 2020/10/09.
-//
-
-import Vapor
-import Fluent
 import Domain
+import Fluent
+import Foundation
 
 final class Fan: Model {
     static let schema = "fans"
@@ -18,7 +11,7 @@ final class Fan: Model {
     @Field(key: "display_name")
     var displayName: String
 
-    init() { }
+    init() {}
 
     init(id: UUID? = nil, displayName: String) {
         self.id = id
@@ -28,7 +21,7 @@ final class Fan: Model {
 
 extension Fan {
     var toDomain: Domain.Fan {
-        return Domain.Fan(
+        Domain.Fan(
             id: id,
             displayName: displayName
         )
@@ -37,7 +30,7 @@ extension Fan {
 
 extension Domain.Fan {
     var toData: Fan {
-        return Fan(
+        Fan(
             id: id,
             displayName: displayName
         )

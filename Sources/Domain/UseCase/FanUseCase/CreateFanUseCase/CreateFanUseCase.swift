@@ -1,21 +1,27 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
 
-import Vapor
+import NIO
 
+public struct CreateFanInput: Codable {
+    public let displayName: String
+}
 
-class CreateFanUseCase: AnyUseCase {
+public class CreateFanUseCase: UseCase {
+    public typealias Request = CreateFanInput
+    public typealias Response = Fan
+
     private let repository: FanRepository
-    
-    private init(_ repository: FanRepository) {
+
+    internal init(_ repository: FanRepository) {
         self.repository = repository
     }
-    
-    public func execute(request: CreateFanInput) throws -> EventLoopFuture<Fan> {
+
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let fan: Fan = Fan(id: nil, displayName: request.displayName)
         return repository.create(fan: fan)
     }

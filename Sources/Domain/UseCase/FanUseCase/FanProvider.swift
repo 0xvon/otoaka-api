@@ -1,12 +1,16 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/09.
 //
 
-import Foundation
+public struct FanProvider {
+    private let repository: Domain.FanRepository
+    public let createFanUseCase: AnyUseCase<CreateFanInput, Fan>
 
-public protocol FanProvider {
-    var createFanUseCase: UseCase<CreateFanInput, Fan> { get }
+    public init(_ repository: Domain.FanRepository) {
+        self.repository = repository
+        createFanUseCase = AnyUseCase(CreateFanUseCase(repository))
+    }
 }
