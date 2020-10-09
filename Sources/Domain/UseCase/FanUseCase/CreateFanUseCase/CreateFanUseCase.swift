@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
@@ -14,9 +14,9 @@ public struct CreateFanInput: Codable {
 public class CreateFanUseCase: UseCase {
     public typealias Request = CreateFanInput
     public typealias Response = Fan
-    
+
     private let repository: FanRepository
-    
+
     internal init(_ repository: FanRepository) {
         self.repository = repository
     }

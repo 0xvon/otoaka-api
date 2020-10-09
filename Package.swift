@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "rocket-api",
     platforms: [
-       .macOS(.v10_15)
+        .macOS(.v10_15),
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
@@ -18,13 +18,13 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
-                .target(name: "Persistance")
+                .target(name: "Persistance"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
         .target(name: "Domain", dependencies: [
@@ -34,12 +34,12 @@ let package = Package(
             .product(name: "Fluent", package: "fluent"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
-            .target(name: "Domain")
+            .target(name: "Domain"),
         ]),
         .target(name: "Run", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
-        ])
+        ]),
     ]
 )

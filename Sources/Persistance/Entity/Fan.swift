@@ -1,6 +1,6 @@
-import Foundation
-import Fluent
 import Domain
+import Fluent
+import Foundation
 
 final class Fan: Model {
     static let schema = "fans"
@@ -11,7 +11,7 @@ final class Fan: Model {
     @Field(key: "display_name")
     var displayName: String
 
-    init() { }
+    init() {}
 
     init(id: UUID? = nil, displayName: String) {
         self.id = id

@@ -1,13 +1,13 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/08.
 //
 
-import Vapor
-import Foundation
 import Domain
+import Foundation
+import Vapor
 
 // 入力値を適切な型に変換してUseCaseに渡す役目
 struct FanController: RouteCollection {
@@ -15,9 +15,9 @@ struct FanController: RouteCollection {
         let fans = routes.grouped("fans")
         fans.post(use: createFan)
     }
-    
+
     private let provider: Domain.FanProvider
-    
+
     init(_ provider: Domain.FanProvider) {
         self.provider = provider
     }
