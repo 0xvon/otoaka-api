@@ -16,9 +16,8 @@ let package = Package(
         .target(
             name: "App",
             dependencies: [
-                .product(name: "Fluent", package: "fluent"),
-                .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
-                .product(name: "Vapor", package: "vapor")
+                .product(name: "Vapor", package: "vapor"),
+                .target(name: "Data")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -27,6 +26,15 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
             ]
         ),
+        .target(name: "Domain", dependencies: [
+            .product(name: "Vapor", package: "vapor")
+        ]),
+        .target(name: "Data", dependencies: [
+            .product(name: "Fluent", package: "fluent"),
+            .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
+            .product(name: "Vapor", package: "vapor"),
+            .target(name: "Domain")
+        ]),
         .target(name: "Run", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
