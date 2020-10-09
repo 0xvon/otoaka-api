@@ -12,18 +12,18 @@ public protocol UseCase {
     associatedtype Request
     associatedtype Response
     
-    func execute(request: Request) throws -> EventLoopFuture<Response>
+    func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response>
 }
 
 public struct AnyUseCase<Request, Response>: UseCase {
     
-    private let _execute: (_ request: Request) throws -> EventLoopFuture<Response>
+    private let _callAsFunction: (_ request: Request) throws -> EventLoopFuture<Response>
     
     public init<U: UseCase>(_ useCase: U) where U.Request == Request, U.Response == Response {
-        _execute = useCase.execute
+        _callAsFunction = useCase.callAsFunction
     }
     
-    public func execute(request: Request) throws -> EventLoopFuture<Response> {
-        return try _execute(request)
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        return try _callAsFunction(request)
     }
 }

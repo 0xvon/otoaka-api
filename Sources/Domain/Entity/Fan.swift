@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Fan {
+public struct Fan: Codable {
     public let id: UUID?
     public let displayName: String
     

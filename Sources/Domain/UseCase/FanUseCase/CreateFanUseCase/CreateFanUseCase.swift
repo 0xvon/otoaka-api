@@ -7,20 +7,21 @@
 
 import NIO
 
-public struct CreateFanInput {
+public struct CreateFanInput: Codable {
     public let displayName: String
 }
 
-class CreateFanUseCase: UseCase {
-    typealias Request = CreateFanInput
+public class CreateFanUseCase: UseCase {
+    public typealias Request = CreateFanInput
+    public typealias Response = Fan
     
     private let repository: FanRepository
     
-    private init(_ repository: FanRepository) {
+    internal init(_ repository: FanRepository) {
         self.repository = repository
     }
 
-    public func execute(request: Request) throws -> EventLoopFuture<Fan> {
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let fan: Fan = Fan(id: nil, displayName: request.displayName)
         return repository.create(fan: fan)
     }

@@ -18,7 +18,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
-                .target(name: "Data")
+                .target(name: "Persistance")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -28,9 +28,9 @@ let package = Package(
             ]
         ),
         .target(name: "Domain", dependencies: [
-            .product(name: "Vapor", package: "vapor")
+            .product(name: "NIO", package: "swift-nio"),
         ]),
-        .target(name: "Data", dependencies: [
+        .target(name: "Persistance", dependencies: [
             .product(name: "Fluent", package: "fluent"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
