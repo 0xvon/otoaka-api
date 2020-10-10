@@ -13,6 +13,7 @@ struct FanController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let fans = routes.grouped("fans")
         fans.post(use: createFan)
+        fans.get(use: listFans)
     }
 
     private let provider: Domain.FanProvider
@@ -24,6 +25,10 @@ struct FanController: RouteCollection {
     func createFan(req: Request) throws -> EventLoopFuture<Domain.Fan> {
         let fan = try req.content.decode(Domain.CreateFanInput.self)
         return try provider.createFanUseCase(fan)
+    }
+    
+    func listFans(req: Request) throws -> EventLoopFuture<[Domain.Fan]> {
+        return try provider.listFansUseCase(())
     }
 }
 
