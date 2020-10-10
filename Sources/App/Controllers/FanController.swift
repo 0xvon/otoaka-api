@@ -9,7 +9,6 @@ import Domain
 import Foundation
 import Vapor
 
-// 入力値を適切な型に変換してUseCaseに渡す役目
 struct FanController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let fans = routes.grouped("fans")

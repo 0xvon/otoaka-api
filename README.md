@@ -13,31 +13,19 @@
 
 ### How to run
 
-#### 1. setup Database
+#### 1. setup
 
 ```
-$ docker-compose up db
+$ docker-compose up --build app
 ```
 
-#### 2. build application
-
-```
-$ vapor build
-```
-
-#### 4. migrate
+#### 2. migrate
 
 ```
 $ vapor run migrate
 ```
 
-#### 5. run application
-
-```
-$ vapor run
-```
-
-#### 6. enjoy
+#### 3. enjoy
 
 ```
 $ curl -X localhost:8080
