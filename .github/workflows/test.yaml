@@ -3,6 +3,16 @@ on: [push]
 jobs:
   test_project:
     runs-on: ubuntu-18.04
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - '3306:3306'
+        env:
+          MYSQL_USER: vapor_username
+          MYSQL_PASSWORD: vapor_password
+          MYSQL_DATABASE: vapor_database
+          MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
