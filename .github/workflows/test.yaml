@@ -12,6 +12,7 @@ jobs:
           MYSQL_USER: vapor_username
           MYSQL_PASSWORD: vapor_password
           MYSQL_DATABASE: vapor_database
+          MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
