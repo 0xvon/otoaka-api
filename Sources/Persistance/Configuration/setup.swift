@@ -7,21 +7,25 @@
 
 import Fluent
 import FluentMySQLDriver
-import Vapor
 
-// configures your application
-public func setup(_ app: Application) throws {
-    // uncomment to serve files from /Public folder
-    // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
-
-    app.databases.use(.mysql(
-        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
-        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
-        database: Environment.get("DATABASE_NAME") ?? "vapor_database",
+// configures persistance system
+public func setup(
+    databases: Databases,
+    migrator: Migrator,
+    migrations: Migrations,
+    environmentGetter: (String) -> String?
+) throws {
+    databases.use(.mysql(
+        hostname: environmentGetter("DATABASE_HOST") ?? "localhost",
+        username: environmentGetter("DATABASE_USERNAME") ?? "vapor_username",
+        password: environmentGetter("DATABASE_PASSWORD") ?? "vapor_password",
+        database: environmentGetter("DATABASE_NAME") ?? "vapor_database",
         tlsConfiguration: .forClient(certificateVerification: .none)
     ), as: .mysql)
 
-    app.migrations.add(CreateFan())
-//    try app.autoMigrate().wait()
+    migrations.add(CreateFan())
+
+    try migrator.setupIfNeeded().flatMap {
+        migrator.prepareBatch()
+    }.wait()
 }

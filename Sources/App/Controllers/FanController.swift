@@ -8,26 +8,29 @@
 import Domain
 import Foundation
 import Vapor
+import Persistance
+
+private func injectProvider<T>(_ handler: @escaping (Request, FanProvider) throws -> T) -> ((Request) throws -> T) {
+    return { req in
+        let fanRepository = Persistance.FanRepository(db: req.db)
+        let provider = FanProvider(fanRepository)
+        return try handler(req, provider)
+    }
+}
 
 struct FanController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let fans = routes.grouped("fans")
-        fans.post(use: createFan)
-        fans.get(use: listFans)
+        fans.post(use: injectProvider(createFan))
+        fans.get(use: injectProvider(listFans))
     }
 
-    private let provider: Domain.FanProvider
-
-    init(_ provider: Domain.FanProvider) {
-        self.provider = provider
-    }
-
-    func createFan(req: Request) throws -> EventLoopFuture<Domain.Fan> {
+    func createFan(req: Request, provider: FanProvider) throws -> EventLoopFuture<Domain.Fan> {
         let fan = try req.content.decode(Domain.CreateFanInput.self)
         return try provider.createFanUseCase(fan)
     }
     
-    func listFans(req: Request) throws -> EventLoopFuture<[Domain.Fan]> {
+    func listFans(req: Request, provider: FanProvider) throws -> EventLoopFuture<[Domain.Fan]> {
         return try provider.listFansUseCase(())
     }
 }
