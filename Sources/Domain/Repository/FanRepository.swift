@@ -9,5 +9,5 @@ import NIO
 
 public protocol FanRepository {
     func create(fan: Fan) -> EventLoopFuture<Fan>
-//    func list() -> Future<[Fan]>
+    func list() -> EventLoopFuture<[Fan]>
 }
