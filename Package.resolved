@@ -56,6 +56,15 @@
         }
       },
       {
+        "package": "jwt-kit",
+        "repositoryURL": "https://github.com/vapor/jwt-kit.git",
+        "state": {
+          "branch": null,
+          "revision": "6055fe8439769aa3646a3c797d573ce7305849c8",
+          "version": "4.2.0"
+        }
+      },
+      {
         "package": "mysql-kit",
         "repositoryURL": "https://github.com/vapor/mysql-kit.git",
         "state": {

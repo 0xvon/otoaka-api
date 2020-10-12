@@ -23,7 +23,7 @@ public func setup(
         tlsConfiguration: .forClient(certificateVerification: .none)
     ), as: .mysql)
 
-    migrations.add(CreateFan())
+    migrations.add(CreateFan(), CreateUser())
 
     try migrator.setupIfNeeded().flatMap {
         migrator.prepareBatch()

@@ -2,6 +2,7 @@ import Domain
 import FluentKit
 import Persistance
 import Vapor
+import JWTKit
 
 func routes(_ app: Application) throws {
     app.get { _ in
