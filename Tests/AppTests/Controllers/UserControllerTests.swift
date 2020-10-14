@@ -21,6 +21,9 @@ class UserControllerTests: XCTestCase {
         let client = CognitoClient(httpClient: app.http.client.shared)
         let dummyUserName = UUID().uuidString
         let dummyUser = try client.createToken(userName: dummyUserName).wait()
+        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+
+
         var headers = HTTPHeaders()
         headers.add(name: .authorization, value: "Bearer \(dummyUser.token)")
 
