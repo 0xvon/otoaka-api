@@ -1,34 +1,40 @@
-import JWTKit
-import Vapor
-import Persistance
 import Domain
 import Foundation
+import JWTKit
+import Persistance
+import Vapor
 
 class JWTAuthenticator: BearerAuthenticator {
     enum Error: Swift.Error {
         case invalidJWTFormat
         case userNotFound
     }
-    let publicKey: RSAKey
-    let signer: JWTSigner
-    let issuer: String
+
+    private let signer: JWTSigners
+    private let issuer: String
+    private let userRepositoryFactory: (Request) -> Domain.UserRepository
 
     init(
         cognitoRegion: String = Environment.get("CONGNITO_IDP_REGION")!,
-        cognitoUserPoolId: String = Environment.get("CONGNITO_IDP_USER_POOL_ID")!
+        cognitoUserPoolId: String = Environment.get("CONGNITO_IDP_USER_POOL_ID")!,
+        userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
+            Persistance.UserRepository(db: $0.db)
+        }
     ) throws {
-        issuer = "https://cognito-idp.\(cognitoRegion).amazonaws.com/\(cognitoUserPoolId)"
+        self.userRepositoryFactory = userRepositoryFactory
+        self.issuer = "https://cognito-idp.\(cognitoRegion).amazonaws.com/\(cognitoUserPoolId)"
         let jwkURL = URL(string: "\(issuer)/.well-known/jwks.json")!
-        publicKey = try RSAKey.public(pem: Data(contentsOf: jwkURL))
-        signer = JWTSigner.rs256(key: publicKey)
+        let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
+        self.signer = JWTSigners()
+        try signer.use(jwks: jwks)
     }
-    
+
     struct Payload: JWTPayload {
         let sub: SubjectClaim
         let iss: IssuerClaim
         let email: String
         let exp: ExpirationClaim
-        func verify(using signer: JWTSigner) throws {
+        func verify(using _: JWTSigner) throws {
             try exp.verifyNotExpired()
         }
     }
@@ -41,7 +47,7 @@ class JWTAuthenticator: BearerAuthenticator {
         } catch {
             return eventLoop.makeFailedFuture(error)
         }
-        let repository = UserRepository(db: request.db)
+        let repository = userRepositoryFactory(request)
         let maybeUser = payload.flatMap { payload in
             repository.find(by: Domain.User.ForeignID(value: payload.sub.value))
         }
@@ -52,7 +58,7 @@ class JWTAuthenticator: BearerAuthenticator {
             }
             .map { _ in }
     }
-    
+
     func verifyJWT(bearer: BearerAuthorization) throws -> Payload {
         let payload = try signer.verify(bearer.token, as: Payload.self)
         guard payload.iss.value == issuer else {

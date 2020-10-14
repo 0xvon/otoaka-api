@@ -1,7 +1,7 @@
-import Fluent
 import Domain
+import Fluent
 
-public class UserRepository {
+public class UserRepository: Domain.UserRepository {
     private let db: Database
     enum Error: Swift.Error {
         case alreadyCreated
@@ -20,7 +20,7 @@ public class UserRepository {
                     .map { Domain.User(from: storedUser) }
             }
     }
-    
+
     public func find(by foreignId: Domain.User.ForeignID) -> EventLoopFuture<Domain.User?> {
         let maybeUser = User.query(on: db).filter(\.$foreignId == foreignId).first()
         return maybeUser.map { maybeUser in

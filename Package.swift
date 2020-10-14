@@ -13,6 +13,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-mysql-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.18.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
+        .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
     ],
     targets: [
         .target(
@@ -42,6 +43,7 @@ let package = Package(
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
+            .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
         ]),
     ]
 )

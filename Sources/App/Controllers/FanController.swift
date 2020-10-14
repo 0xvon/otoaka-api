@@ -7,8 +7,8 @@
 
 import Domain
 import Foundation
-import Vapor
 import Persistance
+import Vapor
 
 private func injectProvider<T>(_ handler: @escaping (Request, FanProvider) throws -> T) -> ((Request) throws -> T) {
     return { req in
@@ -29,9 +29,9 @@ struct FanController: RouteCollection {
         let fan = try req.content.decode(Domain.CreateFanInput.self)
         return try provider.createFanUseCase(fan)
     }
-    
-    func listFans(req: Request, provider: FanProvider) throws -> EventLoopFuture<[Domain.Fan]> {
-        return try provider.listFansUseCase(())
+
+    func listFans(req _: Request, provider: FanProvider) throws -> EventLoopFuture<[Domain.Fan]> {
+        try provider.listFansUseCase(())
     }
 }
 

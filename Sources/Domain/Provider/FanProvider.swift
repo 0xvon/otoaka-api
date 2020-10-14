@@ -8,7 +8,7 @@
 public struct FanProvider {
     private let repository: Domain.FanRepository
     public let createFanUseCase: AnyUseCase<CreateFanInput, Fan>
-    public let listFansUseCase: AnyUseCase<(), [Fan]>
+    public let listFansUseCase: AnyUseCase<Void, [Fan]>
 
     public init(_ repository: Domain.FanRepository) {
         self.repository = repository
