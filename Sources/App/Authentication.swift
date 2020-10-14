@@ -5,8 +5,8 @@ import Persistance
 import Vapor
 
 #if canImport(FoundationNetworking)
-// Import FoundationNetworking for use of Data(contentsOf:)
-import FoundationNetworking
+    // Import FoundationNetworking for use of Data(contentsOf:)
+    import FoundationNetworking
 #endif
 
 class JWTAuthenticator: BearerAuthenticator {
@@ -22,10 +22,10 @@ class JWTAuthenticator: BearerAuthenticator {
         }
     ) throws {
         self.userRepositoryFactory = userRepositoryFactory
-        self.issuer = "https://cognito-idp.\(cognitoRegion).amazonaws.com/\(cognitoUserPoolId)"
+        issuer = "https://cognito-idp.\(cognitoRegion).amazonaws.com/\(cognitoUserPoolId)"
         let jwkURL = URL(string: "\(issuer)/.well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
-        self.signer = JWTSigners()
+        signer = JWTSigners()
         try signer.use(jwks: jwks)
     }
 

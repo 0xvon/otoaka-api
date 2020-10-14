@@ -1,6 +1,6 @@
 @testable import App
-import XCTVapor
 import Domain
+import XCTVapor
 
 class AuthenticationTests: XCTestCase {
     var app: Application!
@@ -13,11 +13,11 @@ class AuthenticationTests: XCTestCase {
     override func tearDown() {
         app.shutdown()
     }
-    
+
     func testCognitoPublicKeys() throws {
         XCTAssertNoThrow(try JWTAuthenticator())
     }
-    
+
     func testVerifyJWT() throws {
         let client = CognitoClient(httpClient: app.http.client.shared)
         let authenticator = try JWTAuthenticator()
@@ -35,14 +35,15 @@ class AuthenticationTests: XCTestCase {
         init(eventLoop: EventLoop) {
             self.eventLoop = eventLoop
         }
+
         func create(foreignId: User.ForeignID) -> EventLoopFuture<User> {
             let newUser = User(id: foreignId)
-            self.users[foreignId] = newUser
+            users[foreignId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }
-        
+
         func find(by foreignId: User.ForeignID) -> EventLoopFuture<User?> {
-            return eventLoop.makeSucceededFuture(self.users[foreignId])
+            eventLoop.makeSucceededFuture(users[foreignId])
         }
     }
 
@@ -87,4 +88,3 @@ class AuthenticationTests: XCTestCase {
         }
     }
 }
-

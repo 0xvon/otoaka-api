@@ -1,6 +1,6 @@
+import CognitoIdentityProvider
 import Foundation
 import NIO
-import CognitoIdentityProvider
 import Vapor
 
 class CognitoClient {
@@ -8,14 +8,15 @@ class CognitoClient {
         let token: String
         let sub: String
     }
+
     let cognito: CognitoIdentityProvider
     let userPoolId: String = Environment.get("CONGNITO_IDP_USER_POOL_ID")!
     let region: String = Environment.get("CONGNITO_IDP_REGION")!
     let clientId: String = Environment.get("CONGNITO_IDP_CLIENT_ID")!
-    init(httpClient: HTTPClient) {
-        self.cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
+    init(httpClient _: HTTPClient) {
+        cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
     }
-    
+
     func createToken(userName: String, email: String? = nil, password: String = "Passw0rd!!") -> EventLoopFuture<User> {
         let email = email ?? "\(userName)@example.com"
         let tempPassword = "Passw0rd!"
@@ -48,11 +49,11 @@ class CognitoClient {
                 )
                 return self.cognito.adminRespondToAuthChallenge(input).and(value: sub)
             }
-            .map { (response, sub) in
+            .map { response, sub in
                 User(token: response.authenticationResult!.idToken!, sub: sub)
             }
     }
-    
+
     func destroyUser(userName: String) -> EventLoopFuture<Void> {
         cognito.adminDeleteUser(.init(username: userName, userPoolId: userPoolId))
     }
