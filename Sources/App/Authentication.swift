@@ -43,7 +43,9 @@ class JWTAuthenticator: BearerAuthenticator {
         let eventLoop = request.eventLoop
         let payload: EventLoopFuture<Payload>
         do {
-            payload = try eventLoop.makeSucceededFuture(verifyJWT(bearer: bearer))
+            let verifiedPayload = try verifyJWT(bearer: bearer)
+            request.auth.login(verifiedPayload)
+            payload = eventLoop.makeSucceededFuture(verifiedPayload)
         } catch {
             return eventLoop.makeFailedFuture(error)
         }
@@ -51,12 +53,11 @@ class JWTAuthenticator: BearerAuthenticator {
         let maybeUser = payload.flatMap { payload in
             repository.find(by: Domain.User.ForeignID(value: payload.sub.value))
         }
-        return maybeUser.unwrap(orError: Error.userNotFound)
-            .always { result in
-                guard case let .success(user) = result else { return }
-                request.auth.login(user)
-            }
-            .map { _ in }
+        return maybeUser.always { result in
+            guard case let .success(.some(user)) = result else { return }
+            request.auth.login(user)
+        }
+        .map { _ in }
     }
 
     func verifyJWT(bearer: BearerAuthorization) throws -> Payload {
@@ -69,6 +70,7 @@ class JWTAuthenticator: BearerAuthenticator {
 }
 
 extension Domain.User: Authenticatable {}
+extension JWTAuthenticator.Payload: Authenticatable {}
 
 extension JWTAuthenticator.Error: AbortError {
     var status: HTTPResponseStatus {

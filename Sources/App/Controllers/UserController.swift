@@ -12,17 +12,21 @@ private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserReposit
 
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let users = routes.grouped("users")
-        users.post(use: injectProvider(createUser))
-        try users.grouped(JWTAuthenticator()).get("get", use: getUser)
+        let authenticator = try JWTAuthenticator()
+        let users = routes.grouped("users").grouped(authenticator)
+
+        users.grouped(JWTAuthenticator.Payload.guardMiddleware())
+            .post("create", use: injectProvider(createUser))
+        users.grouped(User.guardMiddleware())
+            .get("get_info", use: getUser)
     }
 
     func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<Domain.User> {
-        struct Input: Content {
-            let id: Domain.User.ForeignID
+        guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
-        let input = try req.content.decode(Input.self)
-        return repository.create(foreignId: input.id)
+        let foreignId = User.ForeignID(value: jwtPayload.sub.value)
+        return repository.create(foreignId: foreignId)
     }
 
     func getUser(req: Request) throws -> EventLoopFuture<Domain.User> {
