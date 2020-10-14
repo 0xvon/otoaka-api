@@ -4,6 +4,11 @@ import JWTKit
 import Persistance
 import Vapor
 
+#if canImport(FoundationNetworking)
+// Import FoundationNetworking for use of Data(contentsOf:)
+import FoundationNetworking
+#endif
+
 class JWTAuthenticator: BearerAuthenticator {
     private let signer: JWTSigners
     private let issuer: String
