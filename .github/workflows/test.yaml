@@ -30,3 +30,9 @@ jobs:
         run: swiftenv install
       - name: Build and test
         run: swiftenv exec swift test --enable-test-discovery
+        env:
+          CONGNITO_IDP_REGION: ${{ secrets.CONGNITO_IDP_REGION }}
+          CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
+          CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
