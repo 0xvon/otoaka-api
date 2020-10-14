@@ -35,6 +35,11 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.id, User.ForeignID(value: dummyUser.sub))
         }
 
+        // Try to create same id user again
+        try app.test(.POST, "users/create", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+
         // Try to get user info after create user
         try app.test(.GET, "users/get_info", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)

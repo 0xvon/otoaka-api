@@ -23,6 +23,7 @@ struct UserController: RouteCollection {
 
     func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<Domain.User> {
         guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let foreignId = User.ForeignID(value: jwtPayload.sub.value)
@@ -31,6 +32,7 @@ struct UserController: RouteCollection {
 
     func getUser(req: Request) throws -> EventLoopFuture<Domain.User> {
         guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         return req.eventLoop.makeSucceededFuture(user)
@@ -38,3 +40,10 @@ struct UserController: RouteCollection {
 }
 
 extension Domain.User: Content {}
+extension Persistance.UserRepository.Error: AbortError {
+    public var status: HTTPResponseStatus {
+        switch self {
+        case .alreadyCreated: return .badRequest
+        }
+    }
+}

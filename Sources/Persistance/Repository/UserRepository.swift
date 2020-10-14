@@ -3,7 +3,7 @@ import Fluent
 
 public class UserRepository: Domain.UserRepository {
     private let db: Database
-    enum Error: Swift.Error {
+    public enum Error: Swift.Error {
         case alreadyCreated
     }
 

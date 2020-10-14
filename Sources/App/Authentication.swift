@@ -5,11 +5,6 @@ import Persistance
 import Vapor
 
 class JWTAuthenticator: BearerAuthenticator {
-    enum Error: Swift.Error {
-        case invalidJWTFormat
-        case userNotFound
-    }
-
     private let signer: JWTSigners
     private let issuer: String
     private let userRepositoryFactory: (Request) -> Domain.UserRepository
@@ -71,9 +66,3 @@ class JWTAuthenticator: BearerAuthenticator {
 
 extension Domain.User: Authenticatable {}
 extension JWTAuthenticator.Payload: Authenticatable {}
-
-extension JWTAuthenticator.Error: AbortError {
-    var status: HTTPResponseStatus {
-        .unauthorized
-    }
-}
