@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Masato TSUTSUMI on 2020/10/10.
 //
@@ -17,8 +17,7 @@ public class ListFansUseCase: UseCase {
         self.repository = repository
     }
 
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        return repository.list()
+    public func callAsFunction(_: Request) throws -> EventLoopFuture<Response> {
+        repository.list()
     }
 }
-

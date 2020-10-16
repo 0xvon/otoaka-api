@@ -23,8 +23,8 @@ public struct FanRepository: Domain.FanRepository {
     }
 
     public func list() -> EventLoopFuture<[Domain.Fan]> {
-        return Fan.query(on: db)
+        Fan.query(on: db)
             .all()
-            .map { $0.map { $0.toDomain } }
+            .map { $0.map(\.toDomain) }
     }
 }

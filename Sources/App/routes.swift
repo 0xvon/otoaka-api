@@ -1,5 +1,6 @@
 import Domain
 import FluentKit
+import JWTKit
 import Persistance
 import Vapor
 
@@ -12,4 +13,5 @@ func routes(_ app: Application) throws {
         "Hello, world!"
     }
     try app.register(collection: FanController())
+    try app.register(collection: UserController())
 }

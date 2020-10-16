@@ -4,6 +4,7 @@ import XCTVapor
 final class AppTests: XCTestCase {
     func testHelloWorld() throws {
         let app = Application(.testing)
+        DotEnvFile.load(path: dotEnvPath.path)
         defer { app.shutdown() }
         try configure(app)
 
