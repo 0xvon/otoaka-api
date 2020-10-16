@@ -3,6 +3,9 @@ on: [push]
 jobs:
   build_image:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Projects/rocket-api
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
