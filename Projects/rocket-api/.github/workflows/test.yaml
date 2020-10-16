@@ -13,9 +13,6 @@ jobs:
           MYSQL_PASSWORD: vapor_password
           MYSQL_DATABASE: vapor_database
           MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-    defaults:
-      run:
-        working-directory: Projects/rocket-api
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
