@@ -25,7 +25,7 @@ class AuthenticationTests: XCTestCase {
         let dummyEmail = "\(dummyUserName)@example.com"
         let dummyUser = try client.createToken(userName: dummyUserName).wait()
         defer { try! client.destroyUser(userName: dummyUserName).wait() }
-        let payload = try authenticator.verifyJWT(bearer: BearerAuthorization(token: dummyUser.token))
+        let payload = try authenticator.verifyJWT(token: dummyUser.token)
         XCTAssertEqual(payload.email, dummyEmail)
     }
 
