@@ -41,18 +41,15 @@ class JWTAuthenticator: BearerAuthenticator {
 
     func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
         let eventLoop = request.eventLoop
-        let payload: EventLoopFuture<Payload>
+        let payload: Payload
         do {
-            let verifiedPayload = try verifyJWT(bearer: bearer)
-            request.auth.login(verifiedPayload)
-            payload = eventLoop.makeSucceededFuture(verifiedPayload)
+            payload = try verifyJWT(token: bearer.token)
+            request.auth.login(payload)
         } catch {
             return eventLoop.makeFailedFuture(error)
         }
         let repository = userRepositoryFactory(request)
-        let maybeUser = payload.flatMap { payload in
-            repository.find(by: Domain.User.ForeignID(value: payload.sub.value))
-        }
+        let maybeUser = repository.find(by: Domain.User.ForeignID(value: payload.sub.value))
         return maybeUser.always { result in
             guard case let .success(.some(user)) = result else { return }
             request.auth.login(user)
@@ -60,8 +57,8 @@ class JWTAuthenticator: BearerAuthenticator {
         .map { _ in }
     }
 
-    func verifyJWT(bearer: BearerAuthorization) throws -> Payload {
-        let payload = try signer.verify(bearer.token, as: Payload.self)
+    func verifyJWT(token: String) throws -> Payload {
+        let payload = try signer.verify(token, as: Payload.self)
         guard payload.iss.value == issuer else {
             throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Cognito")
         }
