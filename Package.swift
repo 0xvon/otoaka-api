@@ -14,6 +14,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.18.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
+        .package(path: "Endpoint"),
     ],
     targets: [
         .target(
@@ -21,6 +22,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "JWTKit", package: "jwt-kit"),
+                .product(name: "Endpoint", package: "Endpoint"),
                 .target(name: "Persistance"),
             ],
             swiftSettings: [
