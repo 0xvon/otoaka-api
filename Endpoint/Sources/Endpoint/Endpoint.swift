@@ -5,18 +5,19 @@ public enum HTTPMethod: String {
     case delete = "DELETE"
 }
 
-public protocol Endpoint {
+public protocol EndpointProtocol {
     associatedtype Request: Codable
     associatedtype Response: Codable
     associatedtype Parameters
 
     static var method: HTTPMethod { get }
-    static var path: Route<Parameters> { get }
+    static var pathPattern: [String] { get }
+    static func buildPath(with parameters: Parameters) -> [String]
 }
 
 public struct Empty: Codable {}
 
-public struct Signup: Endpoint {
+public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public var displayName: String
     }
@@ -24,12 +25,30 @@ public struct Signup: Endpoint {
         public var displayName: String
     }
     public static let method: HTTPMethod = .post
-    public static let path = const("signup")
+    public static let pathPattern = ["users", "signup"]
+    public static func buildPath(with parameters: Void) -> [String] {
+        return pathPattern
+    }
 }
 
-public struct GetBand: Endpoint {
+public struct GetUserInfo: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Empty
     public static let method: HTTPMethod = .get
-    public static let path = const("bands")/int()
+    public static let pathPattern = ["users", "get_info"]
+    public static func buildPath(with parameters: Void) -> [String] {
+        return pathPattern
+    }
+}
+
+public struct GetBand: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Empty
+    public static let method: HTTPMethod = .get
+    public typealias Parameters = Int
+
+    public static let pathPattern = ["bands", ":band_id"]
+    public static func buildPath(with bandId: Parameters) -> [String] {
+        ["bands", bandId.description]
+    }
 }

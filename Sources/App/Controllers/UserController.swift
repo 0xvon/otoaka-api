@@ -2,6 +2,7 @@ import Domain
 import Foundation
 import Persistance
 import Vapor
+import Endpoint
 
 private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserRepository) throws -> T) -> ((Request) throws -> T) {
     return { req in
@@ -13,12 +14,13 @@ private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserReposit
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let authenticator = try JWTAuthenticator()
-        let users = routes.grouped("users").grouped(authenticator)
+        let group = routes.grouped(authenticator)
 
-        users.grouped(JWTAuthenticator.Payload.guardMiddleware())
-            .post("create", use: injectProvider(createUser))
-        users.grouped(User.guardMiddleware())
-            .get("get_info", use: getUser)
+        group.grouped(JWTAuthenticator.Payload.guardMiddleware())
+            .on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
+
+        group.grouped(User.guardMiddleware())
+            .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
     }
 
     func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<Domain.User> {
