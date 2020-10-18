@@ -85,6 +85,22 @@ public struct Signup: EndpointProtocol {
     }
 }
 
+public struct SignupStatus: EndpointProtocol {
+    public typealias Request = Empty
+    public struct Response: Codable {
+        public var isSignedup: Bool
+        public init(isSignedup: Bool) {
+            self.isSignedup = isSignedup
+        }
+    }
+
+    public static let method: HTTPMethod = .get
+    public static let pathPattern = ["users", "get_signup_status"]
+    public static func buildPath(with _: Void) -> [String] {
+        pathPattern
+    }
+}
+
 public struct GetUserInfo: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = User

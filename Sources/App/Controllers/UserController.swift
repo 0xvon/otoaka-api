@@ -16,8 +16,9 @@ struct UserController: RouteCollection {
         let authenticator = try JWTAuthenticator()
         let group = routes.grouped(authenticator)
 
-        group.grouped(JWTAuthenticator.Payload.guardMiddleware())
-            .on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
+        let beforeSignup = group.grouped(JWTAuthenticator.Payload.guardMiddleware())
+        beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
+        beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
 
         group.grouped(User.guardMiddleware())
             .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
@@ -44,6 +45,16 @@ struct UserController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let response = GetUserInfo.Response(from: user)
+        return req.eventLoop.makeSucceededFuture(response)
+    }
+
+    func getSignupStatus(req: Request) throws -> EventLoopFuture<SignupStatus.Response> {
+        guard req.auth.has(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        let isSignedup = req.auth.has(Domain.User.self)
+        let response = SignupStatus.Response(isSignedup: isSignedup)
         return req.eventLoop.makeSucceededFuture(response)
     }
 }
@@ -88,6 +99,8 @@ extension Endpoint.User: Content {
         )
     }
 }
+
+extension Endpoint.SignupStatus.Response: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
