@@ -1,7 +1,11 @@
 import Domain
-import Endpoint
 import Fluent
 import Foundation
+
+public enum Role: String, Codable {
+    case artist
+    case fan
+}
 
 final class User: Model {
     static var schema: String = "users"

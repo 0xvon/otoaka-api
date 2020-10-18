@@ -19,11 +19,6 @@ public struct Empty: Codable {
     public init() {}
 }
 
-public enum Role: String, Codable {
-    case artist
-    case fan
-}
-
 public struct Artist: Codable {
     public var part: String
     public init(part: String) {
