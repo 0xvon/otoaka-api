@@ -1,5 +1,4 @@
 import Domain
-import Endpoint
 import Fluent
 
 public class UserRepository: Domain.UserRepository {

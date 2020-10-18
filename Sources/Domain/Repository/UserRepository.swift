@@ -1,4 +1,3 @@
-import Endpoint
 import NIO
 
 public protocol UserRepository {
