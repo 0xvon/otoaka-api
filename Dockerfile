@@ -17,6 +17,7 @@ WORKDIR /build
 # as long as your Package.swift/Package.resolved
 # files do not change.
 COPY ./Package.* ./
+COPY ./Endpoint ./
 RUN swift package resolve
 
 # Copy entire repo into container

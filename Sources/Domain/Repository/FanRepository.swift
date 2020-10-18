@@ -7,7 +7,7 @@
 
 import NIO
 
-public protocol FanRepository {
-    func create(fan: Fan) -> EventLoopFuture<Fan>
-    func list() -> EventLoopFuture<[Fan]>
-}
+//public protocol FanRepository {
+//    func create(fan: Fan) -> EventLoopFuture<Fan>
+//    func list() -> EventLoopFuture<[Fan]>
+//}

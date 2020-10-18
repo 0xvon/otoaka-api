@@ -1,38 +1,43 @@
 import Domain
 import Fluent
 import Foundation
-
-final class Fan: Model {
-    static let schema = "fans"
-
-    @ID(key: .id)
-    var id: UUID?
-
-    @Field(key: "display_name")
-    var displayName: String
-
-    init() {}
-
-    init(id: UUID? = nil, displayName: String) {
-        self.id = id
-        self.displayName = displayName
-    }
-}
-
-extension Fan {
-    var toDomain: Domain.Fan {
-        Domain.Fan(
-            id: id,
-            displayName: displayName
-        )
-    }
-}
-
-extension Domain.Fan {
-    var toData: Fan {
-        Fan(
-            id: id,
-            displayName: displayName
-        )
-    }
-}
+//
+//final class Fan: Model {
+//    static let schema = "fans"
+//
+//    @ID(key: .id)
+//    var id: UUID?
+//
+//    @Field(key: "name")
+//    var name: String
+//    
+//    @Field(key: "biography")
+//    var biography: String?
+//    
+//    @Field(key: "thumbnail_url")
+//    var thumbnailURL: String?
+//
+//    init() {}
+//}
+//
+//extension Domain.Fan: EntityConvertible {
+//    typealias PersistanceEntity = Fan
+//
+//    init(fromPersistance entity: Fan) throws {
+//        try self.init(
+//            id: entity.requireID(),
+//            name: entity.name,
+//            biography: entity.biography,
+//            thumbnailURL: entity.thumbnailURL
+//        )
+//    }
+//
+//    func asPersistance() -> Fan {
+//        let fan = Fan()
+//        fan.id = id
+//        fan.name = name
+//        fan.biography = biography
+//        fan.thumbnailURL = thumbnailURL
+//        return fan
+//    }
+//}

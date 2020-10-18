@@ -49,7 +49,7 @@ class JWTAuthenticator: BearerAuthenticator {
             return eventLoop.makeFailedFuture(error)
         }
         let repository = userRepositoryFactory(request)
-        let maybeUser = repository.find(by: Domain.User.ForeignID(value: payload.sub.value))
+        let maybeUser = repository.find(by: payload.sub.value)
         return maybeUser.always { result in
             guard case let .success(.some(user)) = result else { return }
             request.auth.login(user)

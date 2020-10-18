@@ -1,6 +1,7 @@
 @testable import App
 import Domain
 import XCTVapor
+import Endpoint
 
 class AuthenticationTests: XCTestCase {
     var app: Application!
@@ -30,19 +31,20 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
-        var users: [User.ForeignID: Domain.User] = [:]
+        var users: [Domain.User.CognitoID: Domain.User] = [:]
         let eventLoop: EventLoop
         init(eventLoop: EventLoop) {
             self.eventLoop = eventLoop
         }
 
-        func create(foreignId: User.ForeignID) -> EventLoopFuture<User> {
-            let newUser = User(id: foreignId)
-            users[foreignId] = newUser
+        func create(cognitoId: Domain.User.CognitoID, email: String, name: String,
+                    biography: String?, thumbnailURL: String?, role: Domain.RoleProperties) -> EventLoopFuture<Domain.User> {
+            let newUser = Domain.User(id: UUID(), cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
+            users[cognitoId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }
 
-        func find(by foreignId: User.ForeignID) -> EventLoopFuture<User?> {
+        func find(by foreignId: Domain.User.CognitoID) -> EventLoopFuture<Domain.User?> {
             eventLoop.makeSucceededFuture(users[foreignId])
         }
     }
@@ -50,12 +52,16 @@ class AuthenticationTests: XCTestCase {
     func testIntegratedHTTPRequests() throws {
         let client = CognitoClient()
         let dummyUserName = UUID().uuidString
+        let dummyEmail = "\(dummyUserName)@example.com"
         let dummyUser = try client.createToken(userName: dummyUserName).wait()
         defer { try! client.destroyUser(userName: dummyUserName).wait() }
 
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
-            _ = try! repo.create(foreignId: User.ForeignID(value: dummyUser.sub)).wait()
+            _ = try! repo.create(
+                cognitoId: dummyUser.sub, email: dummyEmail,
+                name: "foo", biography: nil, thumbnailURL: nil, role: .fan
+            ).wait()
             return repo
         })
         app.grouped(authenticator, User.guardMiddleware()).get("secure") { _ in

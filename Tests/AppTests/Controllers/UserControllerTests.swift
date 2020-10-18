@@ -1,5 +1,6 @@
 @testable import App
 import Domain
+import Endpoint
 import XCTVapor
 
 class UserControllerTests: XCTestCase {
@@ -19,35 +20,40 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .unauthorized)
         }
         let client = CognitoClient()
-        let dummyUserName = UUID().uuidString
-        let dummyUser = try client.createToken(userName: dummyUserName).wait()
-        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+        let dummyCognitoUserName = UUID().uuidString
+        let dummyUser = try client.createToken(userName: dummyCognitoUserName).wait()
+        defer { try! client.destroyUser(userName: dummyCognitoUserName).wait() }
 
 
         var headers = HTTPHeaders()
         headers.add(name: .authorization, value: "Bearer \(dummyUser.token)")
+        headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
 
         // Try to get user info before create user
         try app.test(.GET, "users/get_info", headers: headers) { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
 
-        try app.test(.POST, "users/signup", headers: headers) { res in
+        let dummyUserName = UUID().uuidString
+        let body = Endpoint.Signup.Request(name: dummyUserName, role: .fan(Fan()))
+        let bodyData = try ByteBuffer(data: JSONEncoder().encode(body))
+
+        try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok)
-            let responseBody = try res.content.decode(Domain.User.self)
-            XCTAssertEqual(responseBody.id, User.ForeignID(value: dummyUser.sub))
+            let responseBody = try res.content.decode(Signup.Response.self)
+            XCTAssertEqual(responseBody.name, dummyUserName)
         }
 
         // Try to create same id user again
-        try app.test(.POST, "users/signup", headers: headers) { res in
+        try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         // Try to get user info after create user
-        try app.test(.GET, "users/get_info", headers: headers) { res in
+        try app.test(.GET, "users/get_info", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok)
-            let responseBody = try res.content.decode(Domain.User.self)
-            XCTAssertEqual(responseBody.id, User.ForeignID(value: dummyUser.sub))
+            let responseBody = try res.content.decode(Signup.Response.self)
+            XCTAssertEqual(responseBody.name, dummyUserName)
         }
     }
 }

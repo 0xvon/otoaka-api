@@ -7,12 +7,16 @@
 
 import Foundation
 
-public struct Fan: Codable {
-    public let id: UUID?
-    public let displayName: String
-
-    public init(id: UUID?, displayName: String) {
-        self.id = id
-        self.displayName = displayName
-    }
-}
+//public struct Fan: Codable {
+//    public let id: UUID
+//    public var name: String
+//    public var biography: String?
+//    public var thumbnailURL: String?
+//
+//    public init(id: UUID, name: String, biography: String?, thumbnailURL: String?) {
+//        self.id = id
+//        self.name = name
+//        self.biography = biography
+//        self.thumbnailURL = thumbnailURL
+//    }
+//}
