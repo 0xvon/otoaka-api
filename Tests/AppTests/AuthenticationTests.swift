@@ -19,7 +19,7 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testVerifyJWT() throws {
-        let client = CognitoClient(httpClient: app.http.client.shared)
+        let client = CognitoClient()
         let authenticator = try JWTAuthenticator()
         let dummyUserName = UUID().uuidString
         let dummyEmail = "\(dummyUserName)@example.com"
@@ -48,7 +48,7 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testIntegratedHTTPRequests() throws {
-        let client = CognitoClient(httpClient: app.http.client.shared)
+        let client = CognitoClient()
         let dummyUserName = UUID().uuidString
         let dummyUser = try client.createToken(userName: dummyUserName).wait()
         defer { try! client.destroyUser(userName: dummyUserName).wait() }

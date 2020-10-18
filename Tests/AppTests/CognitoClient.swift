@@ -13,7 +13,7 @@ class CognitoClient {
     let userPoolId: String = Environment.get("CONGNITO_IDP_USER_POOL_ID")!
     let region: String = Environment.get("CONGNITO_IDP_REGION")!
     let clientId: String = Environment.get("CONGNITO_IDP_CLIENT_ID")!
-    init(httpClient _: HTTPClient) {
+    init() {
         cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
     }
 

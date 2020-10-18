@@ -15,10 +15,10 @@ class UserControllerTests: XCTestCase {
     }
 
     func testCreateUserAndGetUserInfo() throws {
-        try app.test(.POST, "users/create") { res in
+        try app.test(.POST, "users/signup") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
-        let client = CognitoClient(httpClient: app.http.client.shared)
+        let client = CognitoClient()
         let dummyUserName = UUID().uuidString
         let dummyUser = try client.createToken(userName: dummyUserName).wait()
         defer { try! client.destroyUser(userName: dummyUserName).wait() }
@@ -32,14 +32,14 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .unauthorized)
         }
 
-        try app.test(.POST, "users/create", headers: headers) { res in
+        try app.test(.POST, "users/signup", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(Domain.User.self)
             XCTAssertEqual(responseBody.id, User.ForeignID(value: dummyUser.sub))
         }
 
         // Try to create same id user again
-        try app.test(.POST, "users/create", headers: headers) { res in
+        try app.test(.POST, "users/signup", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
