@@ -24,7 +24,6 @@ class UserControllerTests: XCTestCase {
         let dummyUser = try client.createToken(userName: dummyCognitoUserName).wait()
         defer { try! client.destroyUser(userName: dummyCognitoUserName).wait() }
 
-
         var headers = HTTPHeaders()
         headers.add(name: .authorization, value: "Bearer \(dummyUser.token)")
         headers.add(name: .contentType, value: HTTPMediaType.json.serialize())

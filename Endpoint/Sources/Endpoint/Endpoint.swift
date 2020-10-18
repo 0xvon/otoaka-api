@@ -38,13 +38,15 @@ public struct Fan: Codable {
 public enum RoleProperties: Codable {
     case artist(Artist)
     case fan(Fan)
-    
+
     enum CodingKeys: CodingKey {
         case kind, value
     }
+
     enum Kind: String, Codable {
         case artist, fan
     }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let kind = try container.decode(Kind.self, forKey: .kind)
@@ -55,7 +57,7 @@ public enum RoleProperties: Codable {
             self = try .fan(container.decode(Fan.self, forKey: .value))
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
@@ -70,8 +72,6 @@ public enum RoleProperties: Codable {
 }
 
 public struct User: Codable {
-
-    
     public var id: String
     public var name: String
     public var biography: String?
@@ -95,17 +95,18 @@ public struct Signup: EndpointProtocol {
             self.thumbnailURL = thumbnailURL
             self.role = role
         }
-        
+
         public var name: String
         public var biography: String?
         public var thumbnailURL: String?
         public var role: RoleProperties
     }
+
     public typealias Response = User
     public static let method: HTTPMethod = .post
     public static let pathPattern = ["users", "signup"]
-    public static func buildPath(with parameters: Void) -> [String] {
-        return pathPattern
+    public static func buildPath(with _: Void) -> [String] {
+        pathPattern
     }
 }
 
@@ -114,8 +115,8 @@ public struct GetUserInfo: EndpointProtocol {
     public typealias Response = User
     public static let method: HTTPMethod = .get
     public static let pathPattern = ["users", "get_info"]
-    public static func buildPath(with parameters: Void) -> [String] {
-        return pathPattern
+    public static func buildPath(with _: Void) -> [String] {
+        pathPattern
     }
 }
 

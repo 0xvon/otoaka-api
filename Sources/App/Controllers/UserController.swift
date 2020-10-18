@@ -1,8 +1,8 @@
 import Domain
+import Endpoint
 import Foundation
 import Persistance
 import Vapor
-import Endpoint
 
 private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserRepository) throws -> T) -> ((Request) throws -> T) {
     return { req in
@@ -52,9 +52,9 @@ extension Endpoint.Artist {
     init(fromDomain domainArtist: Domain.Artist) {
         self.init(part: domainArtist.part)
     }
-    
+
     func asDomain() -> Domain.Artist {
-        return Domain.Artist(part: part)
+        Domain.Artist(part: part)
     }
 }
 
@@ -67,7 +67,7 @@ extension Endpoint.RoleProperties {
             self = .fan(Fan())
         }
     }
-    
+
     func asDomain() -> Domain.RoleProperties {
         switch self {
         case let .artist(artist):
@@ -86,9 +86,9 @@ extension Endpoint.User: Content {
             thumbnailURL: domainUser.thumbnailURL,
             role: .init(fromDomain: domainUser.role)
         )
-
     }
 }
+
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
     public var status: HTTPResponseStatus {

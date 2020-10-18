@@ -1,5 +1,5 @@
-import Vapor
 import Endpoint
+import Vapor
 
 extension Endpoint.HTTPMethod {
     var vaporize: NIOHTTP1.HTTPMethod {
@@ -14,9 +14,9 @@ extension Endpoint.HTTPMethod {
 
 extension RoutesBuilder {
     func on<Endpoint: EndpointProtocol, Response: ResponseEncodable>(
-        endpoint: Endpoint.Type,
+        endpoint _: Endpoint.Type,
         use closure: @escaping (Request) throws -> Response
     ) {
-        self.on(Endpoint.method.vaporize, Endpoint.pathPattern.map(PathComponent.init(stringLiteral: )), use: closure)
+        on(Endpoint.method.vaporize, Endpoint.pathPattern.map(PathComponent.init(stringLiteral:)), use: closure)
     }
 }

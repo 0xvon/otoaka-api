@@ -1,2 +1,1 @@
-public struct Fan: Codable {
-}
+public struct Fan: Codable {}

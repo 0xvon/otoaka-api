@@ -6,12 +6,11 @@ public enum RoleProperties {
 }
 
 public struct User {
-
     public typealias CognitoID = String
     public let id: UUID
     public let cognitoId: CognitoID
     public var email: String
-    
+
     public var name: String
     public var biography: String?
     public var thumbnailURL: String?
@@ -30,5 +29,4 @@ public struct User {
         self.thumbnailURL = thumbnailURL
         self.role = role
     }
-    
 }

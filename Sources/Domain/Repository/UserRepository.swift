@@ -1,5 +1,5 @@
-import NIO
 import Endpoint
+import NIO
 
 public protocol UserRepository {
     func create(

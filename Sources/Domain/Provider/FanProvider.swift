@@ -5,7 +5,7 @@
 //  Created by Masato TSUTSUMI on 2020/10/09.
 //
 
-//public struct FanProvider {
+// public struct FanProvider {
 //    private let repository: Domain.FanRepository
 //    public let createFanUseCase: AnyUseCase<CreateFanInput, Fan>
 //    public let listFansUseCase: AnyUseCase<Void, [Fan]>
@@ -15,4 +15,4 @@
 //        createFanUseCase = AnyUseCase(CreateFanUseCase(repository))
 //        listFansUseCase = AnyUseCase(ListFansUseCase(repository))
 //    }
-//}
+// }

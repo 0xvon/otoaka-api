@@ -1,6 +1,6 @@
 import Domain
-import Fluent
 import Endpoint
+import Fluent
 
 public class UserRepository: Domain.UserRepository {
     private let db: Database

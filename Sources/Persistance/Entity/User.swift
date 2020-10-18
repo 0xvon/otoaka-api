@@ -1,7 +1,7 @@
 import Domain
+import Endpoint
 import Fluent
 import Foundation
-import Endpoint
 
 final class User: Model {
     static var schema: String = "users"
@@ -32,7 +32,8 @@ final class User: Model {
 
     init() {}
     init(cognitoId: Domain.User.CognitoID, email: String, name: String,
-         biography: String?, thumbnailURL: String?, role: Domain.RoleProperties) {
+         biography: String?, thumbnailURL: String?, role: Domain.RoleProperties)
+    {
         self.cognitoId = cognitoId
         self.email = email
         self.name = name
@@ -41,7 +42,7 @@ final class User: Model {
         switch role {
         case let .artist(artist):
             self.role = .artist
-            self.part = artist.part
+            part = artist.part
         case .fan:
             self.role = .fan
         }

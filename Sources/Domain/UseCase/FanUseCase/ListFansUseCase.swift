@@ -7,7 +7,7 @@
 
 import NIO
 //
-//public class ListFansUseCase: UseCase {
+// public class ListFansUseCase: UseCase {
 //    public typealias Request = ()
 //    public typealias Response = [Fan]
 //
@@ -20,4 +20,4 @@ import NIO
 //    public func callAsFunction(_: Request) throws -> EventLoopFuture<Response> {
 //        repository.list()
 //    }
-//}
+// }

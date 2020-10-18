@@ -1,9 +1,9 @@
 import Domain
+import Endpoint
 import FluentKit
 import JWTKit
 import Persistance
 import Vapor
-import Endpoint
 
 func routes(_ app: Application) throws {
     app.get { _ in

@@ -11,7 +11,7 @@ public struct CreateFanInput: Codable {
     public let displayName: String
 }
 
-//public class CreateFanUseCase: UseCase {
+// public class CreateFanUseCase: UseCase {
 //    public typealias Request = CreateFanInput
 //    public typealias Response = Fan
 //
@@ -25,4 +25,4 @@ public struct CreateFanInput: Codable {
 //        let fan: Fan = { fatalError() }() // Fan(id: nil, displayName: request.displayName)
 //        return repository.create(fan: fan)
 //    }
-//}
+// }

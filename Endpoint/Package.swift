@@ -7,13 +7,15 @@ let package = Package(
     products: [
         .library(
             name: "Endpoint",
-            targets: ["Endpoint"]),
+            targets: ["Endpoint"]
+        ),
     ],
     dependencies: [
     ],
     targets: [
         .target(
             name: "Endpoint",
-            dependencies: []),
+            dependencies: []
+        ),
     ]
 )
