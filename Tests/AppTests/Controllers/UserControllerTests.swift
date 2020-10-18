@@ -37,10 +37,20 @@ class UserControllerTests: XCTestCase {
         let body = Endpoint.Signup.Request(name: dummyUserName, role: .fan(Fan()))
         let bodyData = try ByteBuffer(data: JSONEncoder().encode(body))
 
+        try app.test(.GET, "users/get_signup_status", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok)
+            let responseBody = try res.content.decode(SignupStatus.Response.self)
+            XCTAssertFalse(responseBody.isSignedup)
+        }
         try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(Signup.Response.self)
             XCTAssertEqual(responseBody.name, dummyUserName)
+        }
+        try app.test(.GET, "users/get_signup_status", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok)
+            let responseBody = try res.content.decode(SignupStatus.Response.self)
+            XCTAssertTrue(responseBody.isSignedup)
         }
 
         // Try to create same id user again

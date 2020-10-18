@@ -49,10 +49,6 @@ struct UserController: RouteCollection {
     }
 
     func getSignupStatus(req: Request) throws -> EventLoopFuture<SignupStatus.Response> {
-        guard req.auth.has(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
         let isSignedup = req.auth.has(Domain.User.self)
         let response = SignupStatus.Response(isSignedup: isSignedup)
         return req.eventLoop.makeSucceededFuture(response)
