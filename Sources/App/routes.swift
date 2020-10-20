@@ -13,6 +13,7 @@ func routes(_ app: Application) throws {
     app.get("hello") { _ -> String in
         "Hello, world!"
     }
-//    try app.register(collection: FanController())
+
     try app.register(collection: UserController())
+    try app.register(collection: GroupController())
 }

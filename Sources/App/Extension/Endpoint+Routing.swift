@@ -1,7 +1,7 @@
 import Endpoint
 import Vapor
 
-extension Endpoint.HTTPMethod {
+private extension Endpoint.HTTPMethod {
     var vaporize: NIOHTTP1.HTTPMethod {
         switch self {
         case .get: return .GET
