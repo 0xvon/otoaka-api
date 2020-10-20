@@ -88,7 +88,7 @@ extension Endpoint.RoleProperties {
 extension Endpoint.User: Content {
     init(from domainUser: Domain.User) {
         self.init(
-            id: domainUser.id.uuidString,
+            id: domainUser.id.rawValue.uuidString,
             name: domainUser.name, biography: domainUser.biography,
             thumbnailURL: domainUser.thumbnailURL,
             role: .init(fromDomain: domainUser.role)

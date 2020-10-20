@@ -65,7 +65,7 @@ extension Domain.User: EntityConvertible {
             roleProperties = .fan
         }
         try self.init(
-            id: entity.requireID(), cognitoId: entity.cognitoId,
+            id: ID(entity.requireID()), cognitoId: entity.cognitoId,
             email: entity.email, name: entity.name,
             biography: entity.biography, thumbnailURL: entity.thumbnailURL,
             role: roleProperties
@@ -74,7 +74,7 @@ extension Domain.User: EntityConvertible {
 
     func asPersistance() -> User {
         let user = User()
-        user.id = id
+        user.id = id.rawValue
         user.cognitoId = cognitoId
         user.email = email
         user.biography = biography

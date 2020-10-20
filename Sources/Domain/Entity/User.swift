@@ -7,7 +7,8 @@ public enum RoleProperties {
 
 public struct User {
     public typealias CognitoID = String
-    public let id: UUID
+    public typealias ID = Identifier<Self>
+    public let id: ID
     public let cognitoId: CognitoID
     public var email: String
 
@@ -18,7 +19,7 @@ public struct User {
     public var role: RoleProperties
 
     public init(
-        id: UUID, cognitoId: User.CognitoID, email: String, name: String,
+        id: ID, cognitoId: User.CognitoID, email: String, name: String,
         biography: String?, thumbnailURL: String?, role: RoleProperties
     ) {
         self.id = id

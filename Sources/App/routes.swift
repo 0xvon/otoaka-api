@@ -15,5 +15,9 @@ func routes(_ app: Application) throws {
     }
 
     try app.register(collection: UserController())
-    try app.register(collection: GroupController())
+
+    let signedUp = try app.routes
+        .grouped(JWTAuthenticator())
+        .grouped(User.guardMiddleware())
+    try signedUp.register(collection: GroupController())
 }

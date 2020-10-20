@@ -1,7 +1,8 @@
 import Foundation
 
 public struct Group {
-    public let id: UUID
+    public typealias ID = Identifier<Self>
+    public let id: ID
     public var name: String
     public var englishName: String?
     public var biography: String?
@@ -11,7 +12,7 @@ public struct Group {
     public var isVerified: Bool
 
     public init(
-        id: UUID, name: String, englishName: String?,
+        id: ID, name: String, englishName: String?,
         biography: String?, since: Date?, artworkURL: URL?,
         hometown: String?
     ) {
@@ -31,12 +32,25 @@ public struct Membership {
     public let id: UUID
     public var groupId: UUID
     public var artistId: UUID
+
+    public init(id: UUID, groupId: UUID, artistId: UUID) {
+        self.id = id
+        self.groupId = groupId
+        self.artistId = artistId
+    }
 }
 
 public struct GroupInvitation {
     public let id: UUID
-    public var groupId: UUID
+    public var group: Group
     public var invited: Bool
     /// Always `nil` when `invited` is false
-    public var membershipId: UUID?
+    public var membership: Membership?
+
+    public init(id: UUID, group: Group, invited: Bool, membership: Membership?) {
+        self.id = id
+        self.group = group
+        self.invited = invited
+        self.membership = membership
+    }
 }

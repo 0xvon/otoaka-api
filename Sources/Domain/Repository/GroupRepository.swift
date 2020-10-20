@@ -7,4 +7,10 @@ public protocol GroupRepository {
         biography: String?, since: Date?, artworkURL: URL?,
         hometown: String?
     ) -> EventLoopFuture<Domain.Group>
+
+    func join(toGroup groupId: Group.ID, artist: User.ID) -> EventLoopFuture<Void>
+    func invite(toGroup groupdId: Group.ID) -> EventLoopFuture<GroupInvitation>
+
+    func isMember(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
+    func isExists(by id: Group.ID) -> EventLoopFuture<Bool>
 }

@@ -33,4 +33,8 @@ public class UserRepository: Domain.UserRepository {
             return domainUser
         }
     }
+
+    public func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
+        User.find(id.rawValue, on: db).map { $0 != nil }
+    }
 }
