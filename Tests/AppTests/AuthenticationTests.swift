@@ -40,13 +40,16 @@ class AuthenticationTests: XCTestCase {
         func create(cognitoId: Domain.User.CognitoID, email: String, name: String,
                     biography: String?, thumbnailURL: String?, role: Domain.RoleProperties) -> EventLoopFuture<Domain.User>
         {
-            let newUser = Domain.User(id: UUID(), cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
+            let newUser = Domain.User(id: Domain.User.ID(UUID()), cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
             users[cognitoId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }
 
         func find(by foreignId: Domain.User.CognitoID) -> EventLoopFuture<Domain.User?> {
             eventLoop.makeSucceededFuture(users[foreignId])
+        }
+        func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
+            eventLoop.makeSucceededFuture(users.contains(where: { $0.value.id == id }))
         }
     }
 
