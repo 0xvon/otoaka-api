@@ -29,7 +29,7 @@ jobs:
       - name: Install Swift
         run: swiftenv install
       - name: Build and test
-        run: swiftenv exec swift test --enable-test-discovery
+        run: swiftenv exec swift test --enable-test-discovery --parallel
         env:
           CONGNITO_IDP_REGION: ${{ secrets.CONGNITO_IDP_REGION }}
           CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
