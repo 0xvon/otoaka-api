@@ -11,6 +11,7 @@ public struct JoinGroupUseCase: UseCase {
         case userNotFound
         case groupNotFound
         case invitationNotFound
+        case invitationAlreadyUsed
     }
 
     public let groupRepository: GroupRepository
@@ -37,10 +38,13 @@ public struct JoinGroupUseCase: UseCase {
             guard userExists else {
                 throw Error.userNotFound
             }
+            guard !invitation.invited else {
+                throw Error.invitationAlreadyUsed
+            }
             return invitation
         }
         .flatMap { invitation in
-            groupRepository.join(toGroup: invitation.group.id, artist: request.userId)
+            groupRepository.joinWithInvitation(invitationId: invitation.id, artist: request.userId)
         }
     }
 }

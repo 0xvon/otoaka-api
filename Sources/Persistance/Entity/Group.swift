@@ -10,19 +10,19 @@ final class Group: Model {
     @Field(key: "name")
     var name: String
 
-    @Field(key: "english_name")
+    @OptionalField(key: "english_name")
     var englishName: String?
 
-    @Field(key: "biography")
+    @OptionalField(key: "biography")
     var biography: String?
 
     @Timestamp(key: "since", on: .none)
     var since: Date?
 
-    @Field(key: "artwork_url")
+    @OptionalField(key: "artwork_url")
     var artworkURL: URL?
 
-    @Field(key: "hometown")
+    @OptionalField(key: "hometown")
     var hometown: String?
 
     init() {}
@@ -45,13 +45,18 @@ final class Group: Model {
 extension Domain.Group: EntityConvertible {
     typealias PersistanceEntity = Group
 
-    init(fromPersistance entity: Group) throws {
-        try self.init(
-            id: ID(entity.requireID()),
-            name: entity.name, englishName: entity.englishName,
-            biography: entity.biography, since: entity.since,
-            artworkURL: entity.artworkURL, hometown: entity.hometown
-        )
+    static func translate(fromPersistance entity: Group, on db: Database) -> EventLoopFuture<Self> {
+        db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
+            try ($0, $0.requireID())
+        }
+        .map { entity, id in
+            Self.init(
+                id: ID(id),
+                name: entity.name, englishName: entity.englishName,
+                biography: entity.biography, since: entity.since,
+                artworkURL: entity.artworkURL, hometown: entity.hometown
+            )
+        }
     }
 
     func asPersistance() -> Group {
@@ -75,12 +80,17 @@ final class Membership: Model {
 extension Domain.Membership: EntityConvertible {
     typealias PersistanceEntity = Membership
 
-    init(fromPersistance entity: Membership) throws {
-        try self.init(
-            id: entity.requireID(),
-            groupId: entity.$group.id,
-            artistId: entity.$artist.id
-        )
+    static func translate(fromPersistance entity: Membership, on db: Database) -> EventLoopFuture<Self> {
+        db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
+            try ($0, $0.requireID())
+        }
+        .map { entity, id in
+            Self.init(
+                id: id,
+                groupId: entity.$group.id,
+                artistId: entity.$artist.id
+            )
+        }
     }
 
     func asPersistance() -> Membership {
@@ -114,13 +124,17 @@ final class GroupInvitation: Model {
 
 extension Domain.GroupInvitation: EntityConvertible {
     typealias PersistanceEntity = GroupInvitation
-    init(fromPersistance entity: GroupInvitation) throws {
-        try self.init(
-            id: ID(entity.requireID()),
-            group: Domain.Group(fromPersistance: entity.group),
-            invited: entity.invited,
-            membership: nil
-        )
+    static func translate(fromPersistance entity: GroupInvitation, on db: Database) -> EventLoopFuture<Domain.GroupInvitation> {
+        let group = entity.$group.get(on: db)
+        return group.flatMap { Domain.Group.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { group in
+                try Domain.GroupInvitation.init(
+                    id: ID(entity.requireID()),
+                    group: group,
+                    invited: entity.invited,
+                    membership: nil
+                )
+            }
     }
 
     func asPersistance() -> GroupInvitation {

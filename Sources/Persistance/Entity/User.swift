@@ -56,7 +56,7 @@ final class User: Model {
 extension Domain.User: EntityConvertible {
     typealias PersistanceEntity = User
 
-    init(fromPersistance entity: User) throws {
+    static func translate(fromPersistance entity: User, on db: Database) -> EventLoopFuture<Self> {
         let roleProperties: Domain.RoleProperties
         switch entity.role {
         case .artist:
@@ -64,12 +64,14 @@ extension Domain.User: EntityConvertible {
         case .fan:
             roleProperties = .fan
         }
-        try self.init(
-            id: ID(entity.requireID()), cognitoId: entity.cognitoId,
-            email: entity.email, name: entity.name,
-            biography: entity.biography, thumbnailURL: entity.thumbnailURL,
-            role: roleProperties
-        )
+        return db.eventLoop.submit {
+            try Self.init(
+                id: ID(entity.requireID()), cognitoId: entity.cognitoId,
+                email: entity.email, name: entity.name,
+                biography: entity.biography, thumbnailURL: entity.thumbnailURL,
+                role: roleProperties
+            )
+        }
     }
 
     func asPersistance() -> User {

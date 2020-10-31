@@ -1,5 +1,8 @@
+import NIO
+import Fluent
+
 protocol EntityConvertible {
     associatedtype PersistanceEntity
-    init(fromPersistance entity: PersistanceEntity) throws
+    static func translate(fromPersistance entity: PersistanceEntity, on db: Database) -> EventLoopFuture<Self>
     func asPersistance() -> PersistanceEntity
 }

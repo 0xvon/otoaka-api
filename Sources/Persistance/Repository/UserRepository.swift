@@ -20,17 +20,16 @@ public class UserRepository: Domain.UserRepository {
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
             .flatMap { [db] _ -> EventLoopFuture<Domain.User> in
                 let storedUser = User(cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
-                return storedUser.create(on: db)
-                    .flatMapThrowing { try Domain.User(fromPersistance: storedUser) }
+                return storedUser.create(on: db).flatMap { [db] in
+                    Domain.User.translate(fromPersistance: storedUser, on: db)
+                }
             }
     }
 
     public func find(by cognitoId: Domain.User.CognitoID) -> EventLoopFuture<Domain.User?> {
         let maybeUser = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
-        return maybeUser.flatMapThrowing { maybeUser in
-            guard let user = maybeUser else { return nil }
-            let domainUser = try Domain.User(fromPersistance: user)
-            return domainUser
+        return maybeUser.optionalFlatMap { [db] user in
+            Domain.User.translate(fromPersistance: user, on: db)
         }
     }
 

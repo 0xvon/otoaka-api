@@ -137,6 +137,15 @@
         }
       },
       {
+        "package": "StubKit",
+        "repositoryURL": "https://github.com/kateinoigakukun/StubKit.git",
+        "state": {
+          "branch": null,
+          "revision": "bcfc29e17114c5e07f71fc24d8ea111eca74ee87",
+          "version": "0.1.6"
+        }
+      },
+      {
         "package": "swift-backtrace",
         "repositoryURL": "https://github.com/swift-server/swift-backtrace.git",
         "state": {

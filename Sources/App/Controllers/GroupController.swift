@@ -15,15 +15,24 @@ struct GroupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(createBand))
         routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
+        routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
     }
 
     func createBand(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<Endpoint.Group> {
+        guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
         let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
         return repository.create(
             name: input.name, englishName: input.englishName,
             biography: input.biography, since: input.since,
             artworkURL: input.artworkURL, hometown: input.hometown
         )
+        .flatMap { group in
+            repository.join(toGroup: group.id, artist: user.id)
+                .map { _ in group }
+        }
         .map { Endpoint.Group(from: $0) }
     }
 
@@ -77,3 +86,9 @@ extension Endpoint.Group: Content {
 }
 
 extension Endpoint.InviteGroup.Response: Content {}
+
+extension Domain.JoinGroupUseCase.Error: AbortError {
+    public var status: HTTPResponseStatus {
+        .badRequest
+    }
+}
