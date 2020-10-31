@@ -7,96 +7,55 @@ import XCTVapor
 
 class LiveControllerTests: XCTestCase {
     var app: Application!
+    var appClient: AppClient!
+
     override func setUp() {
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))
+        appClient = AppClient(application: app, cognito: CognitoClient())
     }
 
     override func tearDown() {
         app.shutdown()
     }
 
-    func testCreateLive() throws {
-        // try to create without login
+    func testCreateWithoutLogin() throws {
         try app.test(.POST, "lives") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
-        let client = CognitoClient()
-        let dummyCognitoUserName = UUID().uuidString
-        let dummyUser = try client.createToken(userName: dummyCognitoUserName).wait()
-        defer { try! client.destroyUser(userName: dummyCognitoUserName).wait() }
+    }
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-
-        var headers = HTTPHeaders()
-        headers.add(name: .authorization, value: "Bearer \(dummyUser.token)")
-        headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
-
-        do {
-            let dummyUserName = UUID().uuidString
-            let body = Endpoint.Signup.Request(
-                name: dummyUserName, role: .artist(Artist(part: "vocal")))
-            let bodyData = try ByteBuffer(data: encoder.encode(body))
-
-            try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
-                XCTAssertEqual(res.status, .ok)
-                let responseBody = try res.content.decode(Signup.Response.self)
-                XCTAssertEqual(responseBody.name, dummyUserName)
-            }
+    func testCreateLive() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let createdGroup = try appClient.createGroup(with: user)
+        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.hostGroupId, value: createdGroup.id)
+            $0.set(\.performerGroupIds, value: [createdGroup.id])
         }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
-        var createdGroup: Endpoint.Group!
-        do {
-            // Create a group
-            let body = try! Stub.make(CreateGroup.Request.self) {
-                $0.set(\.name, value: "Super unique lucky name")
-            }
-            let bodyData = try ByteBuffer(data: encoder.encode(body))
-            try app.test(.POST, "groups", headers: headers, body: bodyData) { res in
-                XCTAssertEqual(res.status, .ok)
-                let responseBody = try res.content.decode(CreateGroup.Response.self)
-                XCTAssertEqual(responseBody.name, body.name)
-                createdGroup = responseBody
-            }
+        try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: bodyData) {
+            res in
+            XCTAssertEqual(res.status, .ok)
+            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
+            XCTAssertEqual(responseBody.title, body.title)
         }
+    }
+
+    func testCreateLive_() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "important")))
+        let createdGroup = try appClient.createGroup(with: user)
 
         do {
-            let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
-                $0.set(\.hostGroupId, value: createdGroup.id)
-                $0.set(\.performerGroupIds, value: [createdGroup.id])
-            }
-            let bodyData = try ByteBuffer(data: encoder.encode(body))
-
-            try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
-                XCTAssertEqual(res.status, .ok)
-                let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
-                XCTAssertEqual(responseBody.title, body.title)
-            }
-        }
-
-        do {
-            let nonMemberUserName = UUID().uuidString
-            let nonMemberUser = try client.createToken(userName: nonMemberUserName).wait()
-            defer { try! client.destroyUser(userName: nonMemberUserName).wait() }
-
-            var headers = HTTPHeaders()
-            headers.add(name: .authorization, value: "Bearer \(nonMemberUser.token)")
-            headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
-            let signUpBody = Endpoint.Signup.Request(
-                name: nonMemberUserName, role: .artist(Artist(part: "vocal")))
-            let signUpBodyData = try ByteBuffer(data: encoder.encode(signUpBody))
-
-            try app.test(.POST, "users/signup", headers: headers, body: signUpBodyData) { res in
-                XCTAssertEqual(res.status, .ok)
-            }
+            let nonMemberUser = try appClient.createUser()
 
             let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
                 $0.set(\.hostGroupId, value: createdGroup.id)
                 $0.set(\.performerGroupIds, value: [createdGroup.id])
             }
-            let bodyData = try ByteBuffer(data: encoder.encode(body))
+            let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+            let headers = appClient.makeHeaders(for: nonMemberUser)
 
             try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
                 XCTAssertNotEqual(res.status, .ok)
