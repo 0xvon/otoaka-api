@@ -108,7 +108,9 @@ public class GroupRepository: Domain.GroupRepository {
             .count().map { $0 > 0 }
     }
 
-    public func isExists(by id: Domain.Group.ID) -> EventLoopFuture<Bool> {
-        Group.find(id.rawValue, on: db).map { $0 != nil }
+    public func findGroup(by id: Domain.Group.ID) -> EventLoopFuture<Domain.Group?> {
+        Group.find(id.rawValue, on: db).optionalFlatMap { [db] in
+            Domain.Group.translate(fromPersistance: $0, on: db)
+        }
     }
 }

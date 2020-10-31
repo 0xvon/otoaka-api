@@ -18,6 +18,18 @@ struct GroupController: RouteCollection {
         routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(createBand))
         routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
+        routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
+    }
+
+    func getGroupInfo(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<
+        Endpoint.GetGroup.Response
+    > {
+        let rawGroupId = try req.parameters.require("group_id", as: String.self)
+        guard let groupId = UUID(uuidString: rawGroupId) else {
+            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
+        }
+        return repository.findGroup(by: Group.ID(groupId)).unwrap(or: Abort(.notFound))
+            .map { Endpoint.Group(from: $0) }
     }
 
     func createBand(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<

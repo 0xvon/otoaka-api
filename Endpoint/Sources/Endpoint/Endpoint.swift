@@ -18,15 +18,3 @@ public protocol EndpointProtocol {
 public struct Empty: Codable {
     public init() {}
 }
-
-public struct GetBand: EndpointProtocol {
-    public typealias Request = Empty
-    public typealias Response = Empty
-    public static let method: HTTPMethod = .get
-    public typealias Parameters = Int
-
-    public static let pathPattern = ["bands", ":band_id"]
-    public static func buildPath(with bandId: Parameters) -> [String] {
-        ["bands", bandId.description]
-    }
-}

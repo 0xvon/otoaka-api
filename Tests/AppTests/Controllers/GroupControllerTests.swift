@@ -132,5 +132,12 @@ class GroupControllerTests: XCTestCase {
                 XCTAssertEqual(res.status, .badRequest)
             }
         }
+
+        do {
+            // Try to join with invalid invitation
+            try app.test(.GET, "groups/\(createdGroup.id)", headers: headers) { res in
+                XCTAssertEqual(res.status, .ok, res.body.string)
+            }
+        }
     }
 }

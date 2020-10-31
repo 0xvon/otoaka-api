@@ -15,5 +15,12 @@ public protocol GroupRepository {
     func findInvitation(by invitationId: GroupInvitation.ID) -> EventLoopFuture<GroupInvitation?>
 
     func isMember(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
+    func findGroup(by id: Group.ID) -> EventLoopFuture<Group?>
     func isExists(by id: Group.ID) -> EventLoopFuture<Bool>
+}
+
+extension GroupRepository {
+    public func isExists(by id: Group.ID) -> EventLoopFuture<Bool> {
+        findGroup(by: id).map { $0 != nil }
+    }
 }

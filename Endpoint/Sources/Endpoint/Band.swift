@@ -95,3 +95,15 @@ public struct JoinGroup: EndpointProtocol {
         pathPattern
     }
 }
+
+public struct GetGroup: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Group
+    public static let method: HTTPMethod = .get
+    public typealias Parameters = String
+
+    public static let pathPattern = ["groups", ":group_id"]
+    public static func buildPath(with bandId: Parameters) -> [String] {
+        ["bands", bandId.description]
+    }
+}
