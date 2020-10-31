@@ -70,3 +70,14 @@ public struct CreateLive: EndpointProtocol {
         pathPattern
     }
 }
+
+public struct GetLive: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Live
+    public static let method: HTTPMethod = .get
+    public static let pathPattern = ["lives", ":live_id"]
+    public typealias Parameters = String
+    public static func buildPath(with liveId: Parameters) -> [String] {
+        ["lives", liveId.description]
+    }
+}

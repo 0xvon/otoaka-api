@@ -16,6 +16,18 @@ private func injectProvider<T>(_ handler: @escaping (Request, Domain.LiveReposit
 struct LiveController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
+        routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
+    }
+
+    func getLiveInfo(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+        Endpoint.Live
+    > {
+        let rawLiveId = try req.parameters.require("live_id", as: String.self)
+        guard let liveId = UUID(uuidString: rawLiveId) else {
+            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
+        }
+        return repository.findLive(by: Domain.Live.ID(liveId)).unwrap(or: Abort(.notFound))
+            .map { Endpoint.Live(from: $0) }
     }
 
     func create(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<

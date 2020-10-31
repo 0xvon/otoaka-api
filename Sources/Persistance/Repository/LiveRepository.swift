@@ -39,4 +39,10 @@ public class LiveRepository: Domain.LiveRepository {
         }
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
     }
+
+    public func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
+        Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
+            Domain.Live.translate(fromPersistance: $0, on: db)
+        }
+    }
 }

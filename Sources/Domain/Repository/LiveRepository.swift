@@ -9,4 +9,6 @@ public protocol LiveRepository {
         openAt: Date?, startAt: Date?, endAt: Date?,
         performerGroups: [Domain.Group.ID]
     ) -> EventLoopFuture<Domain.Live>
+
+    func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
 }
