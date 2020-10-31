@@ -28,6 +28,7 @@ public func setup(
         CreateUser(),
         CreateGroup(), CreateMembership(), CreateGroupInvitation(),
         CreateLive(), CreateLivePerformer(),
+        AddUniqueConstraintOnLivePerformer(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

@@ -60,7 +60,29 @@ class LiveControllerTests: XCTestCase {
             XCTAssertNotEqual(res.status, .ok)
         }
     }
-    
+
+    func testCreateLiveWithDuplicatedPerformers() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let hostGroup = try appClient.createGroup(with: user)
+
+        let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let request = try! Stub.make(Endpoint.CreateGroup.Request.self) {
+            $0.set(\.name, value: UUID().uuidString)
+        }
+        let participatingGroup = try appClient.createGroup(body: request, with: artist)
+
+        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.hostGroupId, value: hostGroup.id)
+            $0.set(\.performerGroupIds, value: [participatingGroup.id, participatingGroup.id])
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
+            XCTAssertNotEqual(res.status, .ok)
+        }
+    }
+
     func testGetLive() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
