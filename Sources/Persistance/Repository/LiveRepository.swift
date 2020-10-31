@@ -13,7 +13,7 @@ public class LiveRepository: Domain.LiveRepository {
         case groupNotFound
         case invitationNotFound
     }
-    
+
     public func create(
         title: String, style: LiveStyle, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
@@ -21,7 +21,9 @@ public class LiveRepository: Domain.LiveRepository {
         openAt: Date?, startAt: Date?, endAt: Date?,
         performerGroups: [Domain.Group.ID]
     ) -> EventLoopFuture<Domain.Live> {
-        let live = Live(title: title, style: style, artworkURL: artworkURL, hostGroupId: hostGroupId, authorId: authorId, openAt: openAt, startAt: startAt, endAt: endAt)
+        let live = Live(
+            title: title, style: style, artworkURL: artworkURL, hostGroupId: hostGroupId,
+            authorId: authorId, openAt: openAt, startAt: startAt, endAt: endAt)
         return db.transaction { (db) -> EventLoopFuture<Void> in
             live.save(on: db)
                 .flatMapThrowing { _ in try live.requireID() }

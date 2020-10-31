@@ -18,10 +18,10 @@ final class Live: Model {
 
     @Parent(key: "host_group_id")
     var hostGroup: Group
-    
+
     @Parent(key: "author_id")
     var author: User
-    
+
     // TODO: liveHouseId
     @Timestamp(key: "open_at", on: .none)
     var openAt: Date?
@@ -64,10 +64,9 @@ final class LivePerformer: Model {
     var group: Group
 }
 
-
 extension Domain.Live: EntityConvertible {
     typealias PersistanceEntity = Live
-    
+
     static func translate(fromPersistance entity: Live, on db: Database) -> EventLoopFuture<Self> {
         let eventLoop = db.eventLoop
         let liveId = eventLoop.submit { try entity.requireID() }
@@ -78,9 +77,10 @@ extension Domain.Live: EntityConvertible {
         }
         .map { $0.map(\.group) }
         .flatMap { (groups: [Persistance.Group]) in
-            eventLoop.flatten(groups.map {
-                Domain.Group.translate(fromPersistance: $0, on: db)
-            })
+            eventLoop.flatten(
+                groups.map {
+                    Domain.Group.translate(fromPersistance: $0, on: db)
+                })
         }
         let hostGroup = entity.$hostGroup.get(on: db).flatMap {
             Domain.Group.translate(fromPersistance: $0, on: db)
@@ -88,7 +88,7 @@ extension Domain.Live: EntityConvertible {
         let author = entity.$author.get(on: db).flatMap {
             Domain.User.translate(fromPersistance: $0, on: db)
         }
-        
+
         return hostGroup.and(performers).and(author).map { ($0.0, $0.1, $1) }
             .flatMapThrowing { (hostGroup, performers, author) -> Domain.Live in
                 try Self.init(
@@ -103,12 +103,13 @@ extension Domain.Live: EntityConvertible {
                 )
             }
     }
-    
+
     func asPersistance() -> Live {
-        Live(id: id.rawValue,
-             title: title, style: style, artworkURL: artworkURL,
-             hostGroupId: hostGroup.id, authorId: author.id, openAt: openAt,
-             startAt: startAt, endAt: endAt
+        Live(
+            id: id.rawValue,
+            title: title, style: style, artworkURL: artworkURL,
+            hostGroupId: hostGroup.id, authorId: author.id, openAt: openAt,
+            startAt: startAt, endAt: endAt
         )
     }
 }

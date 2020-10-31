@@ -39,5 +39,5 @@ public struct Live {
         self.endAt = endAt
         self.performers = performers
     }
-    
+
 }

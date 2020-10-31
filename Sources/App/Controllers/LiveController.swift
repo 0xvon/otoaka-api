@@ -18,7 +18,9 @@ struct LiveController: RouteCollection {
         routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
     }
 
-    func create(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<Endpoint.Live> {
+    func create(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+        Endpoint.Live
+    > {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -28,7 +30,7 @@ struct LiveController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
         let performerGroupIds = input.performerGroupIds
-            .compactMap(UUID.init(uuidString: ))
+            .compactMap(UUID.init(uuidString:))
             .map(Domain.Group.ID.init(rawValue:))
         guard performerGroupIds.count == input.performerGroupIds.count else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
@@ -38,28 +40,30 @@ struct LiveController: RouteCollection {
             groupRepository: groupRepository,
             liveRepository: repository, eventLoop: req.eventLoop
         )
-        return try useCase((
-            user: user,
-            title: input.title, style: LiveStyle.translate(from: input.style),
-            artworkURL: input.artworkURL,
-            hostGroupId: Domain.Group.ID(hostGroupId),
-            openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
-            performerGroups: performerGroupIds
-        ))
+        return try useCase(
+            (
+                user: user,
+                title: input.title, style: LiveStyle.translate(from: input.style),
+                artworkURL: input.artworkURL,
+                hostGroupId: Domain.Group.ID(hostGroupId),
+                openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
+                performerGroups: performerGroupIds
+            )
+        )
         .map(Endpoint.Live.init(from:))
     }
 }
 
-fileprivate extension Domain.LiveStyle {
-    static func translate(from entity: Endpoint.LiveStyle) -> Domain.LiveStyle {
+extension Domain.LiveStyle {
+    fileprivate static func translate(from entity: Endpoint.LiveStyle) -> Domain.LiveStyle {
         switch entity {
         case .battle: return .battle
         case .festival: return .festival
         case .oneman: return .oneman
         }
     }
-    
-    func asEndpointEntity() -> Endpoint.LiveStyle {
+
+    fileprivate func asEndpointEntity() -> Endpoint.LiveStyle {
         switch self {
         case .battle: return .battle
         case .festival: return .festival

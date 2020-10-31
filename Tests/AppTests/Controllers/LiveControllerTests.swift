@@ -75,7 +75,7 @@ class LiveControllerTests: XCTestCase {
                 XCTAssertEqual(responseBody.title, body.title)
             }
         }
-        
+
         do {
             let nonMemberUserName = UUID().uuidString
             let nonMemberUser = try client.createToken(userName: nonMemberUserName).wait()

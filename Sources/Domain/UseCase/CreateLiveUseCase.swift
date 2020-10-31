@@ -1,5 +1,5 @@
-import NIO
 import Foundation
+import NIO
 
 public struct CreateLiveUseCase: UseCase {
     public typealias Request = (
@@ -34,11 +34,13 @@ public struct CreateLiveUseCase: UseCase {
         guard case .artist = request.user.role else {
             return eventLoop.makeFailedFuture(Error.fanCannotCreateLive)
         }
-        let precondition = groupRepository.isMember(of: request.hostGroupId, member: request.user.id)
-            .flatMapThrowing {
-                guard $0 else { throw Error.isNotMemberOfHostGroup }
-                return
-            }
+        let precondition = groupRepository.isMember(
+            of: request.hostGroupId, member: request.user.id
+        )
+        .flatMapThrowing {
+            guard $0 else { throw Error.isNotMemberOfHostGroup }
+            return
+        }
         return precondition.flatMap {
             liveRepository.create(
                 title: request.title, style: request.style,
