@@ -88,7 +88,7 @@ class LiveControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         let hostGroup = try appClient.createGroup(with: user)
         var performers: [Endpoint.Group] = []
-        
+
         for _ in 0..<3 {
             let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
             let request = try! Stub.make(Endpoint.CreateGroup.Request.self) {
@@ -98,7 +98,8 @@ class LiveControllerTests: XCTestCase {
             performers.append(group)
         }
 
-        let live = try appClient.createLive(hostGroup: hostGroup, performers: performers, with: user)
+        let live = try appClient.createLive(
+            hostGroup: hostGroup, performers: performers, with: user)
 
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)

@@ -48,12 +48,12 @@ public enum TicketStatus: String, Codable {
 
 public struct Ticket {
     public typealias ID = Identifier<Self>
-    
+
     public var id: ID
     public var status: TicketStatus
     public var live: Live
     public var user: User
-    
+
     public init(id: Ticket.ID, status: TicketStatus, live: Live, user: User) {
         self.id = id
         self.status = status

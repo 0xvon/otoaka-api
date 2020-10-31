@@ -53,17 +53,17 @@ struct AddUniqueConstraintOnLivePerformer: Migration {
                 $0["\($1.$group.id)_\($1.$live.id)"] = $1
             }
         }.and(LivePerformer.query(on: database).delete())
-        .map { $0.0 }
-        .flatMap { uniqueEntries in
-            database.schema(LivePerformer.schema)
-                .unique(on: "live_id", "group_id", name: "performer_uniqueness")
-                .update()
-                .map { _ in uniqueEntries }
-        }
-        .flatMap { uniqueEntries in
-            database.eventLoop.flatten(uniqueEntries.map { $0.value.save(on: database) })
-        }
-        .map { _ in }
+            .map { $0.0 }
+            .flatMap { uniqueEntries in
+                database.schema(LivePerformer.schema)
+                    .unique(on: "live_id", "group_id", name: "performer_uniqueness")
+                    .update()
+                    .map { _ in uniqueEntries }
+            }
+            .flatMap { uniqueEntries in
+                database.eventLoop.flatten(uniqueEntries.map { $0.value.save(on: database) })
+            }
+            .map { _ in }
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {

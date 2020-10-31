@@ -66,7 +66,9 @@ struct LiveController: RouteCollection {
         .map(Endpoint.Live.init(from:))
     }
 
-    func register(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<Endpoint.Ticket> {
+    func register(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+        Endpoint.Ticket
+    > {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))

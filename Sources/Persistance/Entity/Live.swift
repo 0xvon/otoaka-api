@@ -141,8 +141,10 @@ final class Ticket: Model {
 
 extension Domain.Ticket {
     typealias PersistanceEntity = Ticket
-    
-    static func translate(fromPersistance entity: Ticket, on db: Database) -> EventLoopFuture<Domain.Ticket> {
+
+    static func translate(fromPersistance entity: Ticket, on db: Database) -> EventLoopFuture<
+        Domain.Ticket
+    > {
         let live = entity.$live.get(on: db).flatMap {
             Domain.Live.translate(fromPersistance: $0, on: db)
         }

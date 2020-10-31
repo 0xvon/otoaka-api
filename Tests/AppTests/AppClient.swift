@@ -75,8 +75,10 @@ class AppClient {
         }
         return createdInvitation
     }
-    
-    func createLive(hostGroup: Endpoint.Group, performers: [Endpoint.Group] = [], with user: AppUser) throws -> Endpoint.Live {
+
+    func createLive(
+        hostGroup: Endpoint.Group, performers: [Endpoint.Group] = [], with user: AppUser
+    ) throws -> Endpoint.Live {
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: hostGroup.id)
             $0.set(\.performerGroupIds, value: performers.map(\.id))
