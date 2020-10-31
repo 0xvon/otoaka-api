@@ -48,17 +48,26 @@ public class GroupRepository: Domain.GroupRepository {
 
     public func invite(toGroup groupdId: Domain.Group.ID) -> EventLoopFuture<Domain.GroupInvitation> {
         let eventLoop = db.eventLoop
-        let maybeGroup = Group.find(groupdId.rawValue, on: db)
-        return maybeGroup.flatMap { [db] group -> EventLoopFuture<Domain.GroupInvitation> in
-            guard let group = group else {
-                return eventLoop.makeFailedFuture(Error.groupNotFound)
-            }
-            let invitation = GroupInvitation()
-            invitation.group = group
-            return invitation.save(on: db).flatMapThrowing {
-                try Domain.GroupInvitation(fromPersistance: invitation)
+        return db.transaction { db in
+            let maybeGroup = Group.find(groupdId.rawValue, on: db)
+            return maybeGroup.flatMap { [db] group -> EventLoopFuture<Domain.GroupInvitation> in
+                guard let group = group else {
+                    return eventLoop.makeFailedFuture(Error.groupNotFound)
+                }
+                let invitation = GroupInvitation()
+                invitation.group = group
+                return invitation.save(on: db).flatMapThrowing {
+                    try Domain.GroupInvitation(fromPersistance: invitation)
+                }
             }
         }
+    }
+
+    public func findInvitation(by invitationId: Domain.GroupInvitation.ID) -> EventLoopFuture<Domain.GroupInvitation?> {
+        GroupInvitation.find(invitationId.rawValue, on: db)
+            .flatMapThrowing {
+                try $0.map { try Domain.GroupInvitation(fromPersistance: $0) }
+            }
     }
 
     public func isMember(of groupId: Domain.Group.ID, member: Domain.User.ID) -> EventLoopFuture<Bool> {

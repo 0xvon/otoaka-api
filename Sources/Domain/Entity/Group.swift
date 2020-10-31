@@ -41,13 +41,14 @@ public struct Membership {
 }
 
 public struct GroupInvitation {
-    public let id: UUID
+    public typealias ID = Identifier<Self>
+    public let id: ID
     public var group: Group
     public var invited: Bool
     /// Always `nil` when `invited` is false
     public var membership: Membership?
 
-    public init(id: UUID, group: Group, invited: Bool, membership: Membership?) {
+    public init(id: ID, group: Group, invited: Bool, membership: Membership?) {
         self.id = id
         self.group = group
         self.invited = invited

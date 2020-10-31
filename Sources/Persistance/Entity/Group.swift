@@ -116,7 +116,7 @@ extension Domain.GroupInvitation: EntityConvertible {
     typealias PersistanceEntity = GroupInvitation
     init(fromPersistance entity: GroupInvitation) throws {
         try self.init(
-            id: entity.requireID(),
+            id: ID(entity.requireID()),
             group: Domain.Group(fromPersistance: entity.group),
             invited: entity.invited,
             membership: nil
@@ -125,7 +125,7 @@ extension Domain.GroupInvitation: EntityConvertible {
 
     func asPersistance() -> GroupInvitation {
         let entity = GroupInvitation()
-        entity.id = id
+        entity.id = id.rawValue
         entity.$group.id = group.id.rawValue
         entity.invited = invited
         entity.$membership.id = membership?.id

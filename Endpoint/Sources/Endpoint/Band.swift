@@ -47,7 +47,7 @@ public struct CreateGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
     public typealias Parameters = Void
 
-    public static let pathPattern = ["bands"]
+    public static let pathPattern = ["groups"]
     public static func buildPath(with _: Parameters) -> [String] {
         pathPattern
     }
@@ -73,8 +73,25 @@ public struct InviteGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
     public typealias Parameters = Void
 
-    public static let pathPattern = ["bands", "invite"]
+    public static let pathPattern = ["groups", "invite"]
     public static func buildPath(with _: Parameters) -> [String] {
+        pathPattern
+    }
+}
+
+public struct JoinGroup: EndpointProtocol {
+    public struct Request: Codable {
+        public var invitationId: String
+        
+        public init(invitationId: String) {
+            self.invitationId = invitationId
+        }
+    }
+    public typealias Response = Empty
+    public static let method: HTTPMethod = .post
+    public typealias Parameters = Void
+    public static var pathPattern = ["groups", "join"]
+    public static func buildPath(with parameters: Void) -> [String] {
         pathPattern
     }
 }

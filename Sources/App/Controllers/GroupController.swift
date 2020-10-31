@@ -43,8 +43,25 @@ struct GroupController: RouteCollection {
         )
         let invitation = try useCase((artistId: user.id, groupId: Domain.Group.ID(groupId)))
         return invitation.map { invitation in
-            Endpoint.InviteGroup.Invitation(id: invitation.id.uuidString)
+            Endpoint.InviteGroup.Invitation(id: invitation.id.rawValue.uuidString)
         }
+    }
+
+    func join(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<Empty> {
+        guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        let input = try req.content.decode(Endpoint.JoinGroup.Request.self)
+        guard let invitationId = UUID(uuidString: input.invitationId) else {
+            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
+        }
+        let userRepository = Persistance.UserRepository(db: req.db)
+        let useCase = JoinGroupUseCase(groupRepository: repository,
+                                       userRepository: userRepository,
+                                       eventLopp: req.eventLoop)
+        let response = try useCase((invitationId: GroupInvitation.ID(invitationId), user.id))
+        return response.map { _ in Empty() }
     }
 }
 
