@@ -27,6 +27,7 @@ public func setup(
     migrations.add([
         CreateUser(),
         CreateGroup(), CreateMembership(), CreateGroupInvitation(),
+        CreateLive(), CreateLivePerformer(),
     ])
 
     try migrator.setupIfNeeded().flatMap {
