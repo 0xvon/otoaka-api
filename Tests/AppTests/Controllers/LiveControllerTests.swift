@@ -43,23 +43,21 @@ class LiveControllerTests: XCTestCase {
         }
     }
 
-    func testCreateLive_() throws {
+    func testCreateLiveAsNonHostMember() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "important")))
         let createdGroup = try appClient.createGroup(with: user)
 
-        do {
-            let nonMemberUser = try appClient.createUser()
+        let nonMemberUser = try appClient.createUser()
 
-            let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
-                $0.set(\.hostGroupId, value: createdGroup.id)
-                $0.set(\.performerGroupIds, value: [createdGroup.id])
-            }
-            let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-            let headers = appClient.makeHeaders(for: nonMemberUser)
+        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.hostGroupId, value: createdGroup.id)
+            $0.set(\.performerGroupIds, value: [createdGroup.id])
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        let headers = appClient.makeHeaders(for: nonMemberUser)
 
-            try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
-                XCTAssertNotEqual(res.status, .ok)
-            }
+        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
+            XCTAssertNotEqual(res.status, .ok)
         }
     }
 }
