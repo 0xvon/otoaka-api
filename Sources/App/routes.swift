@@ -20,4 +20,5 @@ func routes(_ app: Application) throws {
         .grouped(JWTAuthenticator())
         .grouped(User.guardMiddleware())
     try signedUp.register(collection: GroupController())
+    try signedUp.register(collection: LiveController())
 }
