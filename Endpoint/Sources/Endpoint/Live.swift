@@ -81,3 +81,36 @@ public struct GetLive: EndpointProtocol {
         ["lives", liveId.description]
     }
 }
+
+public enum TicketStatus: String, Codable {
+    case registered, paid, joined
+}
+
+public struct Ticket: Codable {
+    public var id: String
+    public var status: TicketStatus
+    public var live: Live
+    public var user: User
+    
+    public init(id: String, status: TicketStatus, live: Live, user: User) {
+        self.id = id
+        self.status = status
+        self.live = live
+        self.user = user
+    }
+}
+
+public struct RegisterLive: EndpointProtocol {
+    public struct Request: Codable {
+        public let liveId: String
+        public init(liveId: String) {
+            self.liveId = liveId
+        }
+    }
+    public typealias Response = Ticket
+    public static let method: HTTPMethod = .post
+    public static let pathPattern = ["lives", "register"]
+    public static func buildPath(with _: Void) -> [String] {
+        pathPattern
+    }
+}

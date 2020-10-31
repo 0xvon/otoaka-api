@@ -106,4 +106,22 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.performers.map(\.id)))
         }
     }
+
+    func testRegisterLive() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let hostGroup = try appClient.createGroup(with: user)
+        let live = try appClient.createLive(hostGroup: hostGroup, performers: [], with: user)
+
+        let body = try! Stub.make(Endpoint.RegisterLive.Request.self) {
+            $0.set(\.liveId, value: live.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.POST, "lives/register", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.RegisterLive.Response.self)
+            XCTAssertEqual(responseBody.status, .registered)
+        }
+    }
 }

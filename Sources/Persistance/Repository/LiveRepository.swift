@@ -9,9 +9,7 @@ public class LiveRepository: Domain.LiveRepository {
     }
 
     public enum Error: Swift.Error {
-        case userNotFound
-        case groupNotFound
-        case invitationNotFound
+        case liveNotFound
     }
 
     public func create(
@@ -43,6 +41,20 @@ public class LiveRepository: Domain.LiveRepository {
     public func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
         Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             Domain.Live.translate(fromPersistance: $0, on: db)
+        }
+    }
+    public func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket> {
+        let isLiveExist = Live.find(liveId.rawValue, on: db).map { $0 != nil }
+        return isLiveExist.flatMapThrowing { isLiveExist -> Void in
+            guard isLiveExist else { throw Error.liveNotFound }
+            return ()
+        }
+        .flatMap { [db] _ -> EventLoopFuture<Ticket> in
+            let ticket = Ticket(status: .registered, liveId: liveId.rawValue, userId: user.rawValue)
+            return ticket.save(on: db).map { _ in ticket }
+        }
+        .flatMap { [db] in
+            Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
     }
 }

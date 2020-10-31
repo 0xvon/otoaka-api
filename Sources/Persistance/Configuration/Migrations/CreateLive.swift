@@ -72,3 +72,29 @@ struct AddUniqueConstraintOnLivePerformer: Migration {
             .update()
     }
 }
+
+struct CreateTicket: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let statusEnum = database.enum("ticket_status")
+            .case("registered")
+            .case("paid")
+            .case("joined")
+            .create()
+        return statusEnum.flatMap { statusEnum in
+            database.schema(Ticket.schema)
+                .id()
+                .field("status", statusEnum, .required)
+                .field("live_id", .uuid, .required)
+                .foreignKey("live_id", references: Live.schema, .id)
+                .field("user_id", .uuid, .required)
+                .foreignKey("user_id", references: User.schema, .id)
+                .create()
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Ticket.schema).delete()
+            .and(database.enum("ticket_status").delete())
+            .map { _ in }
+    }
+}

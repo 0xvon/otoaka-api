@@ -113,3 +113,47 @@ extension Domain.Live: EntityConvertible {
         )
     }
 }
+
+final class Ticket: Model {
+    static let schema = "tickets"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Enum(key: "status")
+    var status: TicketStatus
+
+    @Parent(key: "live_id")
+    var live: Live
+
+    @Parent(key: "user_id")
+    var user: User
+
+    init() {}
+
+    init(id: UUID? = nil, status: TicketStatus, liveId: UUID, userId: UUID) {
+        self.id = id
+        self.status = status
+        self.$live.id = liveId
+        self.$user.id = userId
+    }
+}
+
+extension Domain.Ticket {
+    typealias PersistanceEntity = Ticket
+    
+    static func translate(fromPersistance entity: Ticket, on db: Database) -> EventLoopFuture<Domain.Ticket> {
+        let live = entity.$live.get(on: db).flatMap {
+            Domain.Live.translate(fromPersistance: $0, on: db)
+        }
+        let user = entity.$user.get(on: db).flatMap {
+            Domain.User.translate(fromPersistance: $0, on: db)
+        }
+        return live.and(user).flatMapThrowing { (live, user) -> Domain.Ticket in
+            try Domain.Ticket(
+                id: Domain.Ticket.ID(entity.requireID()), status: entity.status,
+                live: live, user: user
+            )
+        }
+    }
+}
