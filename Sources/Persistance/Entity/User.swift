@@ -35,9 +35,10 @@ final class User: Model {
     var part: String?
 
     init() {}
-    init(cognitoId: Domain.User.CognitoID, email: String, name: String,
-         biography: String?, thumbnailURL: String?, role: Domain.RoleProperties)
-    {
+    init(
+        cognitoId: Domain.User.CognitoID, email: String, name: String,
+        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
+    ) {
         self.cognitoId = cognitoId
         self.email = email
         self.name = name

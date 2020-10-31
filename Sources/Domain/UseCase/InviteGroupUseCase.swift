@@ -29,16 +29,19 @@ public struct InviteGroupUseCase: UseCase {
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let userExists = userRepository.isExists(by: request.artistId)
         let groupExists = groupRepository.isExists(by: request.groupId)
-        let precondition = userExists.and(groupExists).flatMapThrowing { (userExists, groupExists) -> Void in
+        let precondition = userExists.and(groupExists).flatMapThrowing {
+            (userExists, groupExists) -> Void in
             guard userExists else { throw Error.userNotFound }
             guard groupExists else { throw Error.groupNotFound }
             return
         }
         let isMember = groupRepository.isMember(of: request.groupId, member: request.artistId)
 
-        return precondition.flatMap { isMember.flatMap { isMember -> EventLoopFuture<Response> in
-            guard isMember else { return eventLoop.makeFailedFuture(Error.notMemberOfGroup) }
-            return groupRepository.invite(toGroup: request.groupId)
-        } }
+        return precondition.flatMap {
+            isMember.flatMap { isMember -> EventLoopFuture<Response> in
+                guard isMember else { return eventLoop.makeFailedFuture(Error.notMemberOfGroup) }
+                return groupRepository.invite(toGroup: request.groupId)
+            }
+        }
     }
 }

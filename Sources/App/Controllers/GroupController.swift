@@ -4,7 +4,9 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T>(_ handler: @escaping (Request, Domain.GroupRepository) throws -> T) -> ((Request) throws -> T) {
+private func injectProvider<T>(_ handler: @escaping (Request, Domain.GroupRepository) throws -> T)
+    -> ((Request) throws -> T)
+{
     return { req in
         let repository = Persistance.GroupRepository(db: req.db)
         return try handler(req, repository)
@@ -18,7 +20,9 @@ struct GroupController: RouteCollection {
         routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
     }
 
-    func createBand(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<Endpoint.Group> {
+    func createBand(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<
+        Endpoint.Group
+    > {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -36,7 +40,9 @@ struct GroupController: RouteCollection {
         .map { Endpoint.Group(from: $0) }
     }
 
-    func invite(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<Endpoint.InviteGroup.Response> {
+    func invite(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<
+        Endpoint.InviteGroup.Response
+    > {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -66,9 +72,10 @@ struct GroupController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
         let userRepository = Persistance.UserRepository(db: req.db)
-        let useCase = JoinGroupUseCase(groupRepository: repository,
-                                       userRepository: userRepository,
-                                       eventLopp: req.eventLoop)
+        let useCase = JoinGroupUseCase(
+            groupRepository: repository,
+            userRepository: userRepository,
+            eventLopp: req.eventLoop)
         let response = try useCase((invitationId: GroupInvitation.ID(invitationId), user.id))
         return response.map { _ in Empty() }
     }

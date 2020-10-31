@@ -60,7 +60,8 @@ class JWTAuthenticator: BearerAuthenticator {
     func verifyJWT(token: String) throws -> Payload {
         let payload = try signer.verify(token, as: Payload.self)
         guard payload.iss.value == issuer else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Cognito")
+            throw JWTError.claimVerificationFailure(
+                name: "iss", reason: "Token not provided by Cognito")
         }
         return payload
     }

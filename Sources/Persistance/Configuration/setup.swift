@@ -15,13 +15,14 @@ public func setup(
     migrations: Migrations,
     environmentGetter: (String) -> String?
 ) throws {
-    databases.use(.mysql(
-        hostname: environmentGetter("DATABASE_HOST") ?? "localhost",
-        username: environmentGetter("DATABASE_USERNAME") ?? "vapor_username",
-        password: environmentGetter("DATABASE_PASSWORD") ?? "vapor_password",
-        database: environmentGetter("DATABASE_NAME") ?? "vapor_database",
-        tlsConfiguration: .forClient(certificateVerification: .none)
-    ), as: .mysql)
+    databases.use(
+        .mysql(
+            hostname: environmentGetter("DATABASE_HOST") ?? "localhost",
+            username: environmentGetter("DATABASE_USERNAME") ?? "vapor_username",
+            password: environmentGetter("DATABASE_PASSWORD") ?? "vapor_password",
+            database: environmentGetter("DATABASE_NAME") ?? "vapor_database",
+            tlsConfiguration: .forClient(certificateVerification: .none)
+        ), as: .mysql)
 
     migrations.add([
         CreateUser(),

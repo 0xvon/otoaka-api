@@ -19,7 +19,9 @@ public class UserRepository: Domain.UserRepository {
         let existing = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
             .flatMap { [db] _ -> EventLoopFuture<Domain.User> in
-                let storedUser = User(cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
+                let storedUser = User(
+                    cognitoId: cognitoId, email: email, name: name, biography: biography,
+                    thumbnailURL: thumbnailURL, role: role)
                 return storedUser.create(on: db).flatMap { [db] in
                     Domain.User.translate(fromPersistance: storedUser, on: db)
                 }

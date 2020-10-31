@@ -12,9 +12,12 @@ struct CreateUser: Migration {
             .field("biography", .string)
             .field("thumbnail_url", .string)
 
-            .field("role", .enum(
-                DatabaseSchema.DataType.Enum(name: "role", cases: ["artist", "fan"])
-            ))
+            .field(
+                "role",
+                .enum(
+                    DatabaseSchema.DataType.Enum(name: "role", cases: ["artist", "fan"])
+                )
+            )
             .field("part", .string)
             .create()
     }

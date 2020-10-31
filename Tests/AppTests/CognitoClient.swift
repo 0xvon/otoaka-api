@@ -17,41 +17,49 @@ class CognitoClient {
         cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
     }
 
-    func createToken(userName: String, email: String? = nil, password: String = "Passw0rd!!") -> EventLoopFuture<User> {
+    func createToken(userName: String, email: String? = nil, password: String = "Passw0rd!!")
+        -> EventLoopFuture<User>
+    {
         let email = email ?? "\(userName)@example.com"
         let tempPassword = "Passw0rd!"
-        return cognito.adminCreateUser(.init(temporaryPassword: tempPassword, username: userName, userPoolId: userPoolId))
-            .flatMap { response in
-                let sub = response.user!.attributes!.first(where: { $0.name == "sub" })!.value!
-                return self.cognito.adminInitiateAuth(
-                    .init(
-                        authFlow: .adminNoSrpAuth,
-                        authParameters: [
-                            "USERNAME": userName,
-                            "PASSWORD": tempPassword,
-                        ],
-                        clientId: self.clientId, userPoolId: self.userPoolId
-                    )
-                )
-                .and(value: sub)
-            }
-            .flatMap { (response: CognitoIdentityProvider.AdminInitiateAuthResponse, sub: String) -> EventLoopFuture<(CognitoIdentityProvider.AdminRespondToAuthChallengeResponse, String)> in
-                let input = CognitoIdentityProvider.AdminRespondToAuthChallengeRequest(
-                    challengeName: .newPasswordRequired,
-                    challengeResponses: [
+        return cognito.adminCreateUser(
+            .init(temporaryPassword: tempPassword, username: userName, userPoolId: userPoolId)
+        )
+        .flatMap { response in
+            let sub = response.user!.attributes!.first(where: { $0.name == "sub" })!.value!
+            return self.cognito.adminInitiateAuth(
+                .init(
+                    authFlow: .adminNoSrpAuth,
+                    authParameters: [
                         "USERNAME": userName,
-                        "NEW_PASSWORD": password,
-                        "userAttributes.email": email,
+                        "PASSWORD": tempPassword,
                     ],
-                    clientId: self.clientId,
-                    session: response.session,
-                    userPoolId: self.userPoolId
+                    clientId: self.clientId, userPoolId: self.userPoolId
                 )
-                return self.cognito.adminRespondToAuthChallenge(input).and(value: sub)
-            }
-            .map { response, sub in
-                User(token: response.authenticationResult!.idToken!, sub: sub)
-            }
+            )
+            .and(value: sub)
+        }
+        .flatMap {
+            (response: CognitoIdentityProvider.AdminInitiateAuthResponse, sub: String)
+                -> EventLoopFuture<
+                    (CognitoIdentityProvider.AdminRespondToAuthChallengeResponse, String)
+                > in
+            let input = CognitoIdentityProvider.AdminRespondToAuthChallengeRequest(
+                challengeName: .newPasswordRequired,
+                challengeResponses: [
+                    "USERNAME": userName,
+                    "NEW_PASSWORD": password,
+                    "userAttributes.email": email,
+                ],
+                clientId: self.clientId,
+                session: response.session,
+                userPoolId: self.userPoolId
+            )
+            return self.cognito.adminRespondToAuthChallenge(input).and(value: sub)
+        }
+        .map { response, sub in
+            User(token: response.authenticationResult!.idToken!, sub: sub)
+        }
     }
 
     func destroyUser(userName: String) -> EventLoopFuture<Void> {

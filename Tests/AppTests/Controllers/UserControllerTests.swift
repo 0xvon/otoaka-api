@@ -1,7 +1,8 @@
-@testable import App
 import Domain
 import Endpoint
 import XCTVapor
+
+@testable import App
 
 class UserControllerTests: XCTestCase {
     var app: Application!

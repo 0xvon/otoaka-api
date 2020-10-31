@@ -1,8 +1,8 @@
 import Endpoint
 import Vapor
 
-private extension Endpoint.HTTPMethod {
-    var vaporize: NIOHTTP1.HTTPMethod {
+extension Endpoint.HTTPMethod {
+    fileprivate var vaporize: NIOHTTP1.HTTPMethod {
         switch self {
         case .get: return .GET
         case .put: return .PUT
@@ -17,6 +17,8 @@ extension RoutesBuilder {
         endpoint _: Endpoint.Type,
         use closure: @escaping (Request) throws -> Response
     ) {
-        on(Endpoint.method.vaporize, Endpoint.pathPattern.map(PathComponent.init(stringLiteral:)), use: closure)
+        on(
+            Endpoint.method.vaporize, Endpoint.pathPattern.map(PathComponent.init(stringLiteral:)),
+            use: closure)
     }
 }

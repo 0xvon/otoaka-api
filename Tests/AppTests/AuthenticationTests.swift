@@ -1,7 +1,8 @@
-@testable import App
 import Domain
 import Endpoint
 import XCTVapor
+
+@testable import App
 
 class AuthenticationTests: XCTestCase {
     var app: Application!
@@ -37,10 +38,13 @@ class AuthenticationTests: XCTestCase {
             self.eventLoop = eventLoop
         }
 
-        func create(cognitoId: Domain.User.CognitoID, email: String, name: String,
-                    biography: String?, thumbnailURL: String?, role: Domain.RoleProperties) -> EventLoopFuture<Domain.User>
-        {
-            let newUser = Domain.User(id: Domain.User.ID(UUID()), cognitoId: cognitoId, email: email, name: name, biography: biography, thumbnailURL: thumbnailURL, role: role)
+        func create(
+            cognitoId: Domain.User.CognitoID, email: String, name: String,
+            biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
+        ) -> EventLoopFuture<Domain.User> {
+            let newUser = Domain.User(
+                id: Domain.User.ID(UUID()), cognitoId: cognitoId, email: email, name: name,
+                biography: biography, thumbnailURL: thumbnailURL, role: role)
             users[cognitoId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }

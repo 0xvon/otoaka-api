@@ -4,7 +4,9 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserRepository) throws -> T) -> ((Request) throws -> T) {
+private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserRepository) throws -> T)
+    -> ((Request) throws -> T)
+{
     return { req in
         let repository = Persistance.UserRepository(db: req.db)
         return try handler(req, repository)
@@ -24,7 +26,9 @@ struct UserController: RouteCollection {
             .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
     }
 
-    func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<Signup.Response> {
+    func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<
+        Signup.Response
+    > {
         guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))

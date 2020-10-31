@@ -18,7 +18,6 @@ struct CreateGroup: Migration {
     }
 }
 
-
 struct CreateMembership: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Membership.schema)
@@ -34,7 +33,6 @@ struct CreateMembership: Migration {
         database.schema(Membership.schema).delete()
     }
 }
-
 
 struct CreateGroupInvitation: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
@@ -52,4 +50,3 @@ struct CreateGroupInvitation: Migration {
         database.schema(GroupInvitation.schema).delete()
     }
 }
-

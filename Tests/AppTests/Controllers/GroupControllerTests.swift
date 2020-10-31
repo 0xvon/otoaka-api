@@ -1,8 +1,9 @@
-@testable import App
 import Domain
 import Endpoint
-import XCTVapor
 import StubKit
+import XCTVapor
+
+@testable import App
 
 class GroupControllerTests: XCTestCase {
     var app: Application!
@@ -25,7 +26,7 @@ class GroupControllerTests: XCTestCase {
         let dummyCognitoUserName = UUID().uuidString
         let dummyUser = try client.createToken(userName: dummyCognitoUserName).wait()
         defer { try! client.destroyUser(userName: dummyCognitoUserName).wait() }
-        
+
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
 
@@ -34,9 +35,10 @@ class GroupControllerTests: XCTestCase {
         headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
         do {
             let dummyUserName = UUID().uuidString
-            let body = Endpoint.Signup.Request(name: dummyUserName, role: .artist(Artist(part: "vocal")))
+            let body = Endpoint.Signup.Request(
+                name: dummyUserName, role: .artist(Artist(part: "vocal")))
             let bodyData = try ByteBuffer(data: JSONEncoder().encode(body))
-            
+
             try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .ok)
                 let responseBody = try res.content.decode(Signup.Response.self)
@@ -58,7 +60,7 @@ class GroupControllerTests: XCTestCase {
                 createdGroup = responseBody
             }
         }
-        
+
         do {
             let body = try! Stub.make(InviteGroup.Request.self) {
                 let fakeGroup = UUID()
@@ -70,7 +72,7 @@ class GroupControllerTests: XCTestCase {
                 XCTAssertNotEqual(res.status, .ok, res.body.string)
             }
         }
-        
+
         do {
             let nonMemberUserName = UUID().uuidString
             let nonMemberUser = try client.createToken(userName: nonMemberUserName).wait()
@@ -79,7 +81,7 @@ class GroupControllerTests: XCTestCase {
             var headers = HTTPHeaders()
             headers.add(name: .authorization, value: "Bearer \(nonMemberUser.token)")
             headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
-            
+
             let body = try! Stub.make(InviteGroup.Request.self) {
                 $0.set(\.groupId, value: createdGroup.id)
             }
@@ -102,7 +104,7 @@ class GroupControllerTests: XCTestCase {
                 createdInvitation = try res.content.decode(InviteGroup.Response.self)
             }
         }
-        
+
         do {
             let body = try! Stub.make(JoinGroup.Request.self) {
                 $0.set(\.invitationId, value: createdInvitation.id)
@@ -112,7 +114,7 @@ class GroupControllerTests: XCTestCase {
                 XCTAssertEqual(res.status, .ok)
                 _ = try res.content.decode(JoinGroup.Response.self)
             }
-            
+
             // Try to join again with the same invitation
             try app.test(.POST, "groups/join", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .badRequest)

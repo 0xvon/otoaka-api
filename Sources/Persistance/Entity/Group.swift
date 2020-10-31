@@ -60,8 +60,9 @@ extension Domain.Group: EntityConvertible {
     }
 
     func asPersistance() -> Group {
-        Group(id: id.rawValue, name: name, englishName: englishName, biography: biography,
-              since: since, artworkURL: artworkURL, hometown: hometown)
+        Group(
+            id: id.rawValue, name: name, englishName: englishName, biography: biography,
+            since: since, artworkURL: artworkURL, hometown: hometown)
     }
 }
 
@@ -80,7 +81,9 @@ final class Membership: Model {
 extension Domain.Membership: EntityConvertible {
     typealias PersistanceEntity = Membership
 
-    static func translate(fromPersistance entity: Membership, on db: Database) -> EventLoopFuture<Self> {
+    static func translate(fromPersistance entity: Membership, on db: Database) -> EventLoopFuture<
+        Self
+    > {
         db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
             try ($0, $0.requireID())
         }
@@ -124,7 +127,9 @@ final class GroupInvitation: Model {
 
 extension Domain.GroupInvitation: EntityConvertible {
     typealias PersistanceEntity = GroupInvitation
-    static func translate(fromPersistance entity: GroupInvitation, on db: Database) -> EventLoopFuture<Domain.GroupInvitation> {
+    static func translate(fromPersistance entity: GroupInvitation, on db: Database)
+        -> EventLoopFuture<Domain.GroupInvitation>
+    {
         let group = entity.$group.get(on: db)
         return group.flatMap { Domain.Group.translate(fromPersistance: $0, on: db) }
             .flatMapThrowing { group in

@@ -1,5 +1,6 @@
-@testable import App
 import XCTVapor
+
+@testable import App
 
 final class AppTests: XCTestCase {
     func testHelloWorld() throws {
@@ -8,9 +9,11 @@ final class AppTests: XCTestCase {
         defer { app.shutdown() }
         try configure(app)
 
-        try app.test(.GET, "hello", afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Hello, world!")
-        })
+        try app.test(
+            .GET, "hello",
+            afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "Hello, world!")
+            })
     }
 }

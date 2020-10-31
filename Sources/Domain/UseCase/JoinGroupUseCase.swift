@@ -31,7 +31,8 @@ public struct JoinGroupUseCase: UseCase {
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let maybeInvitation = groupRepository.findInvitation(by: request.invitationId)
         let userExists = userRepository.isExists(by: request.userId)
-        return maybeInvitation.and(userExists).flatMapThrowing { (maybeInvitation, userExists) -> GroupInvitation in
+        return maybeInvitation.and(userExists).flatMapThrowing {
+            (maybeInvitation, userExists) -> GroupInvitation in
             guard let invitation = maybeInvitation else {
                 throw Error.invitationNotFound
             }

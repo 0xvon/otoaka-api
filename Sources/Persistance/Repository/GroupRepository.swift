@@ -18,19 +18,23 @@ public class GroupRepository: Domain.GroupRepository {
         name: String, englishName: String?, biography: String?,
         since: Date?, artworkURL: URL?, hometown: String?
     ) -> EventLoopFuture<Domain.Group> {
-        let group = Group(name: name, englishName: englishName,
-                          biography: biography, since: since,
-                          artworkURL: artworkURL, hometown: hometown)
+        let group = Group(
+            name: name, englishName: englishName,
+            biography: biography, since: since,
+            artworkURL: artworkURL, hometown: hometown)
         return group.save(on: db).flatMap { [db] in
             Domain.Group.translate(fromPersistance: group, on: db)
         }
     }
 
-    public func joinWithInvitation(invitationId: Domain.GroupInvitation.ID, artist: Domain.User.ID) -> EventLoopFuture<Void> {
+    public func joinWithInvitation(invitationId: Domain.GroupInvitation.ID, artist: Domain.User.ID)
+        -> EventLoopFuture<Void>
+    {
         return db.transaction { db -> EventLoopFuture<Void> in
             let maybeInvitation = GroupInvitation.find(invitationId.rawValue, on: db)
             return maybeInvitation.optionalFlatMap { invitation -> EventLoopFuture<Void> in
-                let joined = Self.join(toGroup: Domain.Group.ID(invitation.$group.id), artist: artist, on: db)
+                let joined = Self.join(
+                    toGroup: Domain.Group.ID(invitation.$group.id), artist: artist, on: db)
                 return joined.flatMapThrowing { try $0.requireID() }.flatMap { membershipID in
                     invitation.$membership.id = membershipID
                     invitation.invited = true
@@ -40,10 +44,12 @@ public class GroupRepository: Domain.GroupRepository {
             .unwrap(orError: Error.invitationNotFound)
         }
     }
-    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID) -> EventLoopFuture<Void> {
+    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID) -> EventLoopFuture<
+        Void
+    > {
         Self.join(toGroup: groupId, artist: artist, on: db).map { _ in }
     }
-    
+
     private static func join(
         toGroup groupId: Domain.Group.ID,
         artist: Domain.User.ID, on db: Database
@@ -66,7 +72,8 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
-    public func invite(toGroup groupdId: Domain.Group.ID) -> EventLoopFuture<Domain.GroupInvitation> {
+    public func invite(toGroup groupdId: Domain.Group.ID) -> EventLoopFuture<Domain.GroupInvitation>
+    {
         return db.transaction { db in
             let maybeGroup = Group.find(groupdId.rawValue, on: db)
             return maybeGroup.flatMapThrowing { group -> UUID in
@@ -83,14 +90,18 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
-    public func findInvitation(by invitationId: Domain.GroupInvitation.ID) -> EventLoopFuture<Domain.GroupInvitation?> {
+    public func findInvitation(by invitationId: Domain.GroupInvitation.ID) -> EventLoopFuture<
+        Domain.GroupInvitation?
+    > {
         GroupInvitation.find(invitationId.rawValue, on: db)
             .optionalFlatMap { [db] in
                 Domain.GroupInvitation.translate(fromPersistance: $0, on: db)
             }
     }
 
-    public func isMember(of groupId: Domain.Group.ID, member: Domain.User.ID) -> EventLoopFuture<Bool> {
+    public func isMember(of groupId: Domain.Group.ID, member: Domain.User.ID) -> EventLoopFuture<
+        Bool
+    > {
         Membership.query(on: db)
             .filter(\.$artist.$id == member.rawValue)
             .filter(\.$group.$id == groupId.rawValue)
