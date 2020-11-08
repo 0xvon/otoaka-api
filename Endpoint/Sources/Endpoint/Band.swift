@@ -48,7 +48,7 @@ public struct CreateGroup: EndpointProtocol {
     public typealias Parameters = Void
 
     public static let pathPattern = ["groups"]
-    public static func buildPath(with _: Parameters) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -74,7 +74,7 @@ public struct InviteGroup: EndpointProtocol {
     public typealias Parameters = Void
 
     public static let pathPattern = ["groups", "invite"]
-    public static func buildPath(with _: Parameters) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -91,7 +91,7 @@ public struct JoinGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
     public typealias Parameters = Void
     public static var pathPattern = ["groups", "join"]
-    public static func buildPath(with parameters: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -103,7 +103,7 @@ public struct GetGroup: EndpointProtocol {
     public typealias Parameters = String
 
     public static let pathPattern = ["groups", ":group_id"]
-    public static func buildPath(with bandId: Parameters) -> [String] {
+    public static func buildPath(with bandId: Parameters, query: Empty) -> [String] {
         ["bands", bandId.description]
     }
 }

@@ -80,7 +80,7 @@ public struct Signup: EndpointProtocol {
     public typealias Response = User
     public static let method: HTTPMethod = .post
     public static let pathPattern = ["users", "signup"]
-    public static func buildPath(with _: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -96,7 +96,7 @@ public struct SignupStatus: EndpointProtocol {
 
     public static let method: HTTPMethod = .get
     public static let pathPattern = ["users", "get_signup_status"]
-    public static func buildPath(with _: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -106,7 +106,7 @@ public struct GetUserInfo: EndpointProtocol {
     public typealias Response = User
     public static let method: HTTPMethod = .get
     public static let pathPattern = ["users", "get_info"]
-    public static func buildPath(with _: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }

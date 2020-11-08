@@ -66,7 +66,7 @@ public struct CreateLive: EndpointProtocol {
     public typealias Response = Live
     public static let method: HTTPMethod = .post
     public static let pathPattern = ["lives"]
-    public static func buildPath(with _: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
         pathPattern
     }
 }
@@ -77,7 +77,7 @@ public struct GetLive: EndpointProtocol {
     public static let method: HTTPMethod = .get
     public static let pathPattern = ["lives", ":live_id"]
     public typealias Parameters = String
-    public static func buildPath(with liveId: Parameters) -> [String] {
+    public static func buildPath(with liveId: Parameters, query: Empty) -> [String] {
         ["lives", liveId.description]
     }
 }
@@ -110,7 +110,20 @@ public struct RegisterLive: EndpointProtocol {
     public typealias Response = Ticket
     public static let method: HTTPMethod = .post
     public static let pathPattern = ["lives", "register"]
-    public static func buildPath(with _: Void) -> [String] {
+    public static func buildPath(with _: Void, query: Empty) -> [String] {
+        pathPattern
+    }
+}
+
+public struct GetUpcomingLives: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = PaginatedResponse<Live>
+    public struct QueryParameters: Codable {
+        let exclusiveStartId: String
+    }
+    public static let method: HTTPMethod = .get
+    public static let pathPattern: [String] = ["lives", "upcoming"]
+    public static func buildPath(with _: Void, query: QueryParameters) -> [String] {
         pathPattern
     }
 }
