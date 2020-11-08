@@ -117,9 +117,10 @@ public struct RegisterLive: EndpointProtocol {
 
 public struct GetUpcomingLives: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = PaginatedResponse<Live>
+    public typealias Response = Page<Live>
     public struct QueryParameters: Codable {
-        let exclusiveStartId: String
+        public var page: Int
+        public var per: Int
     }
     public static let method: HTTPMethod = .get
     public static let pathPattern: [String] = ["lives", "upcoming"]

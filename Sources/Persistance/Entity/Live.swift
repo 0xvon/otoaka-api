@@ -30,6 +30,9 @@ final class Live: Model {
     @Timestamp(key: "end_at", on: .none)
     var endAt: Date?
 
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
     init() {}
 
     init(
@@ -69,6 +72,9 @@ extension Domain.Live: EntityConvertible {
 
     static func translate(fromPersistance entity: Live, on db: Database) -> EventLoopFuture<Self> {
         let eventLoop = db.eventLoop
+        guard let createdAt = entity.createdAt else {
+            return eventLoop.makeFailedFuture(PersistanceError.cantTranslateEntityBeforeSaved)
+        }
         let liveId = eventLoop.submit { try entity.requireID() }
         let performers = liveId.flatMap { liveId in
             LivePerformer.query(on: db)
@@ -98,7 +104,7 @@ extension Domain.Live: EntityConvertible {
                     artworkURL: entity.artworkURL,
                     author: author,
                     hostGroup: hostGroup,
-                    startAt: entity.startAt, endAt: entity.endAt,
+                    startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt,
                     performers: performers
                 )
             }

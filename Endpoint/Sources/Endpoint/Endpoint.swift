@@ -20,11 +20,29 @@ public struct Empty: Codable {
     public init() {}
 }
 
-public struct PaginatedResponse<Item: Codable>: Codable {
-    public var lastEvaluatedId: String
-    public var items: [Item]
+public struct PageMetadata: Codable {
+    /// Current page number. Starts at `1`.
+    public let page: Int
+
+    /// Max items per page.
+    public let per: Int
+
+    /// Total number of items available.
+    public let total: Int
+
+    public init(page: Int, per: Int, total: Int) {
+        self.page = page
+        self.per = per
+        self.total = total
+    }
 }
 
-public struct PaginatedRequest<Item: Codable> {
-    public var exclusiveStartId: String
+public struct Page<Item>: Codable where Item: Codable {
+    public let items: [Item]
+    public let metadata: PageMetadata
+    
+    public init(items: [Item], metadata: PageMetadata) {
+        self.items = items
+        self.metadata = metadata
+    }
 }

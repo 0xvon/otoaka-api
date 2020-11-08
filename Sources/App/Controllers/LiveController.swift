@@ -82,6 +82,13 @@ struct LiveController: RouteCollection {
             Endpoint.Ticket(from: $0)
         }
     }
+
+    func getUpcomingLives(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<GetUpcomingLives.Response> {
+        let query = try req.query.decode(Endpoint.GetUpcomingLives.QueryParameters.self)
+        return repository.get(page: query.page, per: query.per).map {
+            $0.asEndpointResponse()
+        }
+    }
 }
 
 extension Domain.LiveStyle {
@@ -99,6 +106,12 @@ extension Domain.LiveStyle {
         case .festival: return .festival
         case .oneman: return .oneman
         }
+    }
+}
+
+extension Domain.Live: EndpointResponseConvertible {
+    func asEndpointResponse() -> Endpoint.Live {
+        Endpoint.Live(from: self)
     }
 }
 
@@ -146,6 +159,16 @@ extension Endpoint.Ticket {
             status: domainEntity.status.asEndpointEntity(),
             live: Endpoint.Live(from: domainEntity.live),
             user: Endpoint.User(from: domainEntity.user)
+        )
+    }
+}
+
+extension Domain.Page: EndpointResponseConvertible where T: EndpointResponseConvertible {
+    typealias EndpointResponse = Endpoint.Page<T.EndpointResponse>
+    func asEndpointResponse() -> EndpointResponse {
+        EndpointResponse(
+            items: items.map { $0.asEndpointResponse() },
+            metadata: Endpoint.PageMetadata(page: metadata.per, per: metadata.per, total: metadata.total)
         )
     }
 }

@@ -21,12 +21,13 @@ public struct Live {
     public var startAt: Date?
     public var endAt: Date?
     public var performers: [Group]
+    public var createdAt: Date
 
     public init(
         id: Live.ID, title: String,
         style: LiveStyle, artworkURL: URL?,
         author: User, hostGroup: Group,
-        startAt: Date?, endAt: Date?,
+        startAt: Date?, endAt: Date?, createdAt: Date,
         performers: [Group]
     ) {
         self.id = id
@@ -38,6 +39,7 @@ public struct Live {
         self.startAt = startAt
         self.endAt = endAt
         self.performers = performers
+        self.createdAt = createdAt
     }
 
 }
