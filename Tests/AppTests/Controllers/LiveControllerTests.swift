@@ -125,4 +125,16 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.status, .registered)
         }
     }
+
+    func testGetUpcomingLives() throws {
+        let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
+        let hostGroup = try appClient.createGroup(with: user)
+        _ = try appClient.createLive(hostGroup: hostGroup, with: user)
+
+        let headers = appClient.makeHeaders(for: user)
+        try app.test(.GET, "lives/upcoming?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(Endpoint.GetUpcomingLives.Response.self)
+            XCTAssertGreaterThan(responseBody.items.count, 1)
+        }
+    }
 }

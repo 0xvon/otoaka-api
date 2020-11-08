@@ -1,4 +1,6 @@
 import Fluent
+import Foundation
+import Domain
 
 struct CreateLive: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
@@ -21,6 +23,7 @@ struct CreateLive: Migration {
                 .field("open_at", .datetime)
                 .field("start_at", .datetime)
                 .field("end_at", .datetime)
+                .field("created_at", .datetime, .required)
                 .create()
         }
     }

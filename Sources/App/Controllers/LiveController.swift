@@ -18,6 +18,7 @@ struct LiveController: RouteCollection {
         routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
         routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
         routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
+        routes.on(endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
     }
 
     func getLiveInfo(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
@@ -133,6 +134,8 @@ extension Endpoint.Live {
 extension Endpoint.Live: Content {}
 
 extension Endpoint.Ticket: Content {}
+
+extension Endpoint.Page: Content {}
 
 extension Domain.TicketStatus {
     fileprivate static func translate(from entity: Endpoint.TicketStatus) -> Domain.TicketStatus {
