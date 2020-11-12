@@ -32,7 +32,7 @@ final class Live: Model {
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
-    
+
     init() {}
 
     init(

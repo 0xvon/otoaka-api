@@ -18,7 +18,7 @@ public struct PageMetadata: Codable {
 public struct Page<T> {
     public let items: [T]
     public let metadata: PageMetadata
-    
+
     public init(items: [T], metadata: PageMetadata) {
         self.items = items
         self.metadata = metadata

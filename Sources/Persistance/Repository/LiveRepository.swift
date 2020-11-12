@@ -58,12 +58,14 @@ public class LiveRepository: Domain.LiveRepository {
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
     }
-    
+
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Live>> {
         let lives = Live.query(on: db)
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            let metadata = Domain.PageMetadata(page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
-            let items = $0.items.map { Domain.Live.translate(fromPersistance: $0, on: db) }.flatten(on: db.eventLoop)
+            let metadata = Domain.PageMetadata(
+                page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
+            let items = $0.items.map { Domain.Live.translate(fromPersistance: $0, on: db) }.flatten(
+                on: db.eventLoop)
             return items.map { Domain.Page(items: $0, metadata: metadata) }
         }
     }

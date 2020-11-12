@@ -4,7 +4,9 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T, URI>(_ handler: @escaping (Request, URI, Domain.GroupRepository) throws -> T)
+private func injectProvider<T, URI>(
+    _ handler: @escaping (Request, URI, Domain.GroupRepository) throws -> T
+)
     -> ((Request, URI) throws -> T)
 {
     return { req, uri in
@@ -21,9 +23,11 @@ struct GroupController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
     }
 
-    func getGroupInfo(req: Request, uri: GetGroup.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<
-        Endpoint.GetGroup.Response
-    > {
+    func getGroupInfo(req: Request, uri: GetGroup.URI, repository: Domain.GroupRepository) throws
+        -> EventLoopFuture<
+            Endpoint.GetGroup.Response
+        >
+    {
         guard let groupId = UUID(uuidString: uri.groupId) else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
@@ -31,9 +35,11 @@ struct GroupController: RouteCollection {
             .map { Endpoint.Group(from: $0) }
     }
 
-    func createBand(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<
-        Endpoint.Group
-    > {
+    func createBand(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
+        -> EventLoopFuture<
+            Endpoint.Group
+        >
+    {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -51,9 +57,11 @@ struct GroupController: RouteCollection {
         .map { Endpoint.Group(from: $0) }
     }
 
-    func invite(req: Request, uri: InviteGroup.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<
-        Endpoint.InviteGroup.Response
-    > {
+    func invite(req: Request, uri: InviteGroup.URI, repository: Domain.GroupRepository) throws
+        -> EventLoopFuture<
+            Endpoint.InviteGroup.Response
+        >
+    {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -73,7 +81,9 @@ struct GroupController: RouteCollection {
         }
     }
 
-    func join(req: Request, uri: JoinGroup.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<Empty> {
+    func join(req: Request, uri: JoinGroup.URI, repository: Domain.GroupRepository) throws
+        -> EventLoopFuture<Empty>
+    {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))

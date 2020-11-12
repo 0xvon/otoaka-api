@@ -4,7 +4,9 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T, URI>(_ handler: @escaping (Request, URI, Domain.UserRepository) throws -> T)
+private func injectProvider<T, URI>(
+    _ handler: @escaping (Request, URI, Domain.UserRepository) throws -> T
+)
     -> ((Request, URI) throws -> T)
 {
     return { req, uri in
@@ -26,9 +28,11 @@ struct UserController: RouteCollection {
             .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
     }
 
-    func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws -> EventLoopFuture<
-        Signup.Response
-    > {
+    func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws
+        -> EventLoopFuture<
+            Signup.Response
+        >
+    {
         guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -43,7 +47,8 @@ struct UserController: RouteCollection {
         return user.map { Signup.Response(from: $0) }
     }
 
-    func getUser(req: Request, uri: GetUserInfo.URI) throws -> EventLoopFuture<GetUserInfo.Response> {
+    func getUser(req: Request, uri: GetUserInfo.URI) throws -> EventLoopFuture<GetUserInfo.Response>
+    {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -52,7 +57,9 @@ struct UserController: RouteCollection {
         return req.eventLoop.makeSucceededFuture(response)
     }
 
-    func getSignupStatus(req: Request, uri: SignupStatus.URI) throws -> EventLoopFuture<SignupStatus.Response> {
+    func getSignupStatus(req: Request, uri: SignupStatus.URI) throws -> EventLoopFuture<
+        SignupStatus.Response
+    > {
         let isSignedup = req.auth.has(Domain.User.self)
         let response = SignupStatus.Response(isSignedup: isSignedup)
         return req.eventLoop.makeSucceededFuture(response)

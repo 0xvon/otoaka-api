@@ -1,6 +1,6 @@
+import Domain
 import Fluent
 import Foundation
-import Domain
 
 struct CreateLive: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {

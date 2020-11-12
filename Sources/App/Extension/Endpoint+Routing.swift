@@ -19,13 +19,12 @@ extension RoutesBuilder {
     ) throws {
         let (pathComponents, _) = try Endpoint.URI.placeholder(createPlaceholder: { ":\($0)" })
         on(
-            Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral: )),
+            Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral:)),
             use: { req in
                 try closure(req, Endpoint.URI.decode(from: req))
             })
     }
 }
-
 
 extension CodableURL {
     static func decode(from request: Request) throws -> Self {
