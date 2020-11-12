@@ -28,11 +28,11 @@ public struct CreateGroup: EndpointProtocol {
         public var englishName: String?
         public var biography: String?
         public var since: Date?
-        public var artworkURL: URL?
+        public var artworkURL: Foundation.URL?
         public var hometown: String?
 
         public init(name: String, englishName: String?, biography: String?,
-                    since: Date?, artworkURL: URL?, hometown: String?)
+                    since: Date?, artworkURL: Foundation.URL?, hometown: String?)
         {
             self.name = name
             self.englishName = englishName
@@ -44,7 +44,7 @@ public struct CreateGroup: EndpointProtocol {
     }
 
     public typealias Response = Group
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("groups") public var prefix: Void
         public init() {}
     }
@@ -74,7 +74,7 @@ public struct InviteGroup: EndpointProtocol {
     }
 
     public typealias Response = Invitation
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("groups", "invite") public var prefix: Void
         public init() {}
     }
@@ -90,7 +90,7 @@ public struct JoinGroup: EndpointProtocol {
         }
     }
     public typealias Response = Empty
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("groups", "join") public var prefix: Void
         public init() {}
     }
@@ -100,7 +100,7 @@ public struct JoinGroup: EndpointProtocol {
 public struct GetGroup: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Group
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: String
         public init() {}

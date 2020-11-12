@@ -79,7 +79,7 @@ public struct Signup: EndpointProtocol {
     }
 
     public typealias Response = User
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("users", "signup") public var prefix: Void
         public init() {}
     }
@@ -94,7 +94,7 @@ public struct SignupStatus: EndpointProtocol {
             self.isSignedup = isSignedup
         }
     }
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("users", "get_signup_status") public var prefix: Void
         public init() {}
     }
@@ -104,7 +104,7 @@ public struct SignupStatus: EndpointProtocol {
 public struct GetUserInfo: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = User
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("users", "get_info") public var prefix: Void
         public init() {}
     }

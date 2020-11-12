@@ -10,7 +10,7 @@ public enum HTTPMethod: String {
 public protocol EndpointProtocol {
     associatedtype Request: Codable
     associatedtype Response: Codable
-    associatedtype URL: CodableURL
+    associatedtype URI: CodableURL
 
     static var method: HTTPMethod { get }
 }

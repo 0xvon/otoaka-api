@@ -16,9 +16,20 @@ extension RoutesBuilder {
     func on<Endpoint: EndpointProtocol, Response: ResponseEncodable>(
         endpoint _: Endpoint.Type,
         use closure: @escaping (Request) throws -> Response
-    ) {
+    ) throws {
+        let (pathComponents, _) = try Endpoint.URI.placeholder(createPlaceholder: { ":\($0)" })
         on(
-            Endpoint.method.vaporize, Endpoint.pathPattern.map(PathComponent.init(stringLiteral:)),
+            Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral: )),
             use: closure)
+    }
+}
+
+
+extension CodableURL {
+    static func decode(from request: Request) throws -> Self {
+        try Self.decode(
+            pathComponents: request.url.path.split(separator: "/").map(String.init),
+            queryParameter: { try! request.query.get(at: $0) }
+        )
     }
 }

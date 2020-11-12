@@ -43,7 +43,7 @@ public struct CreateLive: EndpointProtocol {
     public struct Request: Codable {
         public var title: String
         public var style: LiveStyle
-        public var artworkURL: URL?
+        public var artworkURL: Foundation.URL?
         public var hostGroupId: String
         // TODO: liveHouseId
         public var openAt: Date?
@@ -51,7 +51,7 @@ public struct CreateLive: EndpointProtocol {
         public var endAt: Date?
         public var performerGroupIds: [String]
         
-        public init(title: String, style: LiveStyle, artworkURL: URL?, hostGroupId: String,
+        public init(title: String, style: LiveStyle, artworkURL: Foundation.URL?, hostGroupId: String,
                     openAt: Date?, startAt: Date?, endAt: Date?, performerGroupIds: [String]) {
             self.title = title
             self.style = style
@@ -64,7 +64,7 @@ public struct CreateLive: EndpointProtocol {
         }
     }
     public typealias Response = Live
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("lives") public var prefix: Void
         public init() {}
     }
@@ -74,7 +74,7 @@ public struct CreateLive: EndpointProtocol {
 public struct GetLive: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Live
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("lives") public var prefix: Void
         @DynamicPath public var liveId: String
         public init() {}
@@ -108,7 +108,7 @@ public struct RegisterLive: EndpointProtocol {
         }
     }
     public typealias Response = Ticket
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("lives", "register") public var prefix: Void
         public init() {}
     }
@@ -118,7 +118,7 @@ public struct RegisterLive: EndpointProtocol {
 public struct GetUpcomingLives: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>
-    public struct URL: CodableURL {
+    public struct URI: CodableURL {
         @StaticPath("lives", "upcoming") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int

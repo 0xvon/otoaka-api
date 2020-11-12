@@ -19,10 +19,10 @@ struct UserController: RouteCollection {
         let group = routes.grouped(authenticator)
 
         let beforeSignup = group.grouped(JWTAuthenticator.Payload.guardMiddleware())
-        beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
-        beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
+        try beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
+        try beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
 
-        group.grouped(User.guardMiddleware())
+        try group.grouped(User.guardMiddleware())
             .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
     }
 

@@ -15,16 +15,17 @@ private func injectProvider<T>(_ handler: @escaping (Request, Domain.LiveReposit
 
 struct LiveController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
-        routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
-        routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
-        routes.on(endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
+        try routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
+        try routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
+        try routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
+        try routes.on(endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
     }
 
     func getLiveInfo(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
         Endpoint.Live
     > {
-        let rawLiveId = try req.parameters.require("live_id", as: String.self)
+        let uri = try GetLive.URI.decode(from: req)
+        let rawLiveId = uri.liveId
         guard let liveId = UUID(uuidString: rawLiveId) else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
@@ -85,8 +86,8 @@ struct LiveController: RouteCollection {
     }
 
     func getUpcomingLives(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<GetUpcomingLives.Response> {
-        let query = try req.query.decode(Endpoint.GetUpcomingLives.QueryParameters.self)
-        return repository.get(page: query.page, per: query.per).map {
+        let uri = try GetUpcomingLives.URI.decode(from: req)
+        return repository.get(page: uri.page, per: uri.per).map {
             $0.asEndpointResponse()
         }
     }

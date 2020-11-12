@@ -15,17 +15,17 @@ private func injectProvider<T>(_ handler: @escaping (Request, Domain.GroupReposi
 
 struct GroupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(createBand))
-        routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
-        routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
-        routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
+        try routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(createBand))
+        try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
+        try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
+        try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
     }
 
     func getGroupInfo(req: Request, repository: Domain.GroupRepository) throws -> EventLoopFuture<
         Endpoint.GetGroup.Response
     > {
-        let rawGroupId = try req.parameters.require("group_id", as: String.self)
-        guard let groupId = UUID(uuidString: rawGroupId) else {
+        let uri = try GetGroup.URI.decode(from: req)
+        guard let groupId = UUID(uuidString: uri.groupId) else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
         return repository.findGroup(by: Group.ID(groupId)).unwrap(or: Abort(.notFound))
