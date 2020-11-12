@@ -1,3 +1,5 @@
+@_exported import CodableURL
+
 public enum HTTPMethod: String {
     case get = "GET"
     case put = "PUT"
@@ -8,12 +10,9 @@ public enum HTTPMethod: String {
 public protocol EndpointProtocol {
     associatedtype Request: Codable
     associatedtype Response: Codable
-    associatedtype Parameters
-    associatedtype QueryParameters: Codable = Empty
+    associatedtype URL: CodableURL
 
     static var method: HTTPMethod { get }
-    static var pathPattern: [String] { get }
-    static func buildPath(with parameters: Parameters, query: QueryParameters) -> [String]
 }
 
 public struct Empty: Codable {

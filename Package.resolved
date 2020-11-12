@@ -20,6 +20,15 @@
         }
       },
       {
+        "package": "CodableURL",
+        "repositoryURL": "https://github.com/kateinoigakukun/CodableURL.git",
+        "state": {
+          "branch": null,
+          "revision": "ca2840a940e9a95a303aa682488f52a07569351b",
+          "version": "0.1.0"
+        }
+      },
+      {
         "package": "console-kit",
         "repositoryURL": "https://github.com/vapor/console-kit.git",
         "state": {

@@ -1,3 +1,4 @@
+import CodableURL
 
 public struct Artist: Codable {
     public var part: String
@@ -78,11 +79,11 @@ public struct Signup: EndpointProtocol {
     }
 
     public typealias Response = User
-    public static let method: HTTPMethod = .post
-    public static let pathPattern = ["users", "signup"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("users", "signup") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .post
 }
 
 public struct SignupStatus: EndpointProtocol {
@@ -93,20 +94,19 @@ public struct SignupStatus: EndpointProtocol {
             self.isSignedup = isSignedup
         }
     }
-
-    public static let method: HTTPMethod = .get
-    public static let pathPattern = ["users", "get_signup_status"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("users", "get_signup_status") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .get
 }
 
 public struct GetUserInfo: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = User
-    public static let method: HTTPMethod = .get
-    public static let pathPattern = ["users", "get_info"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("users", "get_info") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .get
 }

@@ -44,6 +44,10 @@ public struct CreateGroup: EndpointProtocol {
     }
 
     public typealias Response = Group
+    public struct URL: CodableURL {
+        @StaticPath("groups") public var prefix: Void
+        public init() {}
+    }
     public static let method: HTTPMethod = .post
     public typealias Parameters = Void
 
@@ -70,13 +74,11 @@ public struct InviteGroup: EndpointProtocol {
     }
 
     public typealias Response = Invitation
-    public static let method: HTTPMethod = .post
-    public typealias Parameters = Void
-
-    public static let pathPattern = ["groups", "invite"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("groups", "invite") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .post
 }
 
 public struct JoinGroup: EndpointProtocol {
@@ -88,22 +90,20 @@ public struct JoinGroup: EndpointProtocol {
         }
     }
     public typealias Response = Empty
-    public static let method: HTTPMethod = .post
-    public typealias Parameters = Void
-    public static var pathPattern = ["groups", "join"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("groups", "join") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .post
 }
 
 public struct GetGroup: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Group
-    public static let method: HTTPMethod = .get
-    public typealias Parameters = String
-
-    public static let pathPattern = ["groups", ":group_id"]
-    public static func buildPath(with bandId: Parameters, query: Empty) -> [String] {
-        ["bands", bandId.description]
+    public struct URL: CodableURL {
+        @StaticPath("groups") public var prefix: Void
+        @DynamicPath public var groupId: String
+        public init() {}
     }
+    public static let method: HTTPMethod = .get
 }

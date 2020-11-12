@@ -64,22 +64,22 @@ public struct CreateLive: EndpointProtocol {
         }
     }
     public typealias Response = Live
-    public static let method: HTTPMethod = .post
-    public static let pathPattern = ["lives"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("lives") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .post
 }
 
 public struct GetLive: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Live
-    public static let method: HTTPMethod = .get
-    public static let pathPattern = ["lives", ":live_id"]
-    public typealias Parameters = String
-    public static func buildPath(with liveId: Parameters, query: Empty) -> [String] {
-        ["lives", liveId.description]
+    public struct URL: CodableURL {
+        @StaticPath("lives") public var prefix: Void
+        @DynamicPath public var liveId: String
+        public init() {}
     }
+    public static let method: HTTPMethod = .get
 }
 
 public enum TicketStatus: String, Codable {
@@ -108,23 +108,21 @@ public struct RegisterLive: EndpointProtocol {
         }
     }
     public typealias Response = Ticket
-    public static let method: HTTPMethod = .post
-    public static let pathPattern = ["lives", "register"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
+    public struct URL: CodableURL {
+        @StaticPath("lives", "register") public var prefix: Void
+        public init() {}
     }
+    public static let method: HTTPMethod = .post
 }
 
 public struct GetUpcomingLives: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>
-    public struct QueryParameters: Codable {
-        public var page: Int
-        public var per: Int
+    public struct URL: CodableURL {
+        @StaticPath("lives", "upcoming") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
     }
     public static let method: HTTPMethod = .get
-    public static let pathPattern: [String] = ["lives", "upcoming"]
-    public static func buildPath(with _: Void, query: QueryParameters) -> [String] {
-        pathPattern
-    }
 }
