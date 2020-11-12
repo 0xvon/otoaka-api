@@ -4,12 +4,12 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T>(_ handler: @escaping (Request, Domain.UserRepository) throws -> T)
-    -> ((Request) throws -> T)
+private func injectProvider<T, URI>(_ handler: @escaping (Request, URI, Domain.UserRepository) throws -> T)
+    -> ((Request, URI) throws -> T)
 {
-    return { req in
+    return { req, uri in
         let repository = Persistance.UserRepository(db: req.db)
-        return try handler(req, repository)
+        return try handler(req, uri, repository)
     }
 }
 
@@ -26,7 +26,7 @@ struct UserController: RouteCollection {
             .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
     }
 
-    func createUser(req: Request, repository: Domain.UserRepository) throws -> EventLoopFuture<
+    func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws -> EventLoopFuture<
         Signup.Response
     > {
         guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
@@ -43,7 +43,7 @@ struct UserController: RouteCollection {
         return user.map { Signup.Response(from: $0) }
     }
 
-    func getUser(req: Request) throws -> EventLoopFuture<GetUserInfo.Response> {
+    func getUser(req: Request, uri: GetUserInfo.URI) throws -> EventLoopFuture<GetUserInfo.Response> {
         guard let user = req.auth.get(Domain.User.self) else {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
@@ -52,7 +52,7 @@ struct UserController: RouteCollection {
         return req.eventLoop.makeSucceededFuture(response)
     }
 
-    func getSignupStatus(req: Request) throws -> EventLoopFuture<SignupStatus.Response> {
+    func getSignupStatus(req: Request, uri: SignupStatus.URI) throws -> EventLoopFuture<SignupStatus.Response> {
         let isSignedup = req.auth.has(Domain.User.self)
         let response = SignupStatus.Response(isSignedup: isSignedup)
         return req.eventLoop.makeSucceededFuture(response)

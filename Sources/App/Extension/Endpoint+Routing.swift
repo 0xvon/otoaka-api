@@ -15,12 +15,14 @@ extension Endpoint.HTTPMethod {
 extension RoutesBuilder {
     func on<Endpoint: EndpointProtocol, Response: ResponseEncodable>(
         endpoint _: Endpoint.Type,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @escaping (Request, Endpoint.URI) throws -> Response
     ) throws {
         let (pathComponents, _) = try Endpoint.URI.placeholder(createPlaceholder: { ":\($0)" })
         on(
             Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral: )),
-            use: closure)
+            use: { req in
+                try closure(req, Endpoint.URI.decode(from: req))
+            })
     }
 }
 

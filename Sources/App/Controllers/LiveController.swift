@@ -4,12 +4,12 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T>(_ handler: @escaping (Request, Domain.LiveRepository) throws -> T)
-    -> ((Request) throws -> T)
+private func injectProvider<T, URI>(_ handler: @escaping (Request, URI, Domain.LiveRepository) throws -> T)
+    -> ((Request, URI) throws -> T)
 {
-    return { req in
+    return { req, uri in
         let repository = Persistance.LiveRepository(db: req.db)
-        return try handler(req, repository)
+        return try handler(req, uri, repository)
     }
 }
 
@@ -21,19 +21,17 @@ struct LiveController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
     }
 
-    func getLiveInfo(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+    func getLiveInfo(req: Request, uri: GetLive.URI, repository: Domain.LiveRepository) throws -> EventLoopFuture<
         Endpoint.Live
     > {
-        let uri = try GetLive.URI.decode(from: req)
-        let rawLiveId = uri.liveId
-        guard let liveId = UUID(uuidString: rawLiveId) else {
+        guard let liveId = UUID(uuidString: uri.liveId) else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
         return repository.findLive(by: Domain.Live.ID(liveId)).unwrap(or: Abort(.notFound))
             .map { Endpoint.Live(from: $0) }
     }
 
-    func create(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+    func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws -> EventLoopFuture<
         Endpoint.Live
     > {
         guard let user = req.auth.get(Domain.User.self) else {
@@ -68,7 +66,7 @@ struct LiveController: RouteCollection {
         .map(Endpoint.Live.init(from:))
     }
 
-    func register(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<
+    func register(req: Request, uri: RegisterLive.URI, repository: Domain.LiveRepository) throws -> EventLoopFuture<
         Endpoint.Ticket
     > {
         guard let user = req.auth.get(Domain.User.self) else {
@@ -85,8 +83,7 @@ struct LiveController: RouteCollection {
         }
     }
 
-    func getUpcomingLives(req: Request, repository: Domain.LiveRepository) throws -> EventLoopFuture<GetUpcomingLives.Response> {
-        let uri = try GetUpcomingLives.URI.decode(from: req)
+    func getUpcomingLives(req: Request, uri: GetUpcomingLives.URI, repository: Domain.LiveRepository) throws -> EventLoopFuture<GetUpcomingLives.Response> {
         return repository.get(page: uri.page, per: uri.per).map {
             $0.asEndpointResponse()
         }
