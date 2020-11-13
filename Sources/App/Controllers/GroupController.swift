@@ -65,15 +65,12 @@ struct GroupController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let input = try req.content.decode(Endpoint.InviteGroup.Request.self)
-        guard let groupId = UUID(uuidString: input.groupId) else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
         let userRepository = Persistance.UserRepository(db: req.db)
         let useCase = InviteGroupUseCase(
             groupRepository: repository, userRepository: userRepository,
             eventLopp: req.eventLoop
         )
-        let invitation = try useCase((artistId: user.id, groupId: Domain.Group.ID(groupId)))
+        let invitation = try useCase((artistId: user.id, groupId: input.groupId))
         return invitation.map { invitation in
             Endpoint.InviteGroup.Invitation(id: invitation.id.rawValue.uuidString)
         }

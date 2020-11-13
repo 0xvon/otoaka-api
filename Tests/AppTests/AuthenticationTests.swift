@@ -32,24 +32,25 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
-        var users: [Domain.User.CognitoID: Domain.User] = [:]
+        var users: [Domain.CognitoID: Domain.User] = [:]
         let eventLoop: EventLoop
         init(eventLoop: EventLoop) {
             self.eventLoop = eventLoop
         }
 
         func create(
-            cognitoId: Domain.User.CognitoID, email: String, name: String,
-            biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
-        ) -> EventLoopFuture<Domain.User> {
-            let newUser = Domain.User(
-                id: Domain.User.ID(UUID()), cognitoId: cognitoId, email: email, name: name,
-                biography: biography, thumbnailURL: thumbnailURL, role: role)
+            cognitoId: Domain.CognitoID, email: String, name: String,
+            biography: String?, thumbnailURL: String?, role: Endpoint.RoleProperties
+        ) -> EventLoopFuture<Endpoint.User> {
+            let newUser = Endpoint.User(
+                id: .init(UUID()), name: name, biography: biography,
+                thumbnailURL: thumbnailURL, role: role
+            )
             users[cognitoId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }
 
-        func find(by foreignId: Domain.User.CognitoID) -> EventLoopFuture<Domain.User?> {
+        func find(by foreignId: Domain.CognitoID) -> EventLoopFuture<Endpoint.User?> {
             eventLoop.makeSucceededFuture(users[foreignId])
         }
         func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
@@ -68,7 +69,7 @@ class AuthenticationTests: XCTestCase {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
             _ = try! repo.create(
                 cognitoId: dummyUser.sub, email: dummyEmail,
-                name: "foo", biography: nil, thumbnailURL: nil, role: .fan
+                name: "foo", biography: nil, thumbnailURL: nil, role: .fan(.init())
             ).wait()
             return repo
         })

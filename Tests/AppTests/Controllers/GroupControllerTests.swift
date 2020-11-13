@@ -21,10 +21,7 @@ class GroupControllerTests: XCTestCase {
 
     func testInviteForNonExistingGroup() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
-        let body = try! Stub.make(InviteGroup.Request.self) {
-            let fakeGroup = UUID()
-            $0.set(\.groupId, value: fakeGroup.uuidString)
-        }
+        let body = try! Stub.make(InviteGroup.Request.self)
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         try app.test(
             .POST, "groups/invite", headers: appClient.makeHeaders(for: user),

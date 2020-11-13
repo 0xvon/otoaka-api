@@ -45,15 +45,7 @@ struct LiveController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let input = try req.content.decode(Endpoint.CreateLive.Request.self)
-        guard let hostGroupId = UUID(uuidString: input.hostGroupId) else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
-        let performerGroupIds = input.performerGroupIds
-            .compactMap(UUID.init(uuidString:))
-            .map(Domain.Group.ID.init(rawValue:))
-        guard performerGroupIds.count == input.performerGroupIds.count else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
+
         let groupRepository = Persistance.GroupRepository(db: req.db)
         let useCase = CreateLiveUseCase(
             groupRepository: groupRepository,
@@ -64,9 +56,9 @@ struct LiveController: RouteCollection {
                 user: user,
                 title: input.title, style: input.style,
                 artworkURL: input.artworkURL,
-                hostGroupId: Domain.Group.ID(hostGroupId),
+                hostGroupId: input.hostGroupId,
                 openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
-                performerGroups: performerGroupIds
+                performerGroups: input.performerGroupIds
             )
         )
     }
@@ -81,11 +73,8 @@ struct LiveController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let input = try req.content.decode(Endpoint.RegisterLive.Request.self)
-        guard let liveId = UUID(uuidString: input.liveId) else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
         let useCase = JoinLiveUseCase(liveRepository: repository, eventLoop: req.eventLoop)
-        return try useCase((liveId: Domain.Live.ID(liveId), user: user))
+        return try useCase((liveId: input.liveId, user: user))
     }
 
     func getUpcomingLives(

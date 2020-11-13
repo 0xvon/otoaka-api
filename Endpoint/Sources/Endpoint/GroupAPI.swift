@@ -37,8 +37,8 @@ public struct CreateGroup: EndpointProtocol {
 
 public struct InviteGroup: EndpointProtocol {
     public struct Request: Codable {
-        public var groupId: String
-        public init(groupId: String) {
+        public var groupId: Group.ID
+        public init(groupId: Group.ID) {
             self.groupId = groupId
         }
     }

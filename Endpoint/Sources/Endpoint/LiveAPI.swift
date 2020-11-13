@@ -5,15 +5,15 @@ public struct CreateLive: EndpointProtocol {
         public var title: String
         public var style: LiveStyle
         public var artworkURL: Foundation.URL?
-        public var hostGroupId: String
+        public var hostGroupId: Group.ID
         // TODO: liveHouseId
         public var openAt: Date?
         public var startAt: Date?
         public var endAt: Date?
-        public var performerGroupIds: [String]
+        public var performerGroupIds: [Group.ID]
         
-        public init(title: String, style: LiveStyle, artworkURL: Foundation.URL?, hostGroupId: String,
-                    openAt: Date?, startAt: Date?, endAt: Date?, performerGroupIds: [String]) {
+        public init(title: String, style: LiveStyle, artworkURL: URL?, hostGroupId: Group.ID,
+                    openAt: Date?, startAt: Date?, endAt: Date?, performerGroupIds: [Group.ID]) {
             self.title = title
             self.style = style
             self.artworkURL = artworkURL
@@ -45,8 +45,8 @@ public struct GetLive: EndpointProtocol {
 
 public struct RegisterLive: EndpointProtocol {
     public struct Request: Codable {
-        public let liveId: String
-        public init(liveId: String) {
+        public let liveId: Live.ID
+        public init(liveId: Live.ID) {
             self.liveId = liveId
         }
     }

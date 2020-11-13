@@ -19,3 +19,7 @@ public struct Identifier<Target>: Equatable, RawRepresentable, Codable, Hashable
         try container.encode(rawValue)
     }
 }
+
+extension Identifier: CustomStringConvertible {
+    public var description: String { rawValue.uuidString }
+}
