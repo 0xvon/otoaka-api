@@ -51,16 +51,7 @@ struct LiveController: RouteCollection {
             groupRepository: groupRepository,
             liveRepository: repository, eventLoop: req.eventLoop
         )
-        return try useCase(
-            (
-                user: user,
-                title: input.title, style: input.style,
-                artworkURL: input.artworkURL,
-                hostGroupId: input.hostGroupId,
-                openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
-                performerGroups: input.performerGroupIds
-            )
-        )
+        return try useCase((user: user, input: input))
     }
 
     func register(req: Request, uri: RegisterLive.URI, repository: Domain.LiveRepository) throws

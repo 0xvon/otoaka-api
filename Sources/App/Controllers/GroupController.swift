@@ -17,7 +17,7 @@ private func injectProvider<T, URI>(
 
 struct GroupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        try routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(createBand))
+        try routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(create))
         try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
         try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
@@ -34,7 +34,7 @@ struct GroupController: RouteCollection {
         return repository.findGroup(by: Group.ID(groupId)).unwrap(or: Abort(.notFound))
     }
 
-    func createBand(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
+    func create(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
         -> EventLoopFuture<
             Endpoint.Group
         >
@@ -44,15 +44,11 @@ struct GroupController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
-        return repository.create(
-            name: input.name, englishName: input.englishName,
-            biography: input.biography, since: input.since,
-            artworkURL: input.artworkURL, hometown: input.hometown
-        )
-        .flatMap { group in
-            repository.join(toGroup: group.id, artist: user.id)
-                .map { _ in group }
-        }
+        return repository.create(input: input)
+            .flatMap { group in
+                repository.join(toGroup: group.id, artist: user.id)
+                    .map { _ in group }
+            }
     }
 
     func invite(req: Request, uri: InviteGroup.URI, repository: Domain.GroupRepository) throws

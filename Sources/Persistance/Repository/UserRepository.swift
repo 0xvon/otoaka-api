@@ -11,17 +11,17 @@ public class UserRepository: Domain.UserRepository {
         self.db = db
     }
 
-    public func create(
-        cognitoId: Domain.CognitoID, email: String, name: String,
-        biography: String?, thumbnailURL: String?,
-        role: Domain.RoleProperties
-    ) -> EventLoopFuture<Endpoint.User> {
+    public func create(cognitoId: CognitoID, email: String, input: Signup.Request)
+        -> EventLoopFuture<Endpoint.User>
+    {
         let existing = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
             .flatMap { [db] _ -> EventLoopFuture<Endpoint.User> in
                 let storedUser = User(
-                    cognitoId: cognitoId, email: email, name: name, biography: biography,
-                    thumbnailURL: thumbnailURL, role: role)
+                    cognitoId: cognitoId, email: email,
+                    name: input.name, biography: input.biography,
+                    thumbnailURL: input.thumbnailURL, role: input.role
+                )
                 return storedUser.create(on: db).flatMap { [db] in
                     Endpoint.User.translate(fromPersistance: storedUser, on: db)
                 }

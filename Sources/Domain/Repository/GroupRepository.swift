@@ -2,11 +2,7 @@ import Foundation
 import NIO
 
 public protocol GroupRepository {
-    func create(
-        name: String, englishName: String?,
-        biography: String?, since: Date?, artworkURL: URL?,
-        hometown: String?
-    ) -> EventLoopFuture<Domain.Group>
+    func create(input: Endpoint.CreateGroup.Request) -> EventLoopFuture<Domain.Group>
 
     func joinWithInvitation(invitationId: Domain.GroupInvitation.ID, artist: Domain.User.ID)
         -> EventLoopFuture<Void>

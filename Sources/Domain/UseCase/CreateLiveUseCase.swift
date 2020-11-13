@@ -3,11 +3,7 @@ import NIO
 
 public struct CreateLiveUseCase: UseCase {
     public typealias Request = (
-        user: User,
-        title: String, style: LiveStyle, artworkURL: URL?,
-        hostGroupId: Domain.Group.ID,
-        openAt: Date?, startAt: Date?, endAt: Date?,
-        performerGroups: [Domain.Group.ID]
+        user: User, input: Endpoint.CreateLive.Request
     )
     public typealias Response = Live
 
@@ -34,8 +30,9 @@ public struct CreateLiveUseCase: UseCase {
         guard case .artist = request.user.role else {
             return eventLoop.makeFailedFuture(Error.fanCannotCreateLive)
         }
+        let input = request.input
         let precondition = groupRepository.isMember(
-            of: request.hostGroupId, member: request.user.id
+            of: input.hostGroupId, member: request.user.id
         )
         .flatMapThrowing {
             guard $0 else { throw Error.isNotMemberOfHostGroup }
@@ -43,12 +40,12 @@ public struct CreateLiveUseCase: UseCase {
         }
         return precondition.flatMap {
             liveRepository.create(
-                title: request.title, style: request.style,
-                artworkURL: request.artworkURL,
-                hostGroupId: request.hostGroupId,
+                title: input.title, style: input.style,
+                artworkURL: input.artworkURL,
+                hostGroupId: input.hostGroupId,
                 authorId: request.user.id,
-                openAt: request.openAt, startAt: request.startAt, endAt: request.endAt,
-                performerGroups: request.performerGroups
+                openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
+                performerGroups: input.performerGroupIds
             )
         }
     }

@@ -14,14 +14,11 @@ public class GroupRepository: Domain.GroupRepository {
         case invitationNotFound
     }
 
-    public func create(
-        name: String, englishName: String?, biography: String?,
-        since: Date?, artworkURL: URL?, hometown: String?
-    ) -> EventLoopFuture<Domain.Group> {
+    public func create(input: Endpoint.CreateGroup.Request) -> EventLoopFuture<Domain.Group> {
         let group = Group(
-            name: name, englishName: englishName,
-            biography: biography, since: since,
-            artworkURL: artworkURL, hometown: hometown)
+            name: input.name, englishName: input.englishName,
+            biography: input.biography, since: input.since,
+            artworkURL: input.artworkURL, hometown: input.hometown)
         return group.save(on: db).flatMap { [db] in
             Domain.Group.translate(fromPersistance: group, on: db)
         }

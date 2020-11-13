@@ -1,5 +1,6 @@
 import Domain
 import Endpoint
+import StubKit
 import XCTVapor
 
 @testable import App
@@ -38,13 +39,12 @@ class AuthenticationTests: XCTestCase {
             self.eventLoop = eventLoop
         }
 
-        func create(
-            cognitoId: Domain.CognitoID, email: String, name: String,
-            biography: String?, thumbnailURL: String?, role: Endpoint.RoleProperties
-        ) -> EventLoopFuture<Endpoint.User> {
+        func create(cognitoId: CognitoID, email: String, input: Signup.Request) -> EventLoopFuture<
+            Endpoint.User
+        > {
             let newUser = Endpoint.User(
-                id: .init(UUID()), name: name, biography: biography,
-                thumbnailURL: thumbnailURL, role: role
+                id: .init(UUID()), name: input.name, biography: input.biography,
+                thumbnailURL: input.thumbnailURL, role: input.role
             )
             users[cognitoId] = newUser
             return eventLoop.makeSucceededFuture(newUser)
@@ -67,10 +67,8 @@ class AuthenticationTests: XCTestCase {
 
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
-            _ = try! repo.create(
-                cognitoId: dummyUser.sub, email: dummyEmail,
-                name: "foo", biography: nil, thumbnailURL: nil, role: .fan(.init())
-            ).wait()
+            _ = try! repo.create(cognitoId: dummyUser.sub, email: dummyEmail, input: Stub.make())
+                .wait()
             return repo
         })
         app.grouped(authenticator, User.guardMiddleware()).get("secure") { _ in
