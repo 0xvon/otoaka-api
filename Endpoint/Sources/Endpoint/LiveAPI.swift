@@ -32,6 +32,26 @@ public struct CreateLive: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct ReplyPerformanceRequest: EndpointProtocol {
+    public enum Reply: String, Codable {
+        case accept, deny
+    }
+    public struct Request: Codable {
+        public let liveId: Live.ID
+        public let reply: Reply
+        public init(liveId: Live.ID, reply: Reply) {
+            self.liveId = liveId
+            self.reply = reply
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("lives", "accept") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct GetLive: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Live
