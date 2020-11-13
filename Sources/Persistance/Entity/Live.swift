@@ -2,6 +2,10 @@ import Domain
 import Fluent
 import Foundation
 
+enum LiveStyle: String, Codable {
+    case oneman, battle, festival
+}
+
 final class Live: Model {
     static let schema = "lives"
     @ID(key: .id)
@@ -67,9 +71,7 @@ final class LivePerformer: Model {
     var group: Group
 }
 
-extension Endpoint.Live: EntityConvertible {
-    typealias PersistanceEntity = Live
-
+extension Endpoint.Live {
     static func translate(fromPersistance entity: Live, on db: Database) -> EventLoopFuture<Self> {
         let eventLoop = db.eventLoop
         guard let createdAt = entity.createdAt else {
@@ -97,26 +99,25 @@ extension Endpoint.Live: EntityConvertible {
 
         return hostGroup.and(performers).and(author).map { ($0.0, $0.1, $1) }
             .flatMapThrowing { (hostGroup, performers, author) -> Endpoint.Live in
+                let style: LiveStyleOutput
+                switch entity.style {
+                case .oneman:
+                    style = .oneman(performer: performers.first)
+                case .battle:
+                    style = .battle(performers: performers)
+                case .festival:
+                    style = .festival(performers: performers)
+                }
                 return try Self.init(
                     id: Endpoint.Live.ID(entity.requireID()),
                     title: entity.title,
-                    style: entity.style,
+                    style: style,
                     artworkURL: entity.artworkURL,
                     author: author,
                     hostGroup: hostGroup,
-                    startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt,
-                    performers: performers
+                    startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt
                 )
             }
-    }
-
-    func asPersistance() -> Live {
-        Live(
-            id: id.rawValue,
-            title: title, style: style, artworkURL: artworkURL,
-            hostGroupId: hostGroup.id, authorId: author.id, openAt: openAt,
-            startAt: startAt, endAt: endAt
-        )
     }
 }
 

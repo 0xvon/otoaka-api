@@ -1,10 +1,60 @@
 import Foundation
 
-public enum LiveStyle: String, Codable {
-    case oneman
-    case battle
-    case festival
+public enum LiveStyle<Performer>: Codable where Performer: Codable {
+    case oneman(performer: Performer?)
+    case battle(performers: [Performer])
+    case festival(performers: [Performer])
+
+    enum CodingKeys: CodingKey {
+        case kind, value
+    }
+
+    enum Kind: String, Codable {
+        case oneman, battle, festival
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let kind = try container.decode(Kind.self, forKey: .kind)
+        switch kind {
+        case .oneman:
+            self = try .oneman(performer: container.decode(Performer?.self, forKey: .value))
+        case .battle:
+            self = try .battle(performers: container.decode([Performer].self, forKey: .value))
+        case .festival:
+            self = try .festival(performers: container.decode([Performer].self, forKey: .value))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .oneman(performer):
+            try container.encode(Kind.oneman, forKey: .kind)
+            try container.encode(performer, forKey: .value)
+        case let .battle(performers):
+            try container.encode(Kind.battle, forKey: .kind)
+            try container.encode(performers, forKey: .value)
+        case let .festival(performers):
+            try container.encode(Kind.festival, forKey: .kind)
+            try container.encode(performers, forKey: .value)
+        }
+    }
+
+    public var performers: [Performer] {
+        switch self {
+        case .oneman(let performer):
+            return performer.map { [$0] } ?? []
+        case .battle(let performers):
+            return performers
+        case .festival(let performers):
+            return performers
+        }
+    }
 }
+
+public typealias LiveStyleInput = LiveStyle<Group.ID>
+public typealias LiveStyleOutput = LiveStyle<Group>
 
 public struct Live: Codable, Identifiable {
 
@@ -12,7 +62,7 @@ public struct Live: Codable, Identifiable {
     public let id: ID
 
     public var title: String
-    public var style: LiveStyle
+    public var style: LiveStyleOutput
     public var artworkURL: URL?
     public var hostGroup: Group
     public var author: User
@@ -20,15 +70,13 @@ public struct Live: Codable, Identifiable {
     public var openAt: Date?
     public var startAt: Date?
     public var endAt: Date?
-    public var performers: [Group]
     public var createdAt: Date
 
     public init(
         id: ID, title: String,
-        style: LiveStyle, artworkURL: URL?,
+        style: LiveStyleOutput, artworkURL: URL?,
         author: User, hostGroup: Group,
-        startAt: Date?, endAt: Date?, createdAt: Date,
-        performers: [Group]
+        startAt: Date?, endAt: Date?, createdAt: Date
     ) {
         self.id = id
         self.title = title
@@ -38,7 +86,6 @@ public struct Live: Codable, Identifiable {
         self.hostGroup = hostGroup
         self.startAt = startAt
         self.endAt = endAt
-        self.performers = performers
         self.createdAt = createdAt
     }
 

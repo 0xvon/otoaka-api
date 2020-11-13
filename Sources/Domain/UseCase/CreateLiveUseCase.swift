@@ -39,14 +39,7 @@ public struct CreateLiveUseCase: UseCase {
             return
         }
         return precondition.flatMap {
-            liveRepository.create(
-                title: input.title, style: input.style,
-                artworkURL: input.artworkURL,
-                hostGroupId: input.hostGroupId,
-                authorId: request.user.id,
-                openAt: input.openAt, startAt: input.startAt, endAt: input.endAt,
-                performerGroups: input.performerGroupIds
-            )
+            liveRepository.create(input: input, authorId: request.user.id)
         }
     }
 }

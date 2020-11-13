@@ -3,17 +3,16 @@ import Foundation
 public struct CreateLive: EndpointProtocol {
     public struct Request: Codable {
         public var title: String
-        public var style: LiveStyle
+        public var style: LiveStyleInput
         public var artworkURL: Foundation.URL?
         public var hostGroupId: Group.ID
         // TODO: liveHouseId
         public var openAt: Date?
         public var startAt: Date?
         public var endAt: Date?
-        public var performerGroupIds: [Group.ID]
         
-        public init(title: String, style: LiveStyle, artworkURL: URL?, hostGroupId: Group.ID,
-                    openAt: Date?, startAt: Date?, endAt: Date?, performerGroupIds: [Group.ID]) {
+        public init(title: String, style: LiveStyleInput, artworkURL: URL?, hostGroupId: Group.ID,
+                    openAt: Date?, startAt: Date?, endAt: Date?) {
             self.title = title
             self.style = style
             self.artworkURL = artworkURL
@@ -21,7 +20,6 @@ public struct CreateLive: EndpointProtocol {
             self.openAt = openAt
             self.startAt = startAt
             self.endAt = endAt
-            self.performerGroupIds = performerGroupIds
         }
     }
     public typealias Response = Live

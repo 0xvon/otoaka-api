@@ -12,16 +12,21 @@ public class LiveRepository: Domain.LiveRepository {
         case liveNotFound
     }
 
-    public func create(
-        title: String, style: LiveStyle, artworkURL: URL?,
-        hostGroupId: Domain.Group.ID,
-        authorId: Domain.User.ID,
-        openAt: Date?, startAt: Date?, endAt: Date?,
-        performerGroups: [Domain.Group.ID]
-    ) -> EventLoopFuture<Domain.Live> {
+    public func create(input: Endpoint.CreateLive.Request, authorId: Domain.User.ID)
+        -> EventLoopFuture<Endpoint.Live>
+    {
+        let style: LiveStyle
+        switch input.style {
+        case .oneman: style = .oneman
+        case .battle: style = .battle
+        case .festival: style = .festival
+        }
+        let performerGroups = input.style.performers
         let live = Live(
-            title: title, style: style, artworkURL: artworkURL, hostGroupId: hostGroupId,
-            authorId: authorId, openAt: openAt, startAt: startAt, endAt: endAt)
+            title: input.title, style: style, artworkURL: input.artworkURL,
+            hostGroupId: input.hostGroupId, authorId: authorId,
+            openAt: input.openAt, startAt: input.startAt, endAt: input.endAt
+        )
         return db.transaction { (db) -> EventLoopFuture<Void> in
             live.save(on: db)
                 .flatMapThrowing { _ in try live.requireID() }

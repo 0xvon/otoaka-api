@@ -31,7 +31,7 @@ class LiveControllerTests: XCTestCase {
         let createdGroup = try appClient.createGroup(with: user)
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: createdGroup.id)
-            $0.set(\.performerGroupIds, value: [createdGroup.id])
+            $0.set(\.style, value: .oneman(performer: createdGroup.id))
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
@@ -51,7 +51,7 @@ class LiveControllerTests: XCTestCase {
 
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: createdGroup.id)
-            $0.set(\.performerGroupIds, value: [createdGroup.id])
+            $0.set(\.style, value: .oneman(performer: createdGroup.id))
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         let headers = appClient.makeHeaders(for: nonMemberUser)
@@ -74,7 +74,8 @@ class LiveControllerTests: XCTestCase {
 
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: hostGroup.id)
-            $0.set(\.performerGroupIds, value: [participatingGroup.id, participatingGroup.id])
+            $0.set(
+                \.style, value: .battle(performers: [participatingGroup.id, participatingGroup.id]))
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
@@ -99,12 +100,12 @@ class LiveControllerTests: XCTestCase {
         }
 
         let live = try appClient.createLive(
-            hostGroup: hostGroup, performers: performers, with: user)
+            hostGroup: hostGroup, style: .battle(performers: performers.map(\.id)), with: user)
 
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
-            XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.performers.map(\.id)))
+            XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.style.performers.map(\.id)))
         }
     }
 
@@ -112,7 +113,8 @@ class LiveControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let hostGroup = try appClient.createGroup(with: user)
-        let live = try appClient.createLive(hostGroup: hostGroup, performers: [], with: user)
+        let live = try appClient.createLive(
+            hostGroup: hostGroup, style: .battle(performers: []), with: user)
 
         let body = try! Stub.make(Endpoint.RegisterLive.Request.self) {
             $0.set(\.liveId, value: live.id)

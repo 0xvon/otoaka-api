@@ -77,11 +77,12 @@ class AppClient {
     }
 
     func createLive(
-        hostGroup: Endpoint.Group, performers: [Endpoint.Group] = [], with user: AppUser
+        hostGroup: Endpoint.Group, style: LiveStyleInput = .oneman(performer: nil),
+        with user: AppUser
     ) throws -> Endpoint.Live {
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: hostGroup.id)
-            $0.set(\.performerGroupIds, value: performers.map(\.id))
+            $0.set(\.style, value: style)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
