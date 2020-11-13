@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Group {
+public struct Group: Codable, Identifiable {
     public typealias ID = Identifier<Self>
     public let id: ID
     public var name: String
@@ -28,12 +28,13 @@ public struct Group {
 }
 
 /// User (Artist) <-> Group
-public struct Membership {
-    public let id: UUID
-    public var groupId: UUID
-    public var artistId: UUID
+public struct Membership: Codable, Identifiable {
+    public typealias ID = Identifier<Self>
+    public let id: ID
+    public var groupId: Group.ID
+    public var artistId: User.ID
 
-    public init(id: UUID, groupId: UUID, artistId: UUID) {
+    public init(id: ID, groupId: Group.ID, artistId: User.ID) {
         self.id = id
         self.groupId = groupId
         self.artistId = artistId

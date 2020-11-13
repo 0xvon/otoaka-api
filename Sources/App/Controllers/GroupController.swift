@@ -32,7 +32,6 @@ struct GroupController: RouteCollection {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
         }
         return repository.findGroup(by: Group.ID(groupId)).unwrap(or: Abort(.notFound))
-            .map { Endpoint.Group(from: $0) }
     }
 
     func createBand(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
@@ -54,7 +53,6 @@ struct GroupController: RouteCollection {
             repository.join(toGroup: group.id, artist: user.id)
                 .map { _ in group }
         }
-        .map { Endpoint.Group(from: $0) }
     }
 
     func invite(req: Request, uri: InviteGroup.URI, repository: Domain.GroupRepository) throws
@@ -102,16 +100,7 @@ struct GroupController: RouteCollection {
     }
 }
 
-extension Endpoint.Group: Content {
-    init(from domainEntity: Domain.Group) {
-        self.init(
-            id: domainEntity.id.rawValue.uuidString,
-            name: domainEntity.name, englishName: domainEntity.englishName,
-            biography: domainEntity.biography, since: domainEntity.since,
-            artworkURL: domainEntity.artworkURL, hometown: domainEntity.hometown
-        )
-    }
-}
+extension Endpoint.Group: Content {}
 
 extension Endpoint.InviteGroup.Response: Content {}
 

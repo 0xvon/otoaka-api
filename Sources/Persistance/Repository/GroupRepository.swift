@@ -84,7 +84,7 @@ public class GroupRepository: Domain.GroupRepository {
                 let invitation = GroupInvitation()
                 invitation.$group.id = groupID
                 return invitation.save(on: db).flatMap { [db] in
-                    Domain.GroupInvitation.translate(fromPersistance: invitation, on: db)
+                    Endpoint.GroupInvitation.translate(fromPersistance: invitation, on: db)
                 }
             }
         }
@@ -95,7 +95,7 @@ public class GroupRepository: Domain.GroupRepository {
     > {
         GroupInvitation.find(invitationId.rawValue, on: db)
             .optionalFlatMap { [db] in
-                Domain.GroupInvitation.translate(fromPersistance: $0, on: db)
+                Endpoint.GroupInvitation.translate(fromPersistance: $0, on: db)
             }
     }
 
@@ -110,7 +110,7 @@ public class GroupRepository: Domain.GroupRepository {
 
     public func findGroup(by id: Domain.Group.ID) -> EventLoopFuture<Domain.Group?> {
         Group.find(id.rawValue, on: db).optionalFlatMap { [db] in
-            Domain.Group.translate(fromPersistance: $0, on: db)
+            Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
     }
 }

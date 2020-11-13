@@ -36,7 +36,7 @@ final class User: Model {
 
     init() {}
     init(
-        cognitoId: Domain.User.CognitoID, email: String, name: String,
+        cognitoId: Domain.CognitoID, email: String, name: String,
         biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
     ) {
         self.cognitoId = cognitoId
@@ -54,41 +54,19 @@ final class User: Model {
     }
 }
 
-extension Domain.User: EntityConvertible {
-    typealias PersistanceEntity = User
-
+extension Endpoint.User {
     static func translate(fromPersistance entity: User, on db: Database) -> EventLoopFuture<Self> {
-        let roleProperties: Domain.RoleProperties
+        let roleProperties: Endpoint.RoleProperties
         switch entity.role {
         case .artist:
-            roleProperties = .artist(Artist(part: entity.part!))
+            roleProperties = .artist(Endpoint.Artist(part: entity.part!))
         case .fan:
-            roleProperties = .fan
+            roleProperties = .fan(Endpoint.Fan())
         }
         return db.eventLoop.submit {
             try Self.init(
-                id: ID(entity.requireID()), cognitoId: entity.cognitoId,
-                email: entity.email, name: entity.name,
-                biography: entity.biography, thumbnailURL: entity.thumbnailURL,
-                role: roleProperties
-            )
+                id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
+                thumbnailURL: entity.thumbnailURL, role: roleProperties)
         }
-    }
-
-    func asPersistance() -> User {
-        let user = User()
-        user.id = id.rawValue
-        user.cognitoId = cognitoId
-        user.email = email
-        user.biography = biography
-        user.thumbnailURL = thumbnailURL
-        switch role {
-        case let .artist(artist):
-            user.role = .artist
-            user.part = artist.part
-        case .fan:
-            user.role = .fan
-        }
-        return user
     }
 }

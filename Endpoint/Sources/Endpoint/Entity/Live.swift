@@ -6,7 +6,7 @@ public enum LiveStyle: String, Codable {
     case festival
 }
 
-public struct Live {
+public struct Live: Codable, Identifiable {
 
     public typealias ID = Identifier<Self>
     public let id: ID
@@ -24,7 +24,7 @@ public struct Live {
     public var createdAt: Date
 
     public init(
-        id: Live.ID, title: String,
+        id: ID, title: String,
         style: LiveStyle, artworkURL: URL?,
         author: User, hostGroup: Group,
         startAt: Date?, endAt: Date?, createdAt: Date,
@@ -48,7 +48,7 @@ public enum TicketStatus: String, Codable {
     case registered, paid, joined
 }
 
-public struct Ticket {
+public struct Ticket: Codable {
     public typealias ID = Identifier<Self>
 
     public var id: ID

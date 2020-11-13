@@ -67,7 +67,7 @@ final class LivePerformer: Model {
     var group: Group
 }
 
-extension Domain.Live: EntityConvertible {
+extension Endpoint.Live: EntityConvertible {
     typealias PersistanceEntity = Live
 
     static func translate(fromPersistance entity: Live, on db: Database) -> EventLoopFuture<Self> {
@@ -85,20 +85,20 @@ extension Domain.Live: EntityConvertible {
         .flatMap { (groups: [Persistance.Group]) in
             eventLoop.flatten(
                 groups.map {
-                    Domain.Group.translate(fromPersistance: $0, on: db)
+                    Endpoint.Group.translate(fromPersistance: $0, on: db)
                 })
         }
         let hostGroup = entity.$hostGroup.get(on: db).flatMap {
-            Domain.Group.translate(fromPersistance: $0, on: db)
+            Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
         let author = entity.$author.get(on: db).flatMap {
-            Domain.User.translate(fromPersistance: $0, on: db)
+            Endpoint.User.translate(fromPersistance: $0, on: db)
         }
 
         return hostGroup.and(performers).and(author).map { ($0.0, $0.1, $1) }
-            .flatMapThrowing { (hostGroup, performers, author) -> Domain.Live in
-                try Self.init(
-                    id: Domain.Live.ID(entity.requireID()),
+            .flatMapThrowing { (hostGroup, performers, author) -> Endpoint.Live in
+                return try Self.init(
+                    id: Endpoint.Live.ID(entity.requireID()),
                     title: entity.title,
                     style: entity.style,
                     artworkURL: entity.artworkURL,

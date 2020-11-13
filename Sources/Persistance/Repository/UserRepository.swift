@@ -12,26 +12,26 @@ public class UserRepository: Domain.UserRepository {
     }
 
     public func create(
-        cognitoId: Domain.User.CognitoID, email: String, name: String,
+        cognitoId: Domain.CognitoID, email: String, name: String,
         biography: String?, thumbnailURL: String?,
         role: Domain.RoleProperties
-    ) -> EventLoopFuture<Domain.User> {
+    ) -> EventLoopFuture<Endpoint.User> {
         let existing = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
-            .flatMap { [db] _ -> EventLoopFuture<Domain.User> in
+            .flatMap { [db] _ -> EventLoopFuture<Endpoint.User> in
                 let storedUser = User(
                     cognitoId: cognitoId, email: email, name: name, biography: biography,
                     thumbnailURL: thumbnailURL, role: role)
                 return storedUser.create(on: db).flatMap { [db] in
-                    Domain.User.translate(fromPersistance: storedUser, on: db)
+                    Endpoint.User.translate(fromPersistance: storedUser, on: db)
                 }
             }
     }
 
-    public func find(by cognitoId: Domain.User.CognitoID) -> EventLoopFuture<Domain.User?> {
+    public func find(by cognitoId: Domain.CognitoID) -> EventLoopFuture<Endpoint.User?> {
         let maybeUser = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return maybeUser.optionalFlatMap { [db] user in
-            Domain.User.translate(fromPersistance: user, on: db)
+            Endpoint.User.translate(fromPersistance: user, on: db)
         }
     }
 

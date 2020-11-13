@@ -23,7 +23,6 @@ let package = Package(
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "JWTKit", package: "jwt-kit"),
-                .product(name: "Endpoint", package: "Endpoint"),
                 .target(name: "Persistance"),
             ],
             swiftSettings: [
@@ -35,6 +34,7 @@ let package = Package(
         ),
         .target(name: "Domain", dependencies: [
             .product(name: "NIO", package: "swift-nio"),
+            .product(name: "Endpoint", package: "Endpoint"),
         ]),
         .target(name: "Persistance", dependencies: [
             .product(name: "Fluent", package: "fluent"),

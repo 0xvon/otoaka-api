@@ -42,7 +42,7 @@ final class Group: Model {
     }
 }
 
-extension Domain.Group: EntityConvertible {
+extension Endpoint.Group: EntityConvertible {
     typealias PersistanceEntity = Group
 
     static func translate(fromPersistance entity: Group, on db: Database) -> EventLoopFuture<Self> {
@@ -78,9 +78,7 @@ final class Membership: Model {
     var artist: User
 }
 
-extension Domain.Membership: EntityConvertible {
-    typealias PersistanceEntity = Membership
-
+extension Endpoint.Membership {
     static func translate(fromPersistance entity: Membership, on db: Database) -> EventLoopFuture<
         Self
     > {
@@ -89,19 +87,11 @@ extension Domain.Membership: EntityConvertible {
         }
         .map { entity, id in
             Self.init(
-                id: id,
-                groupId: entity.$group.id,
-                artistId: entity.$artist.id
+                id: ID(id),
+                groupId: Endpoint.Group.ID(entity.$group.id),
+                artistId: Endpoint.User.ID(entity.$artist.id)
             )
         }
-    }
-
-    func asPersistance() -> Membership {
-        let entity = Membership()
-        entity.id = id
-        entity.$group.id = groupId
-        entity.$artist.id = artistId
-        return entity
     }
 }
 
@@ -125,29 +115,20 @@ final class GroupInvitation: Model {
     }
 }
 
-extension Domain.GroupInvitation: EntityConvertible {
+extension Endpoint.GroupInvitation {
     typealias PersistanceEntity = GroupInvitation
     static func translate(fromPersistance entity: GroupInvitation, on db: Database)
-        -> EventLoopFuture<Domain.GroupInvitation>
+        -> EventLoopFuture<Endpoint.GroupInvitation>
     {
         let group = entity.$group.get(on: db)
-        return group.flatMap { Domain.Group.translate(fromPersistance: $0, on: db) }
+        return group.flatMap { Endpoint.Group.translate(fromPersistance: $0, on: db) }
             .flatMapThrowing { group in
-                try Domain.GroupInvitation.init(
+                try Endpoint.GroupInvitation.init(
                     id: ID(entity.requireID()),
                     group: group,
                     invited: entity.invited,
                     membership: nil
                 )
             }
-    }
-
-    func asPersistance() -> GroupInvitation {
-        let entity = GroupInvitation()
-        entity.id = id.rawValue
-        entity.$group.id = group.id.rawValue
-        entity.invited = invited
-        entity.$membership.id = membership?.id
-        return entity
     }
 }

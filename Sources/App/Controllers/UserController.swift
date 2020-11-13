@@ -42,9 +42,9 @@ struct UserController: RouteCollection {
         let user = repository.create(
             cognitoId: cognitoId, email: jwtPayload.email,
             name: input.name, biography: input.biography,
-            thumbnailURL: input.thumbnailURL, role: input.role.asDomain()
+            thumbnailURL: input.thumbnailURL, role: input.role
         )
-        return user.map { Signup.Response(from: $0) }
+        return user
     }
 
     func getUser(req: Request, uri: GetUserInfo.URI) throws -> EventLoopFuture<GetUserInfo.Response>
@@ -53,8 +53,7 @@ struct UserController: RouteCollection {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
-        let response = GetUserInfo.Response(from: user)
-        return req.eventLoop.makeSucceededFuture(response)
+        return req.eventLoop.makeSucceededFuture(user)
     }
 
     func getSignupStatus(req: Request, uri: SignupStatus.URI) throws -> EventLoopFuture<
@@ -66,46 +65,7 @@ struct UserController: RouteCollection {
     }
 }
 
-extension Endpoint.Artist {
-    init(fromDomain domainArtist: Domain.Artist) {
-        self.init(part: domainArtist.part)
-    }
-
-    func asDomain() -> Domain.Artist {
-        Domain.Artist(part: part)
-    }
-}
-
-extension Endpoint.RoleProperties {
-    init(fromDomain domainUser: Domain.RoleProperties) {
-        switch domainUser {
-        case let .artist(artist):
-            self = .artist(Endpoint.Artist(fromDomain: artist))
-        case .fan:
-            self = .fan(Fan())
-        }
-    }
-
-    func asDomain() -> Domain.RoleProperties {
-        switch self {
-        case let .artist(artist):
-            return .artist(artist.asDomain())
-        case .fan:
-            return .fan
-        }
-    }
-}
-
-extension Endpoint.User: Content {
-    init(from domainUser: Domain.User) {
-        self.init(
-            id: domainUser.id.rawValue.uuidString,
-            name: domainUser.name, biography: domainUser.biography,
-            thumbnailURL: domainUser.thumbnailURL,
-            role: .init(fromDomain: domainUser.role)
-        )
-    }
-}
+extension Endpoint.User: Content {}
 
 extension Endpoint.SignupStatus.Response: Content {}
 

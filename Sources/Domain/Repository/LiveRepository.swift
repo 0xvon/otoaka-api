@@ -14,5 +14,5 @@ public protocol LiveRepository {
 
     func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket>
 
-    func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Live>>
+    func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>>
 }
