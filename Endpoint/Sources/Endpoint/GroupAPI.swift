@@ -80,7 +80,7 @@ public struct GetGroup: EndpointProtocol {
     public typealias Response = Group
     public struct URI: CodableURL {
         @StaticPath("groups") public var prefix: Void
-        @DynamicPath public var groupId: String
+        @DynamicPath public var groupId: Group.ID
         public init() {}
     }
     public static let method: HTTPMethod = .get

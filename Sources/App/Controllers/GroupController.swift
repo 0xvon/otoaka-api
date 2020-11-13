@@ -28,10 +28,7 @@ struct GroupController: RouteCollection {
             Endpoint.GetGroup.Response
         >
     {
-        guard let groupId = UUID(uuidString: uri.groupId) else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
-        return repository.findGroup(by: Group.ID(groupId)).unwrap(or: Abort(.notFound))
+        return repository.findGroup(by: uri.groupId).unwrap(or: Abort(.notFound))
     }
 
     func create(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws

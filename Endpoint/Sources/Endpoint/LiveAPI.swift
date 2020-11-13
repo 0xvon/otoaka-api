@@ -37,7 +37,7 @@ public struct GetLive: EndpointProtocol {
     public typealias Response = Live
     public struct URI: CodableURL {
         @StaticPath("lives") public var prefix: Void
-        @DynamicPath public var liveId: String
+        @DynamicPath public var liveId: Live.ID
         public init() {}
     }
     public static let method: HTTPMethod = .get

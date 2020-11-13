@@ -29,10 +29,7 @@ struct LiveController: RouteCollection {
             Endpoint.Live
         >
     {
-        guard let liveId = UUID(uuidString: uri.liveId) else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-        }
-        return repository.findLive(by: Domain.Live.ID(liveId)).unwrap(or: Abort(.notFound))
+        return repository.findLive(by: uri.liveId).unwrap(or: Abort(.notFound))
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws

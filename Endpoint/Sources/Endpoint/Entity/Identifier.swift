@@ -23,3 +23,14 @@ public struct Identifier<Target>: Equatable, RawRepresentable, Codable, Hashable
 extension Identifier: CustomStringConvertible {
     public var description: String { rawValue.uuidString }
 }
+
+extension Identifier: ExpressibleByURLComponent {
+    public init?(urlComponent: String) {
+        guard let rawValue = UUID(uuidString: urlComponent) else { return nil }
+        self.rawValue = rawValue
+    }
+
+    public var urlComponent: String? {
+        rawValue.uuidString
+    }
+}
