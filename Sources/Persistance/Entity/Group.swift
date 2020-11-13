@@ -42,9 +42,7 @@ final class Group: Model {
     }
 }
 
-extension Endpoint.Group: EntityConvertible {
-    typealias PersistanceEntity = Group
-
+extension Endpoint.Group {
     static func translate(fromPersistance entity: Group, on db: Database) -> EventLoopFuture<Self> {
         db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
             try ($0, $0.requireID())
@@ -57,12 +55,6 @@ extension Endpoint.Group: EntityConvertible {
                 artworkURL: entity.artworkURL, hometown: entity.hometown
             )
         }
-    }
-
-    func asPersistance() -> Group {
-        Group(
-            id: id.rawValue, name: name, englishName: englishName, biography: biography,
-            since: since, artworkURL: artworkURL, hometown: hometown)
     }
 }
 
@@ -116,7 +108,6 @@ final class GroupInvitation: Model {
 }
 
 extension Endpoint.GroupInvitation {
-    typealias PersistanceEntity = GroupInvitation
     static func translate(fromPersistance entity: GroupInvitation, on db: Database)
         -> EventLoopFuture<Endpoint.GroupInvitation>
     {
