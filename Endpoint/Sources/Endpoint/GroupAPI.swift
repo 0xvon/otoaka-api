@@ -27,12 +27,6 @@ public struct CreateGroup: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .post
-    public typealias Parameters = Void
-
-    public static let pathPattern = ["groups"]
-    public static func buildPath(with _: Void, query: Empty) -> [String] {
-        pathPattern
-    }
 }
 
 public struct InviteGroup: EndpointProtocol {
