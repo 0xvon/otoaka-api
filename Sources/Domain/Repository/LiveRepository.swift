@@ -8,6 +8,11 @@ public protocol LiveRepository {
     func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
 
     func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket>
+//    func updatePerformerStatus(
+//        liveId: Domain.Live.ID,
+//        performerId: Domain.User.ID,
+//        status: PerformanceRequest.Status
+//    ) -> EventLoopFuture<Live>
 
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>>
 }

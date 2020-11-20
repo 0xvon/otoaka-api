@@ -69,6 +69,9 @@ final class LivePerformer: Model {
 
     @Parent(key: "group_id")
     var group: Group
+
+    @Field(key: "status")
+    var status: Domain.PerformanceRequest.Status
 }
 
 extension Endpoint.Live {
@@ -128,7 +131,7 @@ final class Ticket: Model {
     var id: UUID?
 
     @Enum(key: "status")
-    var status: TicketStatus
+    var status: Domain.Ticket.Status
 
     @Parent(key: "live_id")
     var live: Live
@@ -138,7 +141,7 @@ final class Ticket: Model {
 
     init() {}
 
-    init(id: UUID? = nil, status: TicketStatus, liveId: UUID, userId: UUID) {
+    init(id: UUID? = nil, status: Domain.Ticket.Status, liveId: UUID, userId: UUID) {
         self.id = id
         self.status = status
         self.$live.id = liveId

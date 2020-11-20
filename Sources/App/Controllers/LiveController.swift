@@ -22,6 +22,7 @@ struct LiveController: RouteCollection {
         try routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
         try routes.on(
             endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
+        try routes.on(endpoint: Endpoint.ReplyPerformanceRequest.self, use: replyRequest)
     }
 
     func getLiveInfo(req: Request, uri: GetLive.URI, repository: Domain.LiveRepository) throws
@@ -69,6 +70,12 @@ struct LiveController: RouteCollection {
         req: Request, uri: GetUpcomingLives.URI, repository: Domain.LiveRepository
     ) throws -> EventLoopFuture<GetUpcomingLives.Response> {
         return repository.get(page: uri.page, per: uri.per)
+    }
+
+    func replyRequest(req: Request, uri: ReplyPerformanceRequest.URI) throws -> EventLoopFuture<ReplyPerformanceRequest.Response> {
+        let input = try req.content.decode(Endpoint.ReplyPerformanceRequest.Request.self)
+        
+        fatalError()
     }
 }
 

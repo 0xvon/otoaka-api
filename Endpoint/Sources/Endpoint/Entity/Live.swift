@@ -88,22 +88,33 @@ public struct Live: Codable, Identifiable {
         self.endAt = endAt
         self.createdAt = createdAt
     }
-
 }
 
-public enum TicketStatus: String, Codable {
-    case registered, paid, joined
+public struct PerformanceRequest: Codable, Identifiable {
+    public typealias ID = Identifier<Self>
+
+    public enum Status: String, Codable {
+        case accept, deny
+    }
+
+    public var id: ID
+    public var status: Status
+    public var live: Live
 }
 
 public struct Ticket: Codable {
     public typealias ID = Identifier<Self>
 
+    public enum Status: String, Codable {
+        case registered, paid, joined
+    }
+
     public var id: ID
-    public var status: TicketStatus
+    public var status: Status
     public var live: Live
     public var user: User
 
-    public init(id: Ticket.ID, status: TicketStatus, live: Live, user: User) {
+    public init(id: Ticket.ID, status: Status, live: Live, user: User) {
         self.id = id
         self.status = status
         self.live = live

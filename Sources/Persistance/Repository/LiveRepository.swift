@@ -10,6 +10,7 @@ public class LiveRepository: Domain.LiveRepository {
 
     public enum Error: Swift.Error {
         case liveNotFound
+        case requestNotFound
     }
 
     public func create(input: Endpoint.CreateLive.Request, authorId: Domain.User.ID)
@@ -63,6 +64,15 @@ public class LiveRepository: Domain.LiveRepository {
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
     }
+//    func updatePerformerStatus(requestId: Domain.PerformanceRequest.ID,
+//                               performerId: Domain.User.ID,
+//                               status: PerformanceRequest.Status) -> EventLoopFuture<Void> {
+//        let performer = LivePerformer.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
+//        performer.flatMap { performer in
+//            performer.status = 
+//        }
+//        fatalError()
+//    }
 
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Live>> {
         let lives = Live.query(on: db)
