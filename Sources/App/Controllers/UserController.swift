@@ -2,6 +2,7 @@ import Domain
 import Endpoint
 import Foundation
 import Persistance
+import SNS
 import Vapor
 
 private func injectProvider<T, URI>(
@@ -17,15 +18,16 @@ private func injectProvider<T, URI>(
 
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let authenticator = try JWTAuthenticator()
-        let group = routes.grouped(authenticator)
 
-        let beforeSignup = group.grouped(JWTAuthenticator.Payload.guardMiddleware())
+        let beforeSignup = routes.grouped(JWTAuthenticator.Payload.guardMiddleware())
         try beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
         try beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
 
-        try group.grouped(User.guardMiddleware())
-            .on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
+        let loggedIn = routes.grouped(User.guardMiddleware())
+        try loggedIn.on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
+        try loggedIn.on(
+            endpoint: Endpoint.RegisterDeviceToken.self,
+            use: injectProvider(registerDeviceToken))
     }
 
     func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws
@@ -61,6 +63,28 @@ struct UserController: RouteCollection {
         let response = SignupStatus.Response(isSignedup: isSignedup)
         return req.eventLoop.makeSucceededFuture(response)
     }
+
+    func registerDeviceToken(
+        req: Request, uri: RegisterDeviceToken.URI, repository: Domain.UserRepository
+    ) throws -> EventLoopFuture<RegisterDeviceToken.Response> {
+        guard let user = req.auth.get(Domain.User.self) else {
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        let input = try req.content.decode(RegisterDeviceToken.Request.self)
+        let secrets = req.application.secrets
+        let sns = SNS(
+            accessKeyId: secrets.awsAccessKeyId,
+            secretAccessKey: secrets.awsAecretAccessKey,
+            region: Region(rawValue: secrets.awsRegion),
+            eventLoopGroupProvider: .shared(req.eventLoop)
+        )
+        let service = SimpleNotificationService(
+            sns: sns, platformApplicationArn: secrets.snsPlatformApplicationArn,
+            eventLoop: req.eventLoop, userRepository: repository
+        )
+        return service.register(deviceToken: input.deviceToken, for: user.id)
+            .map { Empty() }
+    }
 }
 
 extension Endpoint.User: Content {}
@@ -72,6 +96,8 @@ extension Persistance.UserRepository.Error: AbortError {
     public var status: HTTPResponseStatus {
         switch self {
         case .alreadyCreated: return .badRequest
+        case .userNotFound: return .forbidden
+        case .deviceAlreadyRegistered: return .ok
         }
     }
 }

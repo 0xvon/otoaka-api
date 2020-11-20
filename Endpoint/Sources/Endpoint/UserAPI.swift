@@ -47,3 +47,19 @@ public struct GetUserInfo: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+
+public struct RegisterDeviceToken: EndpointProtocol {
+    public struct Request: Codable {
+        public var deviceToken: String
+        public init(deviceToken: String) {
+            self.deviceToken = deviceToken
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "register_device_token") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}

@@ -31,7 +31,7 @@ final class User: Model {
     var role: Role
 
     /// Only for artist
-    @Field(key: "part")
+    @OptionalField(key: "part")
     var part: String?
 
     init() {}
@@ -68,5 +68,25 @@ extension Endpoint.User {
                 id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
                 thumbnailURL: entity.thumbnailURL, role: roleProperties)
         }
+    }
+}
+
+final class UserDevice: Model {
+    static let schema = "user_devices"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "endpoint_arn")
+    var endpointArn: String
+
+    @Parent(key: "user_id")
+    var user: User
+
+    init() {}
+    init(id: UUID? = nil, endpointArn: String, user: User.IDValue) {
+        self.id = id
+        self.endpointArn = endpointArn
+        self.$user.id = user
     }
 }

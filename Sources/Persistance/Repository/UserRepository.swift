@@ -5,6 +5,8 @@ public class UserRepository: Domain.UserRepository {
     private let db: Database
     public enum Error: Swift.Error {
         case alreadyCreated
+        case userNotFound
+        case deviceAlreadyRegistered
     }
 
     public init(db: Database) {
@@ -37,5 +39,29 @@ public class UserRepository: Domain.UserRepository {
 
     public func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
         User.find(id.rawValue, on: db).map { $0 != nil }
+    }
+
+    public func endpointArns(for id: Domain.User.ID) -> EventLoopFuture<[String]> {
+        UserDevice.query(on: db).filter(\.$user.$id == id.rawValue).all().map {
+            $0.map(\.endpointArn)
+        }
+    }
+
+    public func setEndpointArn(_ endpointArn: String, for id: Domain.User.ID) -> EventLoopFuture<
+        Void
+    > {
+        let isExisting = UserDevice.query(on: db)
+            .filter(\.$user.$id == id.rawValue)
+            .filter(\.$endpointArn == endpointArn)
+            .first().map { $0 != nil }
+        let device = UserDevice(endpointArn: endpointArn, user: id.rawValue)
+        let precondition = isExisting.and(isExists(by: id)).flatMapThrowing {
+            guard $1 else { throw Error.userNotFound }
+            guard !$0 else { throw Error.deviceAlreadyRegistered }
+            return
+        }
+        return precondition.flatMap { [db] in
+            device.save(on: db)
+        }
     }
 }

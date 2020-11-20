@@ -1,9 +1,25 @@
 import Domain
 import Endpoint
+import Persistance
 import StubKit
 import XCTVapor
 
 @testable import App
+
+extension JWTAuthenticator {
+    convenience init(
+        userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
+            Persistance.UserRepository(db: $0.db)
+        }
+    ) throws {
+        let secrets = EnvironmentSecrets()
+        try self.init(
+            awsRegion: secrets.awsRegion,
+            cognitoUserPoolId: secrets.cognitoUserPoolId,
+            userRepositoryFactory: userRepositoryFactory
+        )
+    }
+}
 
 class AuthenticationTests: XCTestCase {
     var app: Application!
@@ -33,6 +49,14 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func endpointArns(for id: User.ID) -> EventLoopFuture<[String]> {
+            fatalError("unimplemented")
+        }
+
+        func setEndpointArn(_ endpointArn: String, for id: User.ID) -> EventLoopFuture<Void> {
+            fatalError("unimplemented")
+        }
+
         var users: [Domain.CognitoID: Domain.User] = [:]
         let eventLoop: EventLoop
         init(eventLoop: EventLoop) {

@@ -15,14 +15,13 @@ class JWTAuthenticator: BearerAuthenticator {
     private let userRepositoryFactory: (Request) -> Domain.UserRepository
 
     init(
-        cognitoRegion: String = Environment.get("CONGNITO_IDP_REGION")!,
-        cognitoUserPoolId: String = Environment.get("CONGNITO_IDP_USER_POOL_ID")!,
+        awsRegion: String, cognitoUserPoolId: String,
         userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
             Persistance.UserRepository(db: $0.db)
         }
     ) throws {
         self.userRepositoryFactory = userRepositoryFactory
-        issuer = "https://cognito-idp.\(cognitoRegion).amazonaws.com/\(cognitoUserPoolId)"
+        issuer = "https://cognito-idp.\(awsRegion).amazonaws.com/\(cognitoUserPoolId)"
         let jwkURL = URL(string: "\(issuer)/.well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
         signer = JWTSigners()
