@@ -44,7 +44,7 @@ public struct ReplyPerformanceRequest: EndpointProtocol {
     }
     public typealias Response = Empty
     public struct URI: CodableURL {
-        @StaticPath("lives", "accept") public var prefix: Void
+        @StaticPath("lives", "reply") public var prefix: Void
         public init() {}
     }
     public static let method: HTTPMethod = .post

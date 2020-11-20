@@ -12,11 +12,24 @@ protocol Secrets {
 }
 
 struct EnvironmentSecrets: Secrets {
-    let awsAccessKeyId = Environment.get("AWS_ACCESS_KEY_ID")!
-    let awsAecretAccessKey = Environment.get("AWS_SECRET_ACCESS_KEY")!
-    let awsRegion = Environment.get("AWS_REGION")!
-    let snsPlatformApplicationArn = Environment.get("SNS_PLATFORM_APPLICATION_ARN")!
-    let cognitoUserPoolId = Environment.get("CONGNITO_IDP_USER_POOL_ID")!
+    init() {
+        func require(_ key: String) -> String {
+            guard let value = Environment.get(key) else {
+                fatalError("Please set \"\(key)\" environment variable")
+            }
+            return value
+        }
+        self.awsAccessKeyId = require("AWS_ACCESS_KEY_ID")
+        self.awsAecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
+        self.awsRegion = require("AWS_REGION")
+        self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
+        self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
+    }
+    let awsAccessKeyId: String
+    let awsAecretAccessKey: String
+    let awsRegion: String
+    let snsPlatformApplicationArn: String
+    let cognitoUserPoolId: String
 }
 
 extension Application {
@@ -36,9 +49,6 @@ extension Application {
 
 // configures your application
 public func configure(_ app: Application) throws {
-    // uncomment to serve files from /Public folder
-    // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
-
     try Persistance.setup(
         databases: app.databases,
         migrator: app.migrator,
