@@ -37,13 +37,19 @@ struct CreateLive: Migration {
 
 struct CreateLivePerformer: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(LivePerformer.schema)
-            .id()
-            .field("live_id", .uuid, .required)
-            .field("group_id", .uuid, .required)
+        let statusEnum = database.enum("performance_request_status")
+            .case("accept")
+            .case("deny")
             .create()
+        return statusEnum.flatMap { statusEnum in
+            return database.schema(LivePerformer.schema)
+                .id()
+                .field("live_id", .uuid, .required)
+                .field("group_id", .uuid, .required)
+                .field("status", statusEnum, .required)
+                .create()
+        }
     }
-
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(LivePerformer.schema).delete()
     }
