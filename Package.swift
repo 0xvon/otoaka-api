@@ -43,6 +43,10 @@ let package = Package(
             .target(name: "Domain"),
         ]),
         .target(name: "Run", dependencies: [.target(name: "App")]),
+        .testTarget(name: "DomainTests", dependencies: [
+            .target(name: "Domain"),
+            .product(name: "StubKit", package: "StubKit"),
+        ]),
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
