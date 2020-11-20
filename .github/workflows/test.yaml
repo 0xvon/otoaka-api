@@ -29,8 +29,6 @@ jobs:
       - name: Install Swift
         run: swiftenv install
       - uses: mxschmitt/action-tmate@v3
-      - name: Build and test
-        run: swiftenv exec swift test --enable-test-discovery
         env:
           AWS_REGION: ap-northeast-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
