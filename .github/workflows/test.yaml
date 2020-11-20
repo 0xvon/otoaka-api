@@ -28,6 +28,7 @@ jobs:
           echo "$SWIFTENV_ROOT/bin" >> $GITHUB_PATH
       - name: Install Swift
         run: swiftenv install
+      - uses: mxschmitt/action-tmate@v3
       - name: Build and test
         run: swiftenv exec swift test --enable-test-discovery
         env:
