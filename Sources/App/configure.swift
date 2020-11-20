@@ -11,7 +11,7 @@ protocol Secrets {
     var cognitoUserPoolId: String { get }
 }
 
-struct EnvironmentSecrets: Secrets {
+struct EnvironmentSecrets: Secrets, DatabaseSecrets {
     init() {
         func require(_ key: String) -> String {
             guard let value = Environment.get(key) else {
@@ -24,12 +24,14 @@ struct EnvironmentSecrets: Secrets {
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
         self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
+        self.databaseURL = require("DATABASE_URL")
     }
     let awsAccessKeyId: String
     let awsAecretAccessKey: String
     let awsRegion: String
     let snsPlatformApplicationArn: String
     let cognitoUserPoolId: String
+    let databaseURL: String
 }
 
 extension Application {
@@ -49,12 +51,13 @@ extension Application {
 
 // configures your application
 public func configure(_ app: Application) throws {
+    let secrets = EnvironmentSecrets()
+    app.secrets = secrets
     try Persistance.setup(
         databases: app.databases,
         migrator: app.migrator,
         migrations: app.migrations,
-        environmentGetter: Environment.get
+        secrets: secrets
     )
-    app.secrets = EnvironmentSecrets()
     try routes(app)
 }
