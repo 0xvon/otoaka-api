@@ -74,7 +74,7 @@ struct UserController: RouteCollection {
         let secrets = req.application.secrets
         let sns = SNS(
             accessKeyId: secrets.awsAccessKeyId,
-            secretAccessKey: secrets.awsAecretAccessKey,
+            secretAccessKey: secrets.awsSecretAccessKey,
             region: Region(rawValue: secrets.awsRegion),
             eventLoopGroupProvider: .shared(req.eventLoop)
         )

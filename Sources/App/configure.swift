@@ -5,7 +5,7 @@ import Vapor
 
 protocol Secrets {
     var awsAccessKeyId: String { get }
-    var awsAecretAccessKey: String { get }
+    var awsSecretAccessKey: String { get }
     var awsRegion: String { get }
     var snsPlatformApplicationArn: String { get }
     var cognitoUserPoolId: String { get }
@@ -20,14 +20,14 @@ struct EnvironmentSecrets: Secrets, DatabaseSecrets {
             return value
         }
         self.awsAccessKeyId = require("AWS_ACCESS_KEY_ID")
-        self.awsAecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
+        self.awsSecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
         self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
         self.databaseURL = require("DATABASE_URL")
     }
     let awsAccessKeyId: String
-    let awsAecretAccessKey: String
+    let awsSecretAccessKey: String
     let awsRegion: String
     let snsPlatformApplicationArn: String
     let cognitoUserPoolId: String
