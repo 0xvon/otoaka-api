@@ -43,6 +43,36 @@ class LiveControllerTests: XCTestCase {
         }
     }
 
+    func testEditLive() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let groupX = try appClient.createGroup(with: userA)
+        let live = try appClient.createLive(hostGroup: groupX, with: userA)
+        let newTitle = "a new live title"
+        let body = try! Stub.make(EditLive.Request.self) {
+            $0.set(\.title, value: newTitle)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(
+            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userA),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok)
+            let responseBody = try res.content.decode(Endpoint.EditLive.Response.self)
+            XCTAssertEqual(responseBody.title, newTitle)
+        }
+
+        try app.test(
+            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userB),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .forbidden, res.body.string)
+        }
+    }
+
     func testCreateLiveAsNonHostMember() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "important")))
         let createdGroup = try appClient.createGroup(with: user)

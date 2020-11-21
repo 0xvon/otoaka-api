@@ -18,6 +18,7 @@ private func injectProvider<T, URI>(
 struct LiveController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
+        try routes.on(endpoint: Endpoint.EditLive.self, use: injectProvider(edit))
         try routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
         try routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
         try routes.on(
@@ -127,3 +128,13 @@ extension Endpoint.Live: Content {}
 extension Endpoint.Ticket: Content {}
 
 extension Endpoint.Page: Content {}
+
+extension EditLiveUseCase.Error: AbortError {
+    public var status: HTTPResponseStatus {
+        switch self {
+        case .fanCannotEditLive: return .forbidden
+        case .liveNotFound: return .notFound
+        case .isNotMemberOfHostGroup: return .forbidden
+        }
+    }
+}

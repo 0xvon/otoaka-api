@@ -51,6 +51,10 @@ extension LiveRepositoryMock {
     func create(input: Endpoint.CreateLive.Request, authorId: Domain.User.ID) -> EventLoopFuture<
         Endpoint.Live
     > { unimplemented() }
+    func update(id: Live.ID, input: EditLive.Request, authorId: User.ID) -> EventLoopFuture<Live> {
+        unimplemented()
+    }
+
     func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
         unimplemented()
     }
