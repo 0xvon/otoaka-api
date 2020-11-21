@@ -24,4 +24,5 @@ func routes(_ app: Application) throws {
     let signedUp = loginTried.grouped(User.guardMiddleware())
     try signedUp.register(collection: GroupController())
     try signedUp.register(collection: LiveController())
+    try signedUp.register(collection: UserSocialController())
 }

@@ -90,3 +90,18 @@ final class UserDevice: Model {
         self.$user.id = user
     }
 }
+
+final class Following: Model {
+    static let schema = "followings"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Parent(key: "self_user_id")
+    var user: User
+
+    @Parent(key: "target_group_id")
+    var target: Group
+
+    init() {}
+}

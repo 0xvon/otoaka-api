@@ -26,3 +26,19 @@ struct CreateUser: Migration {
         database.schema(User.schema).delete()
     }
 }
+
+struct CreateFollowing: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Following.schema)
+            .id()
+            .field("self_user_id", .uuid, .required)
+            .foreignKey("self_user_id", references: User.schema, .id)
+            .field("target_group_id", .uuid, .required)
+            .foreignKey("target_group_id", references: Group.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Following.schema).delete()
+    }
+}
