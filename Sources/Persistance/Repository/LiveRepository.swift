@@ -36,6 +36,7 @@ public class LiveRepository: Domain.LiveRepository {
                         let relation = LivePerformer()
                         relation.$group.id = performerId.rawValue
                         relation.$live.id = liveId
+                        relation.status = .pending
                         return relation
                     }
                     return db.eventLoop.flatten(performers.map { $0.save(on: db) })
@@ -89,6 +90,24 @@ public class LiveRepository: Domain.LiveRepository {
             let metadata = Domain.PageMetadata(
                 page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
             let items = $0.items.map { Domain.Live.translate(fromPersistance: $0, on: db) }.flatten(
+                on: db.eventLoop)
+            return items.map { Domain.Page(items: $0, metadata: metadata) }
+        }
+    }
+
+    public func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.PerformanceRequest>
+    > {
+        let performers = LivePerformer.query(on: db)
+            .join(Membership.self, on: \LivePerformer.$group.$id == \Membership.$group.$id)
+            .filter(Membership.self, \.$artist.$id == user.rawValue)
+            .filter(Membership.self, \.$isLeader == true)
+        return performers.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            let metadata = Domain.PageMetadata(
+                page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
+            let items = $0.items.map {
+                Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
+            }.flatten(
                 on: db.eventLoop)
             return items.map { Domain.Page(items: $0, metadata: metadata) }
         }

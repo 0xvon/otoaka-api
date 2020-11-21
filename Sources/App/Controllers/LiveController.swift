@@ -24,6 +24,9 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
         try routes.on(
             endpoint: Endpoint.ReplyPerformanceRequest.self, use: injectProvider(replyRequest))
+        try routes.on(
+            endpoint: Endpoint.GetPerformanceRequests.self,
+            use: injectProvider(getPerformanceRequests))
     }
 
     func getLiveInfo(req: Request, uri: GetLive.URI, repository: Domain.LiveRepository) throws
@@ -87,6 +90,16 @@ struct LiveController: RouteCollection {
         let useCase = ReplyPerformanceRequestUseCase(
             groupRepository: groupRepository, liveRepository: repository, eventLoop: req.eventLoop)
         return try useCase((user: user, input: input)).map { Empty() }
+    }
+
+    func getPerformanceRequests(
+        req: Request, uri: GetPerformanceRequests.URI, repository: Domain.LiveRepository
+    ) throws -> EventLoopFuture<GetPerformanceRequests.Response> {
+        guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        return repository.getRequests(for: user.id, page: uri.page, per: uri.per)
     }
 }
 

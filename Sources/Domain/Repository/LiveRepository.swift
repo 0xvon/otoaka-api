@@ -16,4 +16,7 @@ public protocol LiveRepository {
     func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest>
 
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>>
+    func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Page<PerformanceRequest>
+    >
 }

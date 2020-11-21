@@ -38,8 +38,9 @@ struct CreateLive: Migration {
 struct CreateLivePerformer: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         let statusEnum = database.enum("performance_request_status")
-            .case("accept")
-            .case("deny")
+            .case("accepted")
+            .case("denied")
+            .case("pending")
             .create()
         return statusEnum.flatMap { statusEnum in
             return database.schema(LivePerformer.schema)

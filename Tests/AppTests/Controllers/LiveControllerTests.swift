@@ -139,4 +139,34 @@ class LiveControllerTests: XCTestCase {
             XCTAssertGreaterThan(responseBody.items.count, 1)
         }
     }
+
+    func testReplyRequestAccept() throws {
+        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))
+        let hostGroup = try appClient.createGroup(with: hostUser)
+
+        let userX = try appClient.createUser(role: .artist(.init(part: "foo")))
+        let groupA = try appClient.createGroup(with: userX)
+
+        _ = try appClient.createLive(
+            hostGroup: hostGroup, style: .battle(performers: [groupA.id]), with: hostUser
+        )
+
+        let requests = try appClient.getPerformanceRequests(with: userX)
+        XCTAssertEqual(requests.items.count, 1)
+        let receivedRequest = try XCTUnwrap(requests.items.first)
+        XCTAssertEqual(receivedRequest.status, .pending)
+        let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
+            $0.set(\.reply, value: .accept)
+            $0.set(\.requestId, value: receivedRequest.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        let headers = appClient.makeHeaders(for: userX)
+        try app.test(.POST, "lives/reply", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+
+        let updatedRequests = try appClient.getPerformanceRequests(with: userX)
+        XCTAssertEqual(updatedRequests.items.first?.status, .accepted)
+    }
 }

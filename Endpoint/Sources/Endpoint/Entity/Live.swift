@@ -94,7 +94,7 @@ public struct PerformanceRequest: Codable, Identifiable {
     public typealias ID = Identifier<Self>
 
     public enum Status: String, Codable {
-        case accept, deny
+        case accepted, denied, pending
     }
 
     public var id: ID

@@ -42,7 +42,7 @@ class AppClient {
         name: String = UUID().uuidString,
         role: RoleProperties = .artist(Artist(part: "vocal"))
     ) throws -> AppUser {
-        let user = AppUser(userName: UUID().uuidString, cognito: cognito)
+        let user = AppUser(userName: name, cognito: cognito)
         let headers = makeHeaders(for: user)
         let body = Endpoint.Signup.Request(name: name, role: role)
         let bodyData = try ByteBuffer(data: encoder.encode(body))
@@ -92,5 +92,18 @@ class AppClient {
             created = try res.content.decode(Endpoint.CreateLive.Response.self)
         }
         return created
+    }
+
+    func getPerformanceRequests(page: Int = 1, per: Int = 10, with user: AppUser) throws -> Page<
+        PerformanceRequest
+    > {
+        var response: Page<PerformanceRequest>!
+        try app.test(
+            .GET, "lives/requests?page=\(page)&per=\(per)", headers: makeHeaders(for: user)
+        ) {
+            res in
+            response = try res.content.decode(Endpoint.GetPerformanceRequests.Response.self)
+        }
+        return response
     }
 }

@@ -68,4 +68,9 @@ extension LiveRepositoryMock {
     func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest> {
         unimplemented()
     }
+    func getRequests(for user: User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Page<PerformanceRequest>
+    > {
+        unimplemented()
+    }
 }

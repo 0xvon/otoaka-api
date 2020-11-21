@@ -37,9 +37,14 @@ public struct ReplyPerformanceRequestUseCase: UseCase {
             .flatMapThrowing {
                 guard $0 else { throw Error.onlyLeaderCanAccept }
             }
+        let status: PerformanceRequest.Status
+        switch request.input.reply {
+        case .accept: status = .accepted
+        case .deny: status = .denied
+        }
         return precondition.flatMap {
             liveRepository.updatePerformerStatus(
-                requestId: request.input.requestId, status: request.input.reply
+                requestId: request.input.requestId, status: status
             )
         }
     }
