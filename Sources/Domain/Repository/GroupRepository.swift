@@ -6,7 +6,7 @@ public protocol GroupRepository {
 
     func joinWithInvitation(invitationId: Domain.GroupInvitation.ID, artist: Domain.User.ID)
         -> EventLoopFuture<Void>
-    func join(toGroup groupId: Group.ID, artist: User.ID) -> EventLoopFuture<Void>
+    func join(toGroup groupId: Group.ID, artist: User.ID, asLeader: Bool) -> EventLoopFuture<Void>
     func invite(toGroup groupdId: Group.ID) -> EventLoopFuture<GroupInvitation>
     func findInvitation(by invitationId: GroupInvitation.ID) -> EventLoopFuture<GroupInvitation?>
 

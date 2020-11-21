@@ -68,6 +68,9 @@ final class Membership: Model {
 
     @Parent(key: "artist_id")
     var artist: User
+
+    @Field(key: "is_leader")
+    var isLeader: Bool
 }
 
 extension Endpoint.Membership {

@@ -41,15 +41,15 @@ public class GroupRepository: Domain.GroupRepository {
             .unwrap(orError: Error.invitationNotFound)
         }
     }
-    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID) -> EventLoopFuture<
+    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID, asLeader: Bool) -> EventLoopFuture<
         Void
     > {
-        Self.join(toGroup: groupId, artist: artist, on: db).map { _ in }
+        Self.join(toGroup: groupId, artist: artist, asLeader: asLeader, on: db).map { _ in }
     }
 
     private static func join(
         toGroup groupId: Domain.Group.ID,
-        artist: Domain.User.ID, on db: Database
+        artist: Domain.User.ID, asLeader: Bool = false, on db: Database
     ) -> EventLoopFuture<Membership> {
         let artist = User.query(on: db)
             .filter(\.$id == artist.rawValue)
@@ -65,6 +65,7 @@ public class GroupRepository: Domain.GroupRepository {
             let membership = Membership()
             membership.$artist.id = userID
             membership.$group.id = groupID
+            membership.isLeader = asLeader
             return membership.save(on: db).map { membership }
         }
     }

@@ -20,7 +20,7 @@ extension GroupRepositoryMock {
         unimplemented()
     }
 
-    func join(toGroup groupId: Group.ID, artist: User.ID) -> EventLoopFuture<Void> {
+    func join(toGroup groupId: Group.ID, artist: User.ID, asLeader: Bool) -> EventLoopFuture<Void> {
         unimplemented()
     }
 

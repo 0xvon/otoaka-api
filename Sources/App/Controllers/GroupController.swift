@@ -43,7 +43,7 @@ struct GroupController: RouteCollection {
         let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
         return repository.create(input: input)
             .flatMap { group in
-                repository.join(toGroup: group.id, artist: user.id)
+                repository.join(toGroup: group.id, artist: user.id, asLeader: true)
                     .map { _ in group }
             }
     }

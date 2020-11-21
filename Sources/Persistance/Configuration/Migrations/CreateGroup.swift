@@ -26,6 +26,7 @@ struct CreateMembership: Migration {
             .foreignKey("group_id", references: Group.schema, "id")
             .field("artist_id", .uuid, .required)
             .foreignKey("artist_id", references: User.schema, "id")
+            .field("is_leader", .bool, .required)
             .create()
     }
 
