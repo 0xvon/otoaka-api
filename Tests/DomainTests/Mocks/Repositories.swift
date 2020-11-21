@@ -13,7 +13,9 @@ extension GroupRepositoryMock {
     func create(input: CreateGroup.Request) -> EventLoopFuture<Group> {
         unimplemented()
     }
-
+    func update(id: Group.ID, input: EditGroup.Request) -> EventLoopFuture<Group> {
+        unimplemented()
+    }
     func joinWithInvitation(invitationId: GroupInvitation.ID, artist: User.ID) -> EventLoopFuture<
         Void
     > {

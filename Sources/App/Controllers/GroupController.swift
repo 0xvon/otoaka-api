@@ -18,6 +18,7 @@ private func injectProvider<T, URI>(
 struct GroupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(create))
+        try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
         try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
         try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
@@ -87,6 +88,24 @@ struct GroupController: RouteCollection {
             eventLopp: req.eventLoop)
         let response = try useCase((invitationId: GroupInvitation.ID(invitationId), user.id))
         return response.map { _ in Empty() }
+    }
+
+    func edit(
+        req: Request, uri: EditGroup.URI,
+        repository: Domain.GroupRepository
+    ) throws
+        -> EventLoopFuture<Endpoint.Group>
+    {
+        guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        let input = try req.content.decode(Endpoint.EditGroup.Request.self)
+        let precondition = repository.isMember(of: uri.id, member: user.id).flatMapThrowing {
+            guard $0 else { throw Abort(.forbidden) }
+            return
+        }
+        return precondition.flatMap { repository.update(id: uri.id, input: input) }
     }
 }
 

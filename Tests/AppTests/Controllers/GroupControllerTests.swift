@@ -19,6 +19,24 @@ class GroupControllerTests: XCTestCase {
         app.shutdown()
     }
 
+    func testUpdateGroup() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let createdGroup = try appClient.createGroup(with: user)
+        let newName = "a new group name"
+        let body = try! Stub.make(EditGroup.Request.self) {
+            $0.set(\.name, value: newName)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        try app.test(
+            .POST, "groups/edit/\(createdGroup.id)", headers: appClient.makeHeaders(for: user),
+            body: bodyData
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(EditGroup.Request.self)
+            XCTAssertEqual(body.name, newName)
+        }
+    }
+
     func testInviteForNonExistingGroup() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let body = try! Stub.make(InviteGroup.Request.self)

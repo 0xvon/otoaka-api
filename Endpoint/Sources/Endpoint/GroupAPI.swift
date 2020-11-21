@@ -29,6 +29,17 @@ public struct CreateGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct EditGroup: EndpointProtocol {
+    public typealias Request = CreateGroup.Request
+    public typealias Response = Group
+    public struct URI: CodableURL {
+        @StaticPath("groups", "edit") public var prefix: Void
+        @DynamicPath public var id: Group.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct InviteGroup: EndpointProtocol {
     public struct Request: Codable {
         public var groupId: Group.ID

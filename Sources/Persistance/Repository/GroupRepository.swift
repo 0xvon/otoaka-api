@@ -25,6 +25,25 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
+    public func update(id: Domain.Group.ID, input: Endpoint.EditGroup.Request) -> EventLoopFuture<
+        Domain.Group
+    > {
+        let group = Group.find(id.rawValue, on: db).unwrap(or: Error.groupNotFound)
+        let modified = group.map { (group) -> Group in
+            group.name = input.name
+            group.englishName = input.englishName
+            group.biography = input.biography
+            group.since = input.since
+            group.artworkURL = input.artworkURL
+            group.hometown = input.hometown
+            return group
+        }
+        .flatMap { [db] group in group.update(on: db).map { group } }
+        return modified.flatMap { [db] group in
+            Domain.Group.translate(fromPersistance: group, on: db)
+        }
+    }
+
     public func joinWithInvitation(invitationId: Domain.GroupInvitation.ID, artist: Domain.User.ID)
         -> EventLoopFuture<Void>
     {
