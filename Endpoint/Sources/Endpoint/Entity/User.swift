@@ -1,4 +1,3 @@
-
 public struct Artist: Codable {
     public var part: String
     public init(part: String) {
@@ -54,7 +53,9 @@ public struct User: Codable, Identifiable {
     public var thumbnailURL: String?
     public var role: RoleProperties
 
-    public init(id: ID, name: String, biography: String?, thumbnailURL: String?, role: RoleProperties) {
+    public init(
+        id: ID, name: String, biography: String?, thumbnailURL: String?, role: RoleProperties
+    ) {
         self.id = id
         self.name = name
         self.biography = biography

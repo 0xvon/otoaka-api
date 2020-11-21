@@ -3,9 +3,8 @@ import Foundation
 import NIO
 
 public protocol LiveRepository {
-    func create(input: Endpoint.CreateLive.Request, authorId: Domain.User.ID) -> EventLoopFuture<
-        Endpoint.Live
-    >
+    func create(input: CreateLive.Request, authorId: User.ID) -> EventLoopFuture<Live>
+    func update(id: Live.ID, input: EditLive.Request, authorId: User.ID) -> EventLoopFuture<Live>
     func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
 
     func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket>

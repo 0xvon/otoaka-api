@@ -10,9 +10,11 @@ public struct CreateLive: EndpointProtocol {
         public var openAt: Date?
         public var startAt: Date?
         public var endAt: Date?
-        
-        public init(title: String, style: LiveStyleInput, artworkURL: URL?, hostGroupId: Group.ID,
-                    openAt: Date?, startAt: Date?, endAt: Date?) {
+
+        public init(
+            title: String, style: LiveStyleInput, artworkURL: URL?, hostGroupId: Group.ID,
+            openAt: Date?, startAt: Date?, endAt: Date?
+        ) {
             self.title = title
             self.style = style
             self.artworkURL = artworkURL
@@ -30,6 +32,35 @@ public struct CreateLive: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct EditLive: EndpointProtocol {
+    public struct Request: Codable {
+        public var title: String
+        public var artworkURL: Foundation.URL?
+        // TODO: liveHouseId
+        public var openAt: Date?
+        public var startAt: Date?
+        public var endAt: Date?
+
+        public init(
+            title: String, artworkURL: URL?,
+            openAt: Date?, startAt: Date?, endAt: Date?
+        ) {
+            self.title = title
+            self.artworkURL = artworkURL
+            self.openAt = openAt
+            self.startAt = startAt
+            self.endAt = endAt
+        }
+    }
+    public typealias Response = Live
+    public struct URI: CodableURL {
+        @StaticPath("lives", "edit") public var prefix: Void
+        @DynamicPath public var id: Live.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct ReplyPerformanceRequest: EndpointProtocol {
     public struct Request: Codable {
         public enum Reply: String, Codable {
@@ -37,8 +68,10 @@ public struct ReplyPerformanceRequest: EndpointProtocol {
         }
         public let requestId: PerformanceRequest.ID
         public let reply: Reply
-        public init(requestId: PerformanceRequest.ID,
-                    reply: Reply) {
+        public init(
+            requestId: PerformanceRequest.ID,
+            reply: Reply
+        ) {
             self.requestId = requestId
             self.reply = reply
         }

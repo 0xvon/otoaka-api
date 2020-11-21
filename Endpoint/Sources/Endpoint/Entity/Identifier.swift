@@ -9,7 +9,7 @@ public struct Identifier<Target>: Equatable, RawRepresentable, Codable, Hashable
     public init(rawValue: UUID) {
         self.rawValue = rawValue
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         rawValue = try container.decode(UUID.self)

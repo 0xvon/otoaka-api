@@ -2,7 +2,10 @@ import CodableURL
 
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
-        public init(name: String, biography: String? = nil, thumbnailURL: String? = nil, role: RoleProperties) {
+        public init(
+            name: String, biography: String? = nil, thumbnailURL: String? = nil,
+            role: RoleProperties
+        ) {
             self.name = name
             self.biography = biography
             self.thumbnailURL = thumbnailURL
@@ -47,7 +50,6 @@ public struct GetUserInfo: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
-
 
 public struct RegisterDeviceToken: EndpointProtocol {
     public struct Request: Codable {

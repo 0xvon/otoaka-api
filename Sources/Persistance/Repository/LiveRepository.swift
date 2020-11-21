@@ -45,6 +45,22 @@ public class LiveRepository: Domain.LiveRepository {
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
     }
 
+    public func update(id: Domain.Live.ID, input: EditLive.Request, authorId: Domain.User.ID)
+        -> EventLoopFuture<Domain.Live>
+    {
+        let live = Live.find(id.rawValue, on: db).unwrap(orError: Error.liveNotFound)
+        let modified = live.map { live -> Live in
+            live.title = input.title
+            live.artworkURL = input.artworkURL
+            live.openAt = input.openAt
+            live.startAt = input.startAt
+            live.endAt = input.endAt
+            return live
+        }
+        .flatMap { [db] live in live.save(on: db).map { live } }
+        return modified.flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
+    }
+
     public func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
         Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             Domain.Live.translate(fromPersistance: $0, on: db)

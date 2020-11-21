@@ -9,9 +9,10 @@ public struct CreateGroup: EndpointProtocol {
         public var artworkURL: Foundation.URL?
         public var hometown: String?
 
-        public init(name: String, englishName: String?, biography: String?,
-                    since: Date?, artworkURL: Foundation.URL?, hometown: String?)
-        {
+        public init(
+            name: String, englishName: String?, biography: String?,
+            since: Date?, artworkURL: Foundation.URL?, hometown: String?
+        ) {
             self.name = name
             self.englishName = englishName
             self.biography = biography
@@ -67,7 +68,7 @@ public struct InviteGroup: EndpointProtocol {
 public struct JoinGroup: EndpointProtocol {
     public struct Request: Codable {
         public var invitationId: String
-        
+
         public init(invitationId: String) {
             self.invitationId = invitationId
         }

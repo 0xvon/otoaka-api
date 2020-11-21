@@ -102,7 +102,9 @@ public struct PerformanceRequest: Codable, Identifiable {
     public var live: Live
     public var group: Group
 
-    public init(id: PerformanceRequest.ID, status: PerformanceRequest.Status, live: Live, group: Group) {
+    public init(
+        id: PerformanceRequest.ID, status: PerformanceRequest.Status, live: Live, group: Group
+    ) {
         self.id = id
         self.status = status
         self.live = live

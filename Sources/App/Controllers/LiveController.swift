@@ -56,6 +56,25 @@ struct LiveController: RouteCollection {
         return try useCase((user: user, input: input))
     }
 
+    func edit(req: Request, uri: EditLive.URI, repository: Domain.LiveRepository) throws
+        -> EventLoopFuture<
+            Endpoint.Live
+        >
+    {
+        guard let user = req.auth.get(Domain.User.self) else {
+            // unreachable because guard middleware rejects unauthorized requests
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        let input = try req.content.decode(Endpoint.EditLive.Request.self)
+
+        let groupRepository = Persistance.GroupRepository(db: req.db)
+        let useCase = EditLiveUseCase(
+            groupRepository: groupRepository,
+            liveRepository: repository, eventLoop: req.eventLoop
+        )
+        return try useCase((id: uri.id, user: user, input: input))
+    }
+
     func register(req: Request, uri: RegisterLive.URI, repository: Domain.LiveRepository) throws
         -> EventLoopFuture<
             Endpoint.Ticket
