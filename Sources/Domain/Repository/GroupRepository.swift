@@ -13,6 +13,7 @@ public protocol GroupRepository {
     func isMember(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
     func findGroup(by id: Group.ID) -> EventLoopFuture<Group?>
     func isExists(by id: Group.ID) -> EventLoopFuture<Bool>
+    func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
 }
 
 extension GroupRepository {

@@ -5,11 +5,12 @@ public struct ReplyPerformanceRequestUseCase: UseCase {
     public typealias Request = (
         user: User, input: Endpoint.ReplyPerformanceRequest.Request
     )
-    public typealias Response = Live
+    public typealias Response = Void
 
     public enum Error: Swift.Error {
         case fanCannotBePerformer
-        case isNotMemberOfHostGroup
+        case onlyLeaderCanAccept
+        case liveNotFound
     }
 
     public let groupRepository: GroupRepository
@@ -30,7 +31,16 @@ public struct ReplyPerformanceRequestUseCase: UseCase {
         guard case .artist = request.user.role else {
             return eventLoop.makeFailedFuture(Error.fanCannotBePerformer)
         }
-
-        fatalError()
+        let performanceRequest = liveRepository.find(requestId: request.input.requestId)
+        let precondition = performanceRequest.map(\.group.id)
+            .flatMap { groupRepository.isLeader(of: $0, member: request.user.id) }
+            .flatMapThrowing {
+                guard $0 else { throw Error.onlyLeaderCanAccept }
+            }
+        return precondition.flatMap {
+            liveRepository.updatePerformerStatus(
+                requestId: request.input.requestId, status: request.input.reply
+            )
+        }
     }
 }

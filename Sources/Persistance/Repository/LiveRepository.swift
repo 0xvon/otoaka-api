@@ -64,15 +64,24 @@ public class LiveRepository: Domain.LiveRepository {
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
     }
-//    func updatePerformerStatus(requestId: Domain.PerformanceRequest.ID,
-//                               performerId: Domain.User.ID,
-//                               status: PerformanceRequest.Status) -> EventLoopFuture<Void> {
-//        let performer = LivePerformer.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
-//        performer.flatMap { performer in
-//            performer.status = 
-//        }
-//        fatalError()
-//    }
+    public func updatePerformerStatus(
+        requestId: PerformanceRequest.ID,
+        status: PerformanceRequest.Status
+    ) -> EventLoopFuture<Void> {
+        let performer = LivePerformer.find(requestId.rawValue, on: db).unwrap(
+            or: Error.requestNotFound)
+        return performer.flatMap { [db] performer in
+            performer.status = status
+            return performer.save(on: db)
+        }
+    }
+
+    public func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest> {
+        LivePerformer.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
+            .flatMap { [db] in
+                Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
+            }
+    }
 
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Live>> {
         let lives = Live.query(on: db)

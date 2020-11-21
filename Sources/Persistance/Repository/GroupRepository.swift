@@ -12,6 +12,7 @@ public class GroupRepository: Domain.GroupRepository {
         case userNotFound
         case groupNotFound
         case invitationNotFound
+        case notMemberOfGroup
     }
 
     public func create(input: Endpoint.CreateGroup.Request) -> EventLoopFuture<Domain.Group> {
@@ -41,9 +42,11 @@ public class GroupRepository: Domain.GroupRepository {
             .unwrap(orError: Error.invitationNotFound)
         }
     }
-    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID, asLeader: Bool) -> EventLoopFuture<
-        Void
-    > {
+    public func join(toGroup groupId: Domain.Group.ID, artist: Domain.User.ID, asLeader: Bool)
+        -> EventLoopFuture<
+            Void
+        >
+    {
         Self.join(toGroup: groupId, artist: artist, asLeader: asLeader, on: db).map { _ in }
     }
 
@@ -104,6 +107,15 @@ public class GroupRepository: Domain.GroupRepository {
             .filter(\.$artist.$id == member.rawValue)
             .filter(\.$group.$id == groupId.rawValue)
             .count().map { $0 > 0 }
+    }
+    public func isLeader(of groupId: Domain.Group.ID, member: Domain.User.ID) -> EventLoopFuture<
+        Bool
+    > {
+        Membership.query(on: db)
+            .filter(\.$artist.$id == member.rawValue)
+            .filter(\.$group.$id == groupId.rawValue)
+            .first().unwrap(or: Error.notMemberOfGroup)
+            .map { $0.isLeader }
     }
 
     public func findGroup(by id: Domain.Group.ID) -> EventLoopFuture<Domain.Group?> {

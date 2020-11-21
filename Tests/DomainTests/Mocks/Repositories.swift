@@ -39,6 +39,9 @@ extension GroupRepositoryMock {
     func findGroup(by id: Group.ID) -> EventLoopFuture<Group?> {
         unimplemented()
     }
+    func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool> {
+        unimplemented()
+    }
 }
 
 protocol LiveRepositoryMock: LiveRepository {}
@@ -55,4 +58,14 @@ extension LiveRepositoryMock {
     }
 
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>> { unimplemented() }
+
+    func updatePerformerStatus(requestId: PerformanceRequest.ID, status: PerformanceRequest.Status)
+        -> EventLoopFuture<Void>
+    {
+        unimplemented()
+    }
+
+    func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest> {
+        unimplemented()
+    }
 }

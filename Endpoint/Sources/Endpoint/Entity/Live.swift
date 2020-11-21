@@ -100,6 +100,14 @@ public struct PerformanceRequest: Codable, Identifiable {
     public var id: ID
     public var status: Status
     public var live: Live
+    public var group: Group
+
+    public init(id: PerformanceRequest.ID, status: PerformanceRequest.Status, live: Live, group: Group) {
+        self.id = id
+        self.status = status
+        self.live = live
+        self.group = group
+    }
 }
 
 public struct Ticket: Codable {

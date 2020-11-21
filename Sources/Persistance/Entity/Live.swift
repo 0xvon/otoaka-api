@@ -74,6 +74,26 @@ final class LivePerformer: Model {
     var status: Domain.PerformanceRequest.Status
 }
 
+extension Endpoint.PerformanceRequest {
+    static func translate(fromPersistance entity: LivePerformer, on db: Database)
+        -> EventLoopFuture<Self>
+    {
+        let eventLoop = db.eventLoop
+        let id = eventLoop.submit { try entity.requireID() }
+        let live = entity.$live.get(on: db).flatMap {
+            Endpoint.Live.translate(fromPersistance: $0, on: db)
+        }
+        let group = entity.$group.get(on: db).flatMap {
+            Endpoint.Group.translate(fromPersistance: $0, on: db)
+        }
+        return id.and(live).and(group).map { ($0.0, $0.1, $1) }.map {
+            Endpoint.PerformanceRequest(
+                id: ID($0), status: entity.status, live: $1, group: $2
+            )
+        }
+    }
+}
+
 extension Endpoint.Live {
     static func translate(fromPersistance entity: Live, on db: Database) -> EventLoopFuture<Self> {
         let eventLoop = db.eventLoop

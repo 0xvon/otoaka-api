@@ -32,10 +32,11 @@ public struct CreateLive: EndpointProtocol {
 
 public struct ReplyPerformanceRequest: EndpointProtocol {
     public struct Request: Codable {
-        public let liveId: Live.ID
+        public let requestId: PerformanceRequest.ID
         public let reply: PerformanceRequest.Status
-        public init(liveId: Live.ID, reply: PerformanceRequest.Status) {
-            self.liveId = liveId
+        public init(requestId: PerformanceRequest.ID,
+                    reply: PerformanceRequest.Status) {
+            self.requestId = requestId
             self.reply = reply
         }
     }
