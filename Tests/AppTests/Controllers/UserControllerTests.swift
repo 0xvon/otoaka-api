@@ -1,15 +1,19 @@
 import Domain
 import Endpoint
 import XCTVapor
+import StubKit
 
 @testable import App
 
 class UserControllerTests: XCTestCase {
     var app: Application!
+    var appClient: AppClient!
+
     override func setUp() {
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))
+        appClient = AppClient(application: app, cognito: CognitoClient())
     }
 
     override func tearDown() {
@@ -64,6 +68,20 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(Signup.Response.self)
             XCTAssertEqual(responseBody.name, dummyUserName)
+        }
+    }
+
+    func testRegisterUserDeviceToken() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+
+        let body = try! Stub.make(Endpoint.RegisterDeviceToken.Request.self) {
+            $0.set(\.deviceToken, value: "78539a7548fecaa554e7e8a9d714e8bb23de234763534dd3cce071cbc3d353aa")
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.POST, "users/register_device_token", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
 }
