@@ -42,3 +42,18 @@ struct CreateFollowing: Migration {
         database.schema(Following.schema).delete()
     }
 }
+
+struct CreateUserDevice: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserDevice.schema)
+            .id()
+            .field("endpoint_arn", .string, .required)
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserDevice.schema).delete()
+    }
+}
