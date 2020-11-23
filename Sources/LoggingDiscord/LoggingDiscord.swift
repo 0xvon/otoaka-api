@@ -1,16 +1,17 @@
-import Logging
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
 import Foundation
+import Logging
+
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 
 public class DiscordLogHandler: LogHandler {
     public let label: String
     public var userName: String
-    
+
     /// See `LogHandler.metadata`.
     public var metadata: Logger.Metadata
-    
+
     /// See `LogHandler.logLevel`.
     public var logLevel: Logger.Level
 
@@ -21,7 +22,8 @@ public class DiscordLogHandler: LogHandler {
 
     public init(
         label: String, userName: String, avatarURL: URL,
-        webhookURL: URL, level: Logger.Level = .error, session: URLSession = .shared, metadata: Logger.Metadata = [:]
+        webhookURL: URL, level: Logger.Level = .error, session: URLSession = .shared,
+        metadata: Logger.Metadata = [:]
     ) {
         self.label = label
         self.userName = userName
@@ -37,7 +39,10 @@ public class DiscordLogHandler: LogHandler {
         set(newValue) { metadata[key] = newValue }
     }
 
-    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+    public func log(
+        level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String,
+        file: String, function: String, line: UInt
+    ) {
         var text: String = ""
 
         if self.logLevel <= .trace {
@@ -54,14 +59,17 @@ public class DiscordLogHandler: LogHandler {
         if self.logLevel <= .debug {
             text += " (" + file + ":" + line.description + ")"
         }
-        let webhook = DiscordWebhook(username: userName, avatarUrl: avatarURL.absoluteString, content: "`\(text)`")
+        let webhook = DiscordWebhook(
+            username: userName, avatarUrl: avatarURL.absoluteString, content: "`\(text)`")
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         let body: Data
         do {
             body = try encoder.encode(webhook)
         } catch {
-            print("[ ERROR ] DiscordLogHandler.log failed to encode body '\(error)' (\(#file):\(#line)")
+            print(
+                "[ ERROR ] DiscordLogHandler.log failed to encode body '\(error)' (\(#file):\(#line)"
+            )
             return
         }
         var request = URLRequest(url: webhookURL)
@@ -72,13 +80,19 @@ public class DiscordLogHandler: LogHandler {
             if let data = data, let response = response as? HTTPURLResponse {
                 guard 200..<300 ~= response.statusCode else {
                     let errorResponse = String(data: data, encoding: .utf8)
-                    print("[ ERROR ] DiscordLogHandler.log failed to send request '\(errorResponse ?? "no message")' (\(#file):\(#line)")
+                    print(
+                        "[ ERROR ] DiscordLogHandler.log failed to send request '\(errorResponse ?? "no message")' (\(#file):\(#line)"
+                    )
                     return
                 }
             } else if let error = error {
-                print("[ ERROR ] DiscordLogHandler.log failed to send request '\(error)' (\(#file):\(#line)")
+                print(
+                    "[ ERROR ] DiscordLogHandler.log failed to send request '\(error)' (\(#file):\(#line)"
+                )
             } else {
-                print("[ ERROR ] DiscordLogHandler.log got unexpected request result (\(#file):\(#line)")
+                print(
+                    "[ ERROR ] DiscordLogHandler.log got unexpected request result (\(#file):\(#line)"
+                )
             }
         }
         task.resume()
@@ -91,8 +105,8 @@ struct DiscordWebhook: Codable {
     let content: String
 }
 
-private extension Logger.Metadata {
-    var sortedDescriptionWithoutQuotes: String {
+extension Logger.Metadata {
+    fileprivate var sortedDescriptionWithoutQuotes: String {
         let contents = Array(self)
             .sorted(by: { $0.0 < $1.0 })
             .map { "\($0.description): \($1)" }
@@ -101,8 +115,8 @@ private extension Logger.Metadata {
     }
 }
 
-fileprivate extension Logger.Level {
-    var name: String {
+extension Logger.Level {
+    fileprivate var name: String {
         switch self {
         case .trace: return "TRACE"
         case .debug: return "DEBUG"

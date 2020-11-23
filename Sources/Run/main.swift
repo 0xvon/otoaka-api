@@ -1,7 +1,7 @@
 import App
-import Vapor
 import Logging
 import LoggingDiscord
+import Vapor
 
 var env = try Environment.detect()
 func provideDiscordLoggerFactory() -> ((_ label: String) -> DiscordLogHandler)? {
@@ -28,9 +28,10 @@ try LoggingSystem.bootstrap(from: &env) { level in
     let discordLoggerFactory = provideDiscordLoggerFactory()
     return { label in
         let optionalHandlers = [discordLoggerFactory].compactMap { $0?(label) }
-        return MultiplexLogHandler([
-            ConsoleLogger(label: label, console: console, level: level),
-        ] + optionalHandlers)
+        return MultiplexLogHandler(
+            [
+                ConsoleLogger(label: label, console: console, level: level)
+            ] + optionalHandlers)
     }
 }
 let app = Application(env)

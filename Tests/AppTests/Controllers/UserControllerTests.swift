@@ -1,7 +1,7 @@
 import Domain
 import Endpoint
-import XCTVapor
 import StubKit
+import XCTVapor
 
 @testable import App
 
@@ -76,11 +76,14 @@ class UserControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
 
         let body = try! Stub.make(Endpoint.RegisterDeviceToken.Request.self) {
-            $0.set(\.deviceToken, value: "78539a7548fecaa554e7e8a9d714e8bb23de234763534dd3cce071cbc3d353aa")
+            $0.set(
+                \.deviceToken,
+                value: "78539a7548fecaa554e7e8a9d714e8bb23de234763534dd3cce071cbc3d353aa")
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
-        try app.test(.POST, "users/register_device_token", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "users/register_device_token", headers: headers, body: bodyData) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
