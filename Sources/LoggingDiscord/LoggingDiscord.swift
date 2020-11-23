@@ -70,7 +70,7 @@ public class DiscordLogHandler: LogHandler {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         let task = session.dataTask(with: request) { data, response, error in
             if let data = data, let response = response as? HTTPURLResponse {
-                guard 200..<299 ~= response.statusCode else {
+                guard 200..<300 ~= response.statusCode else {
                     let errorResponse = String(data: data, encoding: .utf8)
                     print("[ ERROR ] DiscordLogHandler.log failed to send request '\(errorResponse ?? "no message")' (\(#file):\(#line)")
                     return
