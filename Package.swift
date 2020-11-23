@@ -23,8 +23,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "JWTKit", package: "jwt-kit"),
-                .target(name: "Persistance"),
                 .product(name: "SNS", package: "AWSSDKSwift"),
+                .target(name: "Persistance"),
+                .target(name: "LoggingDiscord"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -33,6 +34,7 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
+        .target(name: "LoggingDiscord"),
         .target(name: "Domain", dependencies: [
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "Endpoint", package: "Endpoint"),
