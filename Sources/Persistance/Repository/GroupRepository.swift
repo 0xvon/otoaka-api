@@ -142,4 +142,27 @@ public class GroupRepository: Domain.GroupRepository {
             Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
     }
+
+    public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Group>> {
+        let groups = Group.query(on: db)
+        return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            let metadata = Domain.PageMetadata(
+                page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
+            let items = $0.items.map { Domain.Group.translate(fromPersistance: $0, on: db) }
+                .flatten(
+                    on: db.eventLoop)
+            return items.map { Domain.Page(items: $0, metadata: metadata) }
+        }
+    }
+
+    public func getMemberships(for artistId: Domain.User.ID) -> EventLoopFuture<[Domain.Group]> {
+        let memberships = Group.query(on: db)
+            .join(Membership.self, on: \Membership.$group.$id == \Group.$id)
+            .filter(Membership.self, \.$artist.$id == artistId.rawValue)
+            .all()
+        return memberships.flatMap { [db] in
+            $0.map { Domain.Group.translate(fromPersistance: $0, on: db) }
+                .flatten(on: db.eventLoop)
+        }
+    }
 }

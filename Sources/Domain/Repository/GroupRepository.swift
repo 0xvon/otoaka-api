@@ -14,6 +14,9 @@ public protocol GroupRepository {
     func findGroup(by id: Group.ID) -> EventLoopFuture<Group?>
     func isExists(by id: Group.ID) -> EventLoopFuture<Bool>
     func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
+
+    func get(page: Int, per: Int) -> EventLoopFuture<Page<Group>>
+    func getMemberships(for artistId: User.ID) -> EventLoopFuture<[Group]>
 }
 
 extension GroupRepository {

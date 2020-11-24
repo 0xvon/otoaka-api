@@ -22,6 +22,17 @@ struct GroupController: RouteCollection {
         try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
         try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
+
+        try routes.on(
+            endpoint: Endpoint.GetAllGroups.self,
+            use: injectProvider { req, uri, repository in
+                return repository.get(page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.GetMemberships.self,
+            use: injectProvider { req, uri, repository in
+                repository.getMemberships(for: uri.artistId)
+            })
     }
 
     func getGroupInfo(req: Request, uri: GetGroup.URI, repository: Domain.GroupRepository) throws
