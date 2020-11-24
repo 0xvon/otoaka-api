@@ -78,6 +78,33 @@ class GroupControllerTests: XCTestCase {
         }
     }
 
+    func testGetAllGroup() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        _ = try appClient.createGroup(with: user)
+        _ = try appClient.createGroup(with: user)
+        _ = try appClient.createGroup(with: user)
+
+        try app.test(.GET, "groups?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetAllGroups.Response.self)
+            XCTAssertGreaterThan(response.items.count, 3)
+        }
+    }
+
+    func testGetMemberships() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupA = try appClient.createGroup(with: user)
+        let groupB = try appClient.createGroup(with: user)
+
+        try app.test(.GET, "groups/memberships/\(user.user.id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetMemberships.Response.self)
+            XCTAssertEqual(response.map(\.id), [groupA.id, groupB.id])
+        }
+    }
+
     func testJoinWithInvalidInvitation() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
