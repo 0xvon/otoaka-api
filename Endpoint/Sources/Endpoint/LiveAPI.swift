@@ -107,7 +107,7 @@ public struct GetLive: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
-public struct RegisterLive: EndpointProtocol {
+public struct ReserveTicket: EndpointProtocol {
     public struct Request: Codable {
         public let liveId: Live.ID
         public init(liveId: Live.ID) {
@@ -116,7 +116,7 @@ public struct RegisterLive: EndpointProtocol {
     }
     public typealias Response = Ticket
     public struct URI: CodableURL {
-        @StaticPath("lives", "register") public var prefix: Void
+        @StaticPath("lives", "reserve") public var prefix: Void
         public init() {}
     }
     public static let method: HTTPMethod = .post

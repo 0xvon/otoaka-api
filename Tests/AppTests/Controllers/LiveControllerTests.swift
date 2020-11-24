@@ -146,14 +146,14 @@ class LiveControllerTests: XCTestCase {
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: []), with: user)
 
-        let body = try! Stub.make(Endpoint.RegisterLive.Request.self) {
+        let body = try! Stub.make(Endpoint.ReserveTicket.Request.self) {
             $0.set(\.liveId, value: live.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
-        try app.test(.POST, "lives/register", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.RegisterLive.Response.self)
+            let responseBody = try res.content.decode(Endpoint.ReserveTicket.Response.self)
             XCTAssertEqual(responseBody.status, .registered)
         }
     }

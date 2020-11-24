@@ -20,7 +20,7 @@ struct LiveController: RouteCollection {
         try routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
         try routes.on(endpoint: Endpoint.EditLive.self, use: injectProvider(edit))
         try routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
-        try routes.on(endpoint: Endpoint.RegisterLive.self, use: injectProvider(register))
+        try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(register))
         try routes.on(
             endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
         try routes.on(
@@ -76,7 +76,7 @@ struct LiveController: RouteCollection {
         return try useCase((id: uri.id, user: user, input: input))
     }
 
-    func register(req: Request, uri: RegisterLive.URI, repository: Domain.LiveRepository) throws
+    func register(req: Request, uri: ReserveTicket.URI, repository: Domain.LiveRepository) throws
         -> EventLoopFuture<
             Endpoint.Ticket
         >
@@ -85,7 +85,7 @@ struct LiveController: RouteCollection {
             // unreachable because guard middleware rejects unauthorized requests
             return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
-        let input = try req.content.decode(Endpoint.RegisterLive.Request.self)
+        let input = try req.content.decode(Endpoint.ReserveTicket.Request.self)
         let useCase = JoinLiveUseCase(liveRepository: repository, eventLoop: req.eventLoop)
         return try useCase((liveId: input.liveId, user: user))
     }
