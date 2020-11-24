@@ -88,7 +88,7 @@ class GroupControllerTests: XCTestCase {
         try app.test(.GET, "groups?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetAllGroups.Response.self)
-            XCTAssertGreaterThan(response.items.count, 3)
+            XCTAssertGreaterThanOrEqual(response.items.count, 3)
         }
     }
 
