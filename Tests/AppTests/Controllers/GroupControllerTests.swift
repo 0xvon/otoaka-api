@@ -101,7 +101,7 @@ class GroupControllerTests: XCTestCase {
         try app.test(.GET, "groups/memberships/\(user.user.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetMemberships.Response.self)
-            XCTAssertEqual(response.map(\.id), [groupA.id, groupB.id])
+            XCTAssertEqual(Set(response.map(\.id)), Set([groupA.id, groupB.id]))
         }
     }
 
