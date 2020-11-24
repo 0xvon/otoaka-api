@@ -96,7 +96,7 @@ public struct GetMemberships: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = [Group]
     public struct URI: CodableURL {
-        @StaticPath("groups") public var prefix: Void
+        @StaticPath("groups", "memberships") public var prefix: Void
         @DynamicPath public var artistId: User.ID
         public init() {}
     }
