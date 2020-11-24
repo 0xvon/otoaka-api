@@ -44,6 +44,8 @@ extension GroupRepositoryMock {
     func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool> {
         unimplemented()
     }
+    func get(page: Int, per: Int) -> EventLoopFuture<Page<Group>> { unimplemented() }
+    func getMemberships(for artistId: User.ID) -> EventLoopFuture<[Group]> { unimplemented() }
 }
 
 protocol LiveRepositoryMock: LiveRepository {}
