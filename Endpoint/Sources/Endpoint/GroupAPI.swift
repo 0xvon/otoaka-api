@@ -106,7 +106,7 @@ public struct GetMemberships: EndpointProtocol {
 public struct GetAllGroups: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Group>
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int

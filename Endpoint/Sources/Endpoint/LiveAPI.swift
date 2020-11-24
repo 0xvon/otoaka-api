@@ -87,7 +87,7 @@ public struct ReplyPerformanceRequest: EndpointProtocol {
 public struct GetPerformanceRequests: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<PerformanceRequest>
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "requests") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int
@@ -125,7 +125,7 @@ public struct ReserveTicket: EndpointProtocol {
 public struct GetUpcomingLives: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "upcoming") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int

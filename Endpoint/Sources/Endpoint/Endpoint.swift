@@ -19,6 +19,14 @@ public struct Empty: Codable {
     public init() {}
 }
 
+public protocol PaginationQuery {
+    /// Current page number. Starts at `1`.
+    var page: Int { get set }
+
+    /// Max items per page.
+    var per: Int { get set }
+}
+
 public struct PageMetadata: Codable {
     /// Current page number. Starts at `1`.
     public let page: Int
