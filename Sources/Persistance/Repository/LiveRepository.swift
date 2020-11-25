@@ -130,6 +130,16 @@ public class LiveRepository: Domain.LiveRepository {
             }
         }
     }
+    public func get(page: Int, per: Int, group: Domain.Group.ID) -> EventLoopFuture<Domain.Page<Domain.Live>> {
+        let lives = LivePerformer.query(on: db)
+            .filter(\.$group.$id == group.rawValue)
+            .with(\.$live) //  { $0.with(\.$author).with(\.$hostGroup) }
+        return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.Live.translate(fromPersistance: $0.live, on: db)
+            }
+        }
+    }
 
     public func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.PerformanceRequest>
