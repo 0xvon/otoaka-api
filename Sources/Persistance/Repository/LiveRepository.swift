@@ -32,14 +32,22 @@ public class LiveRepository: Domain.LiveRepository {
             live.save(on: db)
                 .flatMapThrowing { _ in try live.requireID() }
                 .flatMap { liveId -> EventLoopFuture<Void> in
-                    let performers = performerGroups.map { performerId -> LivePerformer in
-                        let relation = LivePerformer()
-                        relation.$group.id = performerId.rawValue
-                        relation.$live.id = liveId
-                        relation.status = .pending
-                        return relation
+                    let futures = performerGroups
+                        .map { performerId -> EventLoopFuture<Void> in
+                            if performerId == input.hostGroupId {
+                                let request = LivePerformer()
+                                request.$group.id = performerId.rawValue
+                                request.$live.id = liveId
+                                return request.save(on: db)
+                            } else {
+                                let request = PerformanceRequest()
+                                request.$group.id = performerId.rawValue
+                                request.$live.id = liveId
+                                request.status = .pending
+                                return request.save(on: db)
+                            }
                     }
-                    return db.eventLoop.flatten(performers.map { $0.save(on: db) })
+                    return db.eventLoop.flatten(futures)
                 }
         }
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
@@ -82,19 +90,30 @@ public class LiveRepository: Domain.LiveRepository {
         }
     }
     public func updatePerformerStatus(
-        requestId: PerformanceRequest.ID,
-        status: PerformanceRequest.Status
+        requestId: Domain.PerformanceRequest.ID,
+        status: Domain.PerformanceRequest.Status
     ) -> EventLoopFuture<Void> {
-        let performer = LivePerformer.find(requestId.rawValue, on: db).unwrap(
+        let request = PerformanceRequest.find(requestId.rawValue, on: db).unwrap(
             or: Error.requestNotFound)
-        return performer.flatMap { [db] performer in
-            performer.status = status
-            return performer.save(on: db)
+        return request.flatMap { [db] request in
+            request.status = status
+            return db.transaction { db -> EventLoopFuture<Void> in
+                switch status {
+                case .accepted:
+                    let performer = LivePerformer()
+                    performer.$group.id = request.$group.id
+                    performer.$live.id = request.$live.id
+                    return request.update(on: db)
+                        .flatMap { performer.save(on: db) }
+                default:
+                    return request.update(on: db)
+                }
+            }
         }
     }
 
-    public func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest> {
-        LivePerformer.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
+    public func find(requestId: Domain.PerformanceRequest.ID) -> EventLoopFuture<Domain.PerformanceRequest> {
+        PerformanceRequest.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
             .flatMap { [db] in
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
             }
@@ -112,10 +131,11 @@ public class LiveRepository: Domain.LiveRepository {
     public func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.PerformanceRequest>
     > {
-        let performers = LivePerformer.query(on: db)
-            .join(Membership.self, on: \LivePerformer.$group.$id == \Membership.$group.$id)
+        let performers = PerformanceRequest.query(on: db)
+            .join(Membership.self, on: \PerformanceRequest.$group.$id == \Membership.$group.$id)
             .filter(Membership.self, \.$artist.$id == user.rawValue)
             .filter(Membership.self, \.$isLeader == true)
+            .with(\.$group).with(\.$live)
         return performers.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)

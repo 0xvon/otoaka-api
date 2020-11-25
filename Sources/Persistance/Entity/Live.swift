@@ -59,8 +59,9 @@ final class Live: Model {
     }
 }
 
-final class LivePerformer: Model {
-    static let schema = "live_performers"
+
+final class PerformanceRequest: Model {
+    static let schema = "performance_requests"
     @ID(key: .id)
     var id: UUID?
 
@@ -74,8 +75,20 @@ final class LivePerformer: Model {
     var status: Domain.PerformanceRequest.Status
 }
 
+final class LivePerformer: Model {
+    static let schema = "live_performers"
+    @ID(key: .id)
+    var id: UUID?
+
+    @Parent(key: "live_id")
+    var live: Live
+
+    @Parent(key: "group_id")
+    var group: Group
+}
+
 extension Endpoint.PerformanceRequest {
-    static func translate(fromPersistance entity: LivePerformer, on db: Database)
+    static func translate(fromPersistance entity: PerformanceRequest, on db: Database)
         -> EventLoopFuture<Self>
     {
         let eventLoop = db.eventLoop

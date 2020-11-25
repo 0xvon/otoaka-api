@@ -29,8 +29,7 @@ public func setup(
     migrations.add([
         CreateUser(),
         CreateGroup(), CreateMembership(), CreateGroupInvitation(),
-        CreateLive(), CreateLivePerformer(),
-        AddUniqueConstraintOnLivePerformer(),
+        CreateLive(), CreateLivePerformer(), CreatePerformanceRequest(),
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
     ])
 

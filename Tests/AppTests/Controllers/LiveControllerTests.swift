@@ -178,13 +178,19 @@ class LiveControllerTests: XCTestCase {
         let groupA = try appClient.createGroup(with: userX)
 
         _ = try appClient.createLive(
-            hostGroup: hostGroup, style: .battle(performers: [groupA.id]), with: hostUser
+            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]), with: hostUser
         )
 
         let requests = try appClient.getPerformanceRequests(with: userX)
         XCTAssertEqual(requests.items.count, 1)
         let receivedRequest = try XCTUnwrap(requests.items.first)
         XCTAssertEqual(receivedRequest.status, .pending)
+
+        do {
+            let requests = try appClient.getPerformanceRequests(with: hostUser)
+            XCTAssertEqual(requests.items.count, 0)
+        }
+
         let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
             $0.set(\.reply, value: .accept)
             $0.set(\.requestId, value: receivedRequest.id)

@@ -35,7 +35,7 @@ struct CreateLive: Migration {
     }
 }
 
-struct CreateLivePerformer: Migration {
+struct CreatePerformanceRequest: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         let statusEnum = database.enum("performance_request_status")
             .case("accepted")
@@ -43,43 +43,31 @@ struct CreateLivePerformer: Migration {
             .case("pending")
             .create()
         return statusEnum.flatMap { statusEnum in
-            return database.schema(LivePerformer.schema)
+            return database.schema(PerformanceRequest.schema)
                 .id()
                 .field("live_id", .uuid, .required)
                 .field("group_id", .uuid, .required)
                 .field("status", statusEnum, .required)
+                .unique(on: "live_id", "group_id")
                 .create()
         }
     }
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(LivePerformer.schema).delete()
+        database.schema(PerformanceRequest.schema).delete()
     }
 }
 
-struct AddUniqueConstraintOnLivePerformer: Migration {
+struct CreateLivePerformer: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        LivePerformer.query(on: database).all().map { allEntries in
-            allEntries.reduce(into: [String: LivePerformer]()) {
-                $0["\($1.$group.id)_\($1.$live.id)"] = $1
-            }
-        }.and(LivePerformer.query(on: database).delete())
-            .map { $0.0 }
-            .flatMap { uniqueEntries in
-                database.schema(LivePerformer.schema)
-                    .unique(on: "live_id", "group_id", name: "performer_uniqueness")
-                    .update()
-                    .map { _ in uniqueEntries }
-            }
-            .flatMap { uniqueEntries in
-                database.eventLoop.flatten(uniqueEntries.map { $0.value.save(on: database) })
-            }
-            .map { _ in }
-    }
-
-    func revert(on database: Database) -> EventLoopFuture<Void> {
         return database.schema(LivePerformer.schema)
-            .deleteConstraint(name: "performer_uniqueness")
-            .update()
+            .id()
+            .field("live_id", .uuid, .required)
+            .field("group_id", .uuid, .required)
+            .unique(on: "live_id", "group_id")
+            .create()
+    }
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LivePerformer.schema).delete()
     }
 }
 
