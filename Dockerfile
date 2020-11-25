@@ -65,6 +65,6 @@ ENV PORT=8080
 # Let Docker bind to port 8080
 EXPOSE $PORT
 
-# Start the Vapor service when the image is run, default to listening on 8080 in production environment
-ENTRYPOINT ["./Run"]
-CMD ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "$PORT"]
+RUN echo "./Run serve --env production --hostname 0.0.0.0 --port \$PORT" > ./entrypoint.sh && \
+  chmod +x ./entrypoint.sh
+ENTRYPOINT "./entrypoint.sh"
