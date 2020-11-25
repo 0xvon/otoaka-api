@@ -90,9 +90,10 @@ class AppClient {
     }
 
     func createLive(
-        hostGroup: Endpoint.Group, style: LiveStyleInput = .oneman(performer: nil),
+        hostGroup: Endpoint.Group, style: LiveStyleInput? = nil,
         with user: AppUser
     ) throws -> Endpoint.Live {
+        let style = style ?? .oneman(performer: hostGroup.id)
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: hostGroup.id)
             $0.set(\.style, value: style)
@@ -118,6 +119,18 @@ class AppClient {
             response = try res.content.decode(Endpoint.GetPerformanceRequests.Response.self)
         }
         return response
+    }
+
+    func replyPerformanceRequest(
+        request: PerformanceRequest, reply: ReplyPerformanceRequest.Request.Reply,
+        with user: AppUser
+    ) throws {
+        let body = try! Stub.make(Endpoint.ReplyPerformanceRequest.Request.self) {
+            $0.set(\.requestId, value: request.id)
+            $0.set(\.reply, value: reply)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        try app.test(.POST, "lives/reply", headers: makeHeaders(for: user), body: bodyData)
     }
 
     func follow(group: Group, with user: AppUser) throws {

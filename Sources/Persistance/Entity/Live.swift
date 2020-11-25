@@ -59,7 +59,6 @@ final class Live: Model {
     }
 }
 
-
 final class PerformanceRequest: Model {
     static let schema = "performance_requests"
     @ID(key: .id)
@@ -138,7 +137,7 @@ extension Endpoint.Live {
                 let style: LiveStyleOutput
                 switch entity.style {
                 case .oneman:
-                    style = .oneman(performer: performers.first)
+                    style = .oneman(performer: hostGroup)
                 case .battle:
                     style = .battle(performers: performers)
                 case .festival:

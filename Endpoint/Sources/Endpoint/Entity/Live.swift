@@ -1,7 +1,7 @@
 import Foundation
 
 public enum LiveStyle<Performer>: Codable where Performer: Codable {
-    case oneman(performer: Performer?)
+    case oneman(performer: Performer)
     case battle(performers: [Performer])
     case festival(performers: [Performer])
 
@@ -18,7 +18,7 @@ public enum LiveStyle<Performer>: Codable where Performer: Codable {
         let kind = try container.decode(Kind.self, forKey: .kind)
         switch kind {
         case .oneman:
-            self = try .oneman(performer: container.decode(Performer?.self, forKey: .value))
+            self = try .oneman(performer: container.decode(Performer.self, forKey: .value))
         case .battle:
             self = try .battle(performers: container.decode([Performer].self, forKey: .value))
         case .festival:
@@ -44,7 +44,7 @@ public enum LiveStyle<Performer>: Codable where Performer: Codable {
     public var performers: [Performer] {
         switch self {
         case .oneman(let performer):
-            return performer.map { [$0] } ?? []
+            return [performer]
         case .battle(let performers):
             return performers
         case .festival(let performers):

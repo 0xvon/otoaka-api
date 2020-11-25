@@ -32,7 +32,8 @@ public class LiveRepository: Domain.LiveRepository {
             live.save(on: db)
                 .flatMapThrowing { _ in try live.requireID() }
                 .flatMap { liveId -> EventLoopFuture<Void> in
-                    let futures = performerGroups
+                    let futures =
+                        performerGroups
                         .map { performerId -> EventLoopFuture<Void> in
                             if performerId == input.hostGroupId {
                                 let request = LivePerformer()
@@ -46,7 +47,7 @@ public class LiveRepository: Domain.LiveRepository {
                                 request.status = .pending
                                 return request.save(on: db)
                             }
-                    }
+                        }
                     return db.eventLoop.flatten(futures)
                 }
         }
@@ -112,7 +113,9 @@ public class LiveRepository: Domain.LiveRepository {
         }
     }
 
-    public func find(requestId: Domain.PerformanceRequest.ID) -> EventLoopFuture<Domain.PerformanceRequest> {
+    public func find(requestId: Domain.PerformanceRequest.ID) -> EventLoopFuture<
+        Domain.PerformanceRequest
+    > {
         PerformanceRequest.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
             .flatMap { [db] in
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)

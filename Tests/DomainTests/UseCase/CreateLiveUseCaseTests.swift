@@ -84,6 +84,7 @@ class CreateLiveUseCaseTests: XCTestCase {
                 request: (
                     user: artistA,
                     input: Stub.make {
+                        $0.set(\.style, value: LiveStyle.oneman(performer: groupX.id))
                         $0.set(\.hostGroupId, value: groupX.id)
                     }
                 ),
@@ -96,6 +97,7 @@ class CreateLiveUseCaseTests: XCTestCase {
                 request: (
                     user: artistC,
                     input: Stub.make {
+                        $0.set(\.style, value: LiveStyle.oneman(performer: groupX.id))
                         $0.set(\.hostGroupId, value: groupX.id)
                     }
                 ),
@@ -108,6 +110,7 @@ class CreateLiveUseCaseTests: XCTestCase {
                 request: (
                     user: fanD,
                     input: Stub.make {
+                        $0.set(\.style, value: LiveStyle.oneman(performer: groupX.id))
                         $0.set(\.hostGroupId, value: groupX.id)
                     }
                 ),

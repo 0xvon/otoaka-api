@@ -119,9 +119,11 @@ class LiveControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         let hostGroup = try appClient.createGroup(with: user)
         var performers: [Endpoint.Group] = []
+        var artists: [AppUser] = []
 
         for _ in 0..<3 {
             let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+            artists.append(artist)
             let request = try! Stub.make(Endpoint.CreateGroup.Request.self) {
                 $0.set(\.name, value: UUID().uuidString)
             }
@@ -132,6 +134,16 @@ class LiveControllerTests: XCTestCase {
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: performers.map(\.id)), with: user)
 
+        try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
+            XCTAssertEqual(Set([]), Set(responseBody.style.performers.map(\.id)))
+        }
+        for artist in artists {
+            let requests = try appClient.getPerformanceRequests(with: artist)
+            let request = try XCTUnwrap(requests.items.first)
+            try appClient.replyPerformanceRequest(request: request, reply: .accept, with: artist)
+        }
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
@@ -178,7 +190,8 @@ class LiveControllerTests: XCTestCase {
         let groupA = try appClient.createGroup(with: userX)
 
         _ = try appClient.createLive(
-            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]), with: hostUser
+            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]),
+            with: hostUser
         )
 
         let requests = try appClient.getPerformanceRequests(with: userX)

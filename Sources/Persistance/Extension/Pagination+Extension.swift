@@ -2,7 +2,9 @@ import Endpoint
 import Fluent
 
 extension Endpoint.Page {
-    static func translate<T>(page: Fluent.Page<T>, eventLoop: EventLoop, item: (T) -> EventLoopFuture<Item>) -> EventLoopFuture<Endpoint.Page<Item>> {
+    static func translate<T>(
+        page: Fluent.Page<T>, eventLoop: EventLoop, item: (T) -> EventLoopFuture<Item>
+    ) -> EventLoopFuture<Endpoint.Page<Item>> {
         let metadata = Endpoint.PageMetadata(
             page: page.metadata.page, per: page.metadata.per, total: page.metadata.total)
         let items = page.items.map { item($0) }.flatten(on: eventLoop)
