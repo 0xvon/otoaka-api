@@ -1,4 +1,0 @@
-#!/bin/bash
-
-rm -rf $CACHE_DIR/vapor-build-cache
-cp -r $BUILD_DIR/.build $CACHE_DIR/vapor-build-cache

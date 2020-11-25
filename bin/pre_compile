@@ -1,6 +1,0 @@
-#!/bin/bash
-
-if [ -d $CACHE_DIR/vapor-build-cache ]; then
-  rm -rf $BUILD_DIR/.build
-  cp -r $CACHE_DIR/vapor-build-cache $BUILD_DIR/.build
-fi
