@@ -60,14 +60,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     {
         let followings = Following.query(on: db).filter(\.$user.$id == selfUser.rawValue)
             .with(\.$target)
-        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] page in
-            let metadata = Domain.PageMetadata(
-                page: page.metadata.page, per: page.metadata.per, total: page.metadata.total)
-            let items = page.items.map {
+        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.Group.translate(fromPersistance: $0.target, on: db)
             }
-            .flatten(on: db.eventLoop)
-            return items.map { Domain.Page(items: $0, metadata: metadata) }
         }
     }
 
@@ -76,14 +72,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     > {
         let followings = Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue)
             .with(\.$user)
-        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] page in
-            let metadata = Domain.PageMetadata(
-                page: page.metadata.page, per: page.metadata.per, total: page.metadata.total)
-            let items = page.items.map {
+        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.User.translate(fromPersistance: $0.user, on: db)
             }
-            .flatten(on: db.eventLoop)
-            return items.map { Domain.Page(items: $0, metadata: metadata) }
         }
     }
 }

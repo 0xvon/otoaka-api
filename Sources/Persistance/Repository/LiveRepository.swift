@@ -103,11 +103,9 @@ public class LiveRepository: Domain.LiveRepository {
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Live>> {
         let lives = Live.query(on: db)
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            let metadata = Domain.PageMetadata(
-                page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
-            let items = $0.items.map { Domain.Live.translate(fromPersistance: $0, on: db) }.flatten(
-                on: db.eventLoop)
-            return items.map { Domain.Page(items: $0, metadata: metadata) }
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.Live.translate(fromPersistance: $0, on: db)
+            }
         }
     }
 
@@ -119,13 +117,9 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(Membership.self, \.$artist.$id == user.rawValue)
             .filter(Membership.self, \.$isLeader == true)
         return performers.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            let metadata = Domain.PageMetadata(
-                page: $0.metadata.page, per: $0.metadata.per, total: $0.metadata.total)
-            let items = $0.items.map {
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
-            }.flatten(
-                on: db.eventLoop)
-            return items.map { Domain.Page(items: $0, metadata: metadata) }
+            }
         }
     }
 }
