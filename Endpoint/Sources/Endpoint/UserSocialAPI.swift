@@ -3,6 +3,9 @@ import Foundation
 public struct FollowGroup: EndpointProtocol {
     public struct Request: Codable {
         public var id: Group.ID
+        public init(groupId: Group.ID) {
+            self.id = groupId
+        }
     }
     public typealias Response = Empty
     public struct URI: CodableURL {
@@ -15,6 +18,9 @@ public struct FollowGroup: EndpointProtocol {
 public struct UnfollowGroup: EndpointProtocol {
     public struct Request: Codable {
         public var id: Group.ID
+        public init(groupId: Group.ID) {
+            self.id = groupId
+        }
     }
     public typealias Response = Empty
     public struct URI: CodableURL {
