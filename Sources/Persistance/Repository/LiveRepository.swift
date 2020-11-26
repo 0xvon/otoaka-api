@@ -60,7 +60,7 @@ public class LiveRepository: Domain.LiveRepository {
         let live = Live.find(id.rawValue, on: db).unwrap(orError: Error.liveNotFound)
         let modified = live.map { live -> Live in
             live.title = input.title
-            live.artworkURL = input.artworkURL
+            live.artworkURL = input.artworkURL?.absoluteString
             live.openAt = input.openAt
             live.startAt = input.startAt
             live.endAt = input.endAt

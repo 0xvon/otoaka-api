@@ -34,7 +34,7 @@ public class GroupRepository: Domain.GroupRepository {
             group.englishName = input.englishName
             group.biography = input.biography
             group.since = input.since
-            group.artworkURL = input.artworkURL
+            group.artworkURL = input.artworkURL?.absoluteString
             group.hometown = input.hometown
             return group
         }

@@ -18,7 +18,7 @@ final class Live: Model {
     var style: LiveStyle
 
     @OptionalField(key: "artwork_url")
-    var artworkURL: URL?
+    var artworkURL: String?
 
     @Parent(key: "host_group_id")
     var hostGroup: Group
@@ -50,7 +50,7 @@ final class Live: Model {
         self.id = nil
         self.title = title
         self.style = style
-        self.artworkURL = artworkURL
+        self.artworkURL = artworkURL?.absoluteString
         self.$hostGroup.id = hostGroupId.rawValue
         self.$author.id = authorId.rawValue
         self.openAt = openAt
@@ -147,7 +147,7 @@ extension Endpoint.Live {
                     id: Endpoint.Live.ID(entity.requireID()),
                     title: entity.title,
                     style: style,
-                    artworkURL: entity.artworkURL,
+                    artworkURL: entity.artworkURL.flatMap(URL.init(string: )),
                     author: author,
                     hostGroup: hostGroup,
                     startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt

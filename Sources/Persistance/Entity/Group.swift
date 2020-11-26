@@ -20,7 +20,7 @@ final class Group: Model {
     var since: Date?
 
     @OptionalField(key: "artwork_url")
-    var artworkURL: URL?
+    var artworkURL: String?
 
     @OptionalField(key: "hometown")
     var hometown: String?
@@ -37,7 +37,7 @@ final class Group: Model {
         self.englishName = englishName
         self.biography = biography
         self.since = since
-        self.artworkURL = artworkURL
+        self.artworkURL = artworkURL?.absoluteString
         self.hometown = hometown
     }
 }
@@ -52,7 +52,8 @@ extension Endpoint.Group {
                 id: ID(id),
                 name: entity.name, englishName: entity.englishName,
                 biography: entity.biography, since: entity.since,
-                artworkURL: entity.artworkURL, hometown: entity.hometown
+                artworkURL: entity.artworkURL.flatMap(URL.init(string: )),
+                hometown: entity.hometown
             )
         }
     }
