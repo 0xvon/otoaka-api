@@ -17,7 +17,7 @@ extension RoutesBuilder {
         endpoint _: Endpoint.Type,
         use closure: @escaping (Request, Endpoint.URI) throws -> EventLoopFuture<Endpoint.Response>
     ) throws where Endpoint.Response: ResponseEncodable {
-        let (pathComponents, _) = try Endpoint.URI.placeholder(createPlaceholder: { ":\($0)" })
+        let (pathComponents, _) = try Endpoint.URI.placeholder()
         on(
             Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral:)),
             use: { req in
