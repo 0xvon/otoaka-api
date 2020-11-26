@@ -50,6 +50,7 @@ struct CreateUserDevice: Migration {
             .field("endpoint_arn", .string, .required)
             .field("user_id", .uuid, .required)
             .foreignKey("user_id", references: User.schema, .id)
+            .unique(on: "endpoint_arn", "user_id")
             .create()
     }
 
