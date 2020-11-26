@@ -18,20 +18,16 @@ struct UserSocialController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(
             endpoint: FollowGroup.self,
-            use: injectProvider { req, uri, repository -> EventLoopFuture<Empty> in
-                guard let user = req.auth.get(User.self) else {
-                    throw Abort(.unauthorized)
-                }
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(FollowGroup.Request.self)
                 return repository.follow(selfUser: user.id, targetGroup: input.id)
                     .map { Empty() }
             })
         try routes.on(
             endpoint: UnfollowGroup.self,
-            use: injectProvider { req, uri, repository -> EventLoopFuture<Empty> in
-                guard let user = req.auth.get(User.self) else {
-                    throw Abort(.unauthorized)
-                }
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnfollowGroup.Request.self)
                 return repository.unfollow(selfUser: user.id, targetGroup: input.id)
                     .map { Empty() }

@@ -13,6 +13,18 @@ class SimpleNotificationService: PushNotificationService {
         case endpointArnNotReturned
     }
 
+    convenience init(secrets: Secrets, userRepository: UserRepository, eventLoop: EventLoop) {
+        let sns = SNS(
+            accessKeyId: secrets.awsAccessKeyId,
+            secretAccessKey: secrets.awsSecretAccessKey,
+            region: Region(rawValue: secrets.awsRegion),
+            eventLoopGroupProvider: .shared(eventLoop)
+        )
+        self.init(
+            sns: sns, platformApplicationArn: secrets.snsPlatformApplicationArn,
+            eventLoop: eventLoop, userRepository: userRepository
+        )
+    }
     init(
         sns: SNS, platformApplicationArn: String,
         eventLoop: EventLoop,

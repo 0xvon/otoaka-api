@@ -35,10 +35,7 @@ struct UserController: RouteCollection {
             Signup.Response
         >
     {
-        guard let jwtPayload = req.auth.get(JWTAuthenticator.Payload.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let jwtPayload = try req.auth.require(JWTAuthenticator.Payload.self)
         let input = try req.content.decode(Signup.Request.self)
         let cognitoId = jwtPayload.sub.value
         let user = repository.create(
@@ -49,10 +46,7 @@ struct UserController: RouteCollection {
 
     func getUser(req: Request, uri: GetUserInfo.URI) throws -> EventLoopFuture<GetUserInfo.Response>
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         return req.eventLoop.makeSucceededFuture(user)
     }
 
@@ -67,20 +61,12 @@ struct UserController: RouteCollection {
     func registerDeviceToken(
         req: Request, uri: RegisterDeviceToken.URI, repository: Domain.UserRepository
     ) throws -> EventLoopFuture<RegisterDeviceToken.Response> {
-        guard let user = req.auth.get(Domain.User.self) else {
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(RegisterDeviceToken.Request.self)
-        let secrets = req.application.secrets
-        let sns = SNS(
-            accessKeyId: secrets.awsAccessKeyId,
-            secretAccessKey: secrets.awsSecretAccessKey,
-            region: Region(rawValue: secrets.awsRegion),
-            eventLoopGroupProvider: .shared(req.eventLoop)
-        )
         let service = SimpleNotificationService(
-            sns: sns, platformApplicationArn: secrets.snsPlatformApplicationArn,
-            eventLoop: req.eventLoop, userRepository: repository
+            secrets: req.application.secrets,
+            userRepository: repository,
+            eventLoop: req.eventLoop
         )
         return service.register(deviceToken: input.deviceToken, for: user.id)
             .map { Empty() }

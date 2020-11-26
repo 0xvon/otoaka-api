@@ -48,10 +48,7 @@ struct GroupController: RouteCollection {
             Endpoint.Group
         >
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
         return repository.create(input: input)
             .flatMap { group in
@@ -65,10 +62,7 @@ struct GroupController: RouteCollection {
             Endpoint.InviteGroup.Response
         >
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.InviteGroup.Request.self)
         let userRepository = Persistance.UserRepository(db: req.db)
         let useCase = InviteGroupUseCase(
@@ -84,10 +78,7 @@ struct GroupController: RouteCollection {
     func join(req: Request, uri: JoinGroup.URI, repository: Domain.GroupRepository) throws
         -> EventLoopFuture<Empty>
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.JoinGroup.Request.self)
         guard let invitationId = UUID(uuidString: input.invitationId) else {
             return req.eventLoop.makeFailedFuture(Abort(.badRequest))
@@ -107,10 +98,7 @@ struct GroupController: RouteCollection {
     ) throws
         -> EventLoopFuture<Endpoint.Group>
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.EditGroup.Request.self)
         let precondition = repository.isMember(of: uri.id, member: user.id).flatMapThrowing {
             guard $0 else { throw Abort(.forbidden) }

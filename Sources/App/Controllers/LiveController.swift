@@ -46,10 +46,7 @@ struct LiveController: RouteCollection {
             Endpoint.Live
         >
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.CreateLive.Request.self)
 
         let groupRepository = Persistance.GroupRepository(db: req.db)
@@ -65,10 +62,7 @@ struct LiveController: RouteCollection {
             Endpoint.Live
         >
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.EditLive.Request.self)
 
         let groupRepository = Persistance.GroupRepository(db: req.db)
@@ -84,10 +78,7 @@ struct LiveController: RouteCollection {
             Endpoint.Ticket
         >
     {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.ReserveTicket.Request.self)
         let useCase = JoinLiveUseCase(liveRepository: repository, eventLoop: req.eventLoop)
         return try useCase((liveId: input.liveId, user: user))
@@ -104,10 +95,7 @@ struct LiveController: RouteCollection {
     ) throws -> EventLoopFuture<
         ReplyPerformanceRequest.Response
     > {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.ReplyPerformanceRequest.Request.self)
         let groupRepository = Persistance.GroupRepository(db: req.db)
         let useCase = ReplyPerformanceRequestUseCase(
@@ -118,10 +106,7 @@ struct LiveController: RouteCollection {
     func getPerformanceRequests(
         req: Request, uri: GetPerformanceRequests.URI, repository: Domain.LiveRepository
     ) throws -> EventLoopFuture<GetPerformanceRequests.Response> {
-        guard let user = req.auth.get(Domain.User.self) else {
-            // unreachable because guard middleware rejects unauthorized requests
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
+        let user = try req.auth.require(Domain.User.self)
         return repository.getRequests(for: user.id, page: uri.page, per: uri.per)
     }
 }
