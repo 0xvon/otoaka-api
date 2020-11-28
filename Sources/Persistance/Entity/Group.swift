@@ -52,7 +52,7 @@ extension Endpoint.Group {
                 id: ID(id),
                 name: entity.name, englishName: entity.englishName,
                 biography: entity.biography, since: entity.since,
-                artworkURL: entity.artworkURL.flatMap(URL.init(string: )),
+                artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                 hometown: entity.hometown
             )
         }

@@ -185,7 +185,8 @@ class LiveControllerTests: XCTestCase {
     func testGetGroupLives() throws {
         let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
         let groupX = try appClient.createGroup(with: user)
-        _ = try appClient.createLive(hostGroup: groupX, style: .oneman(performer: groupX.id), with: user)
+        _ = try appClient.createLive(
+            hostGroup: groupX, style: .oneman(performer: groupX.id), with: user)
         let headers = appClient.makeHeaders(for: user)
         try app.test(.GET, "groups/\(groupX.id)/lives?page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(Endpoint.GetGroupLives.Response.self)

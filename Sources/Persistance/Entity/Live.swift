@@ -147,7 +147,7 @@ extension Endpoint.Live {
                     id: Endpoint.Live.ID(entity.requireID()),
                     title: entity.title,
                     style: style,
-                    artworkURL: entity.artworkURL.flatMap(URL.init(string: )),
+                    artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     author: author,
                     hostGroup: hostGroup,
                     startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt

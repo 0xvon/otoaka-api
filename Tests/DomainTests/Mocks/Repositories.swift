@@ -81,5 +81,7 @@ extension LiveRepositoryMock {
     > {
         unimplemented()
     }
-    func get(page: Int, per: Int, group: Group.ID) -> EventLoopFuture<Page<Live>> { unimplemented() }
+    func get(page: Int, per: Int, group: Group.ID) -> EventLoopFuture<Page<Live>> {
+        unimplemented()
+    }
 }

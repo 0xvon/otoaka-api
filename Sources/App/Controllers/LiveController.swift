@@ -28,9 +28,11 @@ struct LiveController: RouteCollection {
         try routes.on(
             endpoint: Endpoint.GetPerformanceRequests.self,
             use: injectProvider(getPerformanceRequests))
-        try routes.on(endpoint: Endpoint.GetGroupLives.self, use: injectProvider { req, uri, repository in
-            repository.get(page: uri.page, per: uri.per, group: uri.groupId)
-        })
+        try routes.on(
+            endpoint: Endpoint.GetGroupLives.self,
+            use: injectProvider { req, uri, repository in
+                repository.get(page: uri.page, per: uri.per, group: uri.groupId)
+            })
     }
 
     func getLiveInfo(req: Request, uri: GetLive.URI, repository: Domain.LiveRepository) throws
