@@ -47,7 +47,7 @@ public struct CreateLiveUseCase: UseCase {
 
     func validateInput(request: Request) throws {
         switch request.input.style {
-        case let .oneman(performer):
+        case .oneman(let performer):
             guard request.input.hostGroupId == performer else {
                 throw Error.onemanStylePerformerShouldBeHostGroup
             }

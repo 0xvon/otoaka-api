@@ -22,9 +22,9 @@ enum Expect<Success> {
 
     func receive<E>(result: Result<Success, E>) throws {
         switch (self, result) {
-        case let (.success(matcher), .success(value)):
+        case (let .success(matcher), let .success(value)):
             try matcher(value)
-        case let (.failure(matcher), .failure(error)):
+        case (let .failure(matcher), let .failure(error)):
             try matcher(error)
         case (.failure(_), .success(_)):
             XCTFail("expect failure but got success")

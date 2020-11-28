@@ -102,7 +102,7 @@ final class GroupInvitation: Model {
     @Field(key: "invited")
     var invited: Bool
 
-    /// Always `nil` when `invited` is false
+    /// Always `nil` when `invited` is false.
     @OptionalParent(key: "membership_id")
     var membership: Membership?
 

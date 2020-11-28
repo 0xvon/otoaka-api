@@ -30,7 +30,7 @@ final class User: Model {
     @Enum(key: "role")
     var role: Role
 
-    /// Only for artist
+    /// Only for artist.
     @OptionalField(key: "part")
     var part: String?
 
@@ -45,7 +45,7 @@ final class User: Model {
         self.biography = biography
         self.thumbnailURL = thumbnailURL
         switch role {
-        case let .artist(artist):
+        case .artist(let artist):
             self.role = .artist
             part = artist.part
         case .fan:
