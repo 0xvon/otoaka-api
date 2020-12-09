@@ -54,7 +54,12 @@ struct GroupController: RouteCollection {
             Endpoint.GetGroup.Response
         >
     {
-        return repository.findGroup(by: uri.groupId).unwrap(or: Abort(.notFound))
+        let user = try req.auth.require(User.self)
+        let group = repository.findGroup(by: uri.groupId).unwrap(or: Abort(.notFound))
+        let isMember = repository.isMember(of: uri.groupId, member: user.id)
+        return group.and(isMember).map {
+            GetGroup.Response(group: $0, isMember: $1)
+        }
     }
 
     func create(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
@@ -127,6 +132,8 @@ extension Endpoint.Group: Content {}
 extension Endpoint.InviteGroup.Response: Content {}
 
 extension Endpoint.GroupFeed: Content {}
+
+extension Endpoint.GetGroup.Response: Content {}
 
 extension Domain.JoinGroupUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {

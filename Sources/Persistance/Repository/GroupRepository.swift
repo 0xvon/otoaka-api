@@ -171,7 +171,7 @@ public class GroupRepository: Domain.GroupRepository {
         feed.$group.id = input.groupId.rawValue
         feed.$author.id = authorId.rawValue
         switch input.feedType {
-        case let .youtube(url):
+        case .youtube(let url):
             feed.feedType = .youtube
             feed.youtubeURL = url.absoluteString
         }

@@ -83,7 +83,15 @@ public struct JoinGroup: EndpointProtocol {
 
 public struct GetGroup: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Group
+    public struct Response: Codable {
+        public init(group: Group, isMember: Bool) {
+            self.group = group
+            self.isMember = isMember
+        }
+
+        public var group: Group
+        public var isMember: Bool
+    }
     public struct URI: CodableURL {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID

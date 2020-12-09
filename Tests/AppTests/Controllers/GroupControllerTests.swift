@@ -75,6 +75,8 @@ class GroupControllerTests: XCTestCase {
 
         try app.test(.GET, "groups/\(createdGroup.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetGroup.Response.self)
+            XCTAssertTrue(response.isMember)
         }
     }
 
