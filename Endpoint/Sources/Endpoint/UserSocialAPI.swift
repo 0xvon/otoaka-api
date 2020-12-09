@@ -77,3 +77,15 @@ public struct GetUpcomingLives: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+public struct LikeLive: EndpointProtocol {
+    public struct Request: Codable {
+        public var liveId: Live.ID
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "like_live") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}

@@ -98,4 +98,11 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 }
             }
     }
+
+    public func likeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
+        let like = LiveLike()
+        like.$user.id = userId.rawValue
+        like.$live.id = liveId.rawValue
+        return like.create(on: db)
+    }
 }

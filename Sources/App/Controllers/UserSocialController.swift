@@ -49,5 +49,12 @@ struct UserSocialController: RouteCollection {
                 let user = try req.auth.require(Domain.User.self)
                 return repository.upcomingLives(userId: user.id, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: LikeLive.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(LikeLive.Request.self)
+                return repository.likeLive(userId: user.id, liveId: input.liveId).map { Empty() }
+            })
     }
 }

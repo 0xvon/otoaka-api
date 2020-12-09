@@ -106,9 +106,27 @@ class UserSocialControllerTests: XCTestCase {
         try appClient.follow(group: groupX, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)
-        try app.test(.GET, "lives/upcoming?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
+
+    func testLikeLive() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        let liveA = try appClient.createLive(hostGroup: groupX, with: userA)
+        try appClient.follow(group: groupX, with: userB)
+
+        try appClient.like(live: liveA, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertTrue(item.isLiked)
         }
     }
 }

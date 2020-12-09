@@ -142,4 +142,14 @@ class AppClient {
         try app.test(
             .POST, "user_social/follow_group", headers: makeHeaders(for: user), body: bodyData)
     }
+
+    func like(live: Live, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.LikeLive.Request.self) {
+            $0.set(\.liveId, value: live.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/like_live", headers: makeHeaders(for: user), body: bodyData)
+    }
 }

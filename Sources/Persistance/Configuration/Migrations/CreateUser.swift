@@ -66,7 +66,7 @@ struct CreateLiveLike: Migration {
             .field("user_id", .uuid, .required)
             .foreignKey("user_id", references: User.schema, .id)
             .field("live_id", .uuid, .required)
-            .foreignKey("live_id", references: User.schema, .id)
+            .foreignKey("live_id", references: Live.schema, .id)
             .create()
     }
 
