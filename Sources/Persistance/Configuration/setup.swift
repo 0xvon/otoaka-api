@@ -31,7 +31,7 @@ public func setup(
         CreateGroup(), CreateMembership(), CreateGroupInvitation(),
         CreateLive(), CreateLivePerformer(), CreatePerformanceRequest(),
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
-        CreateLiveLike(),
+        CreateLiveLike(), CreateGroupFeed(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

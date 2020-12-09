@@ -163,7 +163,7 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
-    public func createFeed(for input: CreateGroupFeed.Request, authorId: Domain.User.ID)
+    public func createFeed(for input: Endpoint.CreateGroupFeed.Request, authorId: Domain.User.ID)
         -> EventLoopFuture<Domain.GroupFeed>
     {
         let feed = GroupFeed()
@@ -172,6 +172,7 @@ public class GroupRepository: Domain.GroupRepository {
         feed.$author.id = authorId.rawValue
         switch input.feedType {
         case let .youtube(url):
+            feed.feedType = .youtube
             feed.youtubeURL = url.absoluteString
         }
         return feed.create(on: db).flatMap { [db] in

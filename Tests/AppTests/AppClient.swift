@@ -152,4 +152,23 @@ class AppClient {
         try app.test(
             .POST, "user_social/like_live", headers: makeHeaders(for: user), body: bodyData)
     }
+
+    func createGroupFeed(
+        group: Group,
+        feedType: FeedType = .youtube(try! Stub.make()),
+        with user: AppUser
+    ) throws -> GroupFeed {
+        let body = try! Stub.make(Endpoint.CreateGroupFeed.Request.self) {
+            $0.set(\.groupId, value: group.id)
+            $0.set(\.feedType, value: feedType)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        var created: Endpoint.GroupFeed!
+        try app.test(.POST, "groups/create_feed", headers: makeHeaders(for: user), body: bodyData) {
+            res in
+            created = try res.content.decode(Endpoint.CreateGroupFeed.Response.self)
+        }
+        return created
+    }
 }

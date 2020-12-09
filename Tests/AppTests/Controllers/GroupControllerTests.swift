@@ -148,4 +148,36 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
+
+    func testCreateGroupFeed() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+
+        let body = try! Stub.make(Endpoint.CreateGroupFeed.Request.self) {
+            $0.set(\.groupId, value: groupX.id)
+            $0.set(\.feedType, value: .youtube(try! Stub.make()))
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.POST, "groups/create_feed", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.CreateGroupFeed.Response.self)
+            XCTAssertEqual(responseBody.group.id, groupX.id)
+        }
+    }
+
+    func testGetGroupFeeds() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createGroupFeed(group: groupX, with: user)
+
+        try app.test(.GET, "groups/\(groupX.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetGroupFeed.Response.self)
+            let firstItem = try XCTUnwrap(responseBody.items.first)
+            XCTAssertEqual(firstItem.id, feed.id)
+        }
+    }
 }

@@ -51,3 +51,28 @@ struct CreateGroupInvitation: Migration {
         database.schema(GroupInvitation.schema).delete()
     }
 }
+
+struct CreateGroupFeed: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("group_feed_type")
+            .case("youtube")
+            .create()
+        return typeEnum.flatMap { typeEnum in
+            database.schema(GroupFeed.schema)
+                .id()
+                .field("text", .string, .required)
+                .field("feed_type", typeEnum, .required)
+                .field("youtube_url", .string)
+                .field("group_id", .uuid, .required)
+                .foreignKey("group_id", references: Group.schema, "id")
+                .field("author_id", .uuid)
+                .foreignKey("author_id", references: User.schema, "id")
+                .field("created_at", .datetime, .required)
+                .create()
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(GroupInvitation.schema).delete()
+    }
+}

@@ -38,7 +38,9 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreateGroupFeed.Request.self)
-                return repository.createFeed(for: input, authorId: user.id)
+                let useCase = CreateGroupFeedUseCase(
+                    groupRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((user: user, input: input))
             })
         try routes.on(
             endpoint: Endpoint.GetGroupFeed.self,

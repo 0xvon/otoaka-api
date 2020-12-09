@@ -46,6 +46,13 @@ extension GroupRepositoryMock {
     }
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Group>> { unimplemented() }
     func getMemberships(for artistId: User.ID) -> EventLoopFuture<[Group]> { unimplemented() }
+
+    func createFeed(for input: CreateGroupFeed.Request, authorId: User.ID) -> EventLoopFuture<
+        GroupFeed
+    > { unimplemented() }
+    func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>> {
+        unimplemented()
+    }
 }
 
 protocol LiveRepositoryMock: LiveRepository {}

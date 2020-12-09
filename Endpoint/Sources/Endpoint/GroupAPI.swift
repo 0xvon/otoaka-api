@@ -151,7 +151,7 @@ public struct GetGroupFeed: EndpointProtocol {
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID
-        @StaticPath("feed") public var suffix: Void
+        @StaticPath("feeds") public var suffix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
