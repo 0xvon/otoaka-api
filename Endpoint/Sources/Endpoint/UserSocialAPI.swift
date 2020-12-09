@@ -78,6 +78,18 @@ public struct GetUpcomingLives: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetFollowingGroupFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "group_feeds") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct LikeLive: EndpointProtocol {
     public struct Request: Codable {
         public var liveId: Live.ID

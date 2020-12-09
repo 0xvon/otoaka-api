@@ -100,6 +100,21 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             }
     }
 
+    public func followingGroupFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.GroupFeed>
+    > {
+        return GroupFeed.query(on: db)
+            .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
+            .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .sort(\.$createdAt)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { live in
+                    return Domain.GroupFeed.translate(fromPersistance: live, on: db)
+                }
+            }
+    }
+
     public func likeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
         let like = LiveLike()
         like.$user.id = userId.rawValue
