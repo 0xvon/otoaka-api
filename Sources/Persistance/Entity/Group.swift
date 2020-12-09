@@ -127,3 +127,52 @@ extension Endpoint.GroupInvitation {
             }
     }
 }
+
+enum FeedType: String, Codable {
+    case youtube
+}
+
+final class GroupFeed: Model {
+    static let schema: String = "group_feeds"
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "text")
+    var text: String
+
+    @Enum(key: "feed_type")
+    var feedType: FeedType
+
+    @OptionalField(key: "youtube_url")
+    var youtubeURL: String?
+
+    @Parent(key: "group_id")
+    var group: Group
+
+    @Parent(key: "author_id")
+    var author: User
+
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+}
+
+extension Endpoint.GroupFeed {
+    static func translate(fromPersistance entity: GroupFeed, on db: Database) -> EventLoopFuture<
+        Endpoint.GroupFeed
+    > {
+        let group = entity.$group.get(on: db)
+        let feedType: Endpoint.FeedType
+        switch entity.feedType {
+        case .youtube:
+            feedType = .youtube(URL(string: entity.youtubeURL!)!)
+        }
+        return group.flatMap { Endpoint.Group.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { group in
+                try Endpoint.GroupFeed(
+                    id: .init(entity.requireID()),
+                    text: entity.text, feedType: feedType,
+                    group: group, createdAt: entity.createdAt!
+                )
+            }
+    }
+}

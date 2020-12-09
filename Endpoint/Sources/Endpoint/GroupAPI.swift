@@ -115,7 +115,6 @@ public struct GetAllGroups: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
-
 public struct GetGroupLives: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>
@@ -123,6 +122,36 @@ public struct GetGroupLives: EndpointProtocol {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID
         @StaticPath("lives") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct CreateGroupFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public var text: String
+        public var feedType: FeedType
+        public var groupId: Group.ID
+    }
+
+    public typealias Response = GroupFeed
+    public struct URI: CodableURL {
+        @StaticPath("groups", "create_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct GetGroupFeed: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupFeed>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("groups") public var prefix: Void
+        @DynamicPath public var groupId: Group.ID
+        @StaticPath("feed") public var suffix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}

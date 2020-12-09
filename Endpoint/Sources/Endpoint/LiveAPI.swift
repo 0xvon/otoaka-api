@@ -121,4 +121,3 @@ public struct ReserveTicket: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
-

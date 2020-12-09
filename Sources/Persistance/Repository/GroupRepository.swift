@@ -162,4 +162,32 @@ public class GroupRepository: Domain.GroupRepository {
                 .flatten(on: db.eventLoop)
         }
     }
+
+    public func createFeed(for input: CreateGroupFeed.Request, authorId: Domain.User.ID)
+        -> EventLoopFuture<Domain.GroupFeed>
+    {
+        let feed = GroupFeed()
+        feed.text = input.text
+        feed.$group.id = input.groupId.rawValue
+        feed.$author.id = authorId.rawValue
+        switch input.feedType {
+        case let .youtube(url):
+            feed.youtubeURL = url.absoluteString
+        }
+        return feed.create(on: db).flatMap { [db] in
+            Domain.GroupFeed.translate(fromPersistance: feed, on: db)
+        }
+    }
+
+    public func feeds(groupId: Domain.Group.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.GroupFeed>
+    > {
+        GroupFeed.query(on: db).filter(\.$group.$id == groupId.rawValue).sort(\.$createdAt)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.GroupFeed.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
 }

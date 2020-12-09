@@ -33,6 +33,18 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.getMemberships(for: uri.artistId)
             })
+        try routes.on(
+            endpoint: Endpoint.CreateGroupFeed.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(CreateGroupFeed.Request.self)
+                return repository.createFeed(for: input, authorId: user.id)
+            })
+        try routes.on(
+            endpoint: Endpoint.GetGroupFeed.self,
+            use: injectProvider { req, uri, repository in
+                return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
+            })
     }
 
     func getGroupInfo(req: Request, uri: GetGroup.URI, repository: Domain.GroupRepository) throws
@@ -111,6 +123,8 @@ struct GroupController: RouteCollection {
 extension Endpoint.Group: Content {}
 
 extension Endpoint.InviteGroup.Response: Content {}
+
+extension Endpoint.GroupFeed: Content {}
 
 extension Domain.JoinGroupUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {
