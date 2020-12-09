@@ -85,6 +85,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         return Live.query(on: db)
             .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .sort(\.$openAt)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
