@@ -78,4 +78,24 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             }
         }
     }
+
+    public func upcomingLives(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.LiveFeed>
+    > {
+        return Live.query(on: db)
+            .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
+            .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
+                    let isLiked = LiveLike.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(\.$user.$id == userId.rawValue)
+                        .count().map { $0 > 0 }
+                    return Domain.Live.translate(fromPersistance: live, on: db).and(isLiked).map {
+                        Domain.LiveFeed(isLiked: $1, live: $0)
+                    }
+                }
+            }
+    }
 }

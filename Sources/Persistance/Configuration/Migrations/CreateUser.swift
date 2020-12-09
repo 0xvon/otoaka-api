@@ -58,3 +58,19 @@ struct CreateUserDevice: Migration {
         database.schema(UserDevice.schema).delete()
     }
 }
+
+struct CreateLiveLike: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LiveLike.schema)
+            .id()
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .field("live_id", .uuid, .required)
+            .foreignKey("live_id", references: User.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LiveLike.schema).delete()
+    }
+}

@@ -22,8 +22,6 @@ struct LiveController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
         try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(register))
         try routes.on(
-            endpoint: Endpoint.GetUpcomingLives.self, use: injectProvider(getUpcomingLives))
-        try routes.on(
             endpoint: Endpoint.ReplyPerformanceRequest.self, use: injectProvider(replyRequest))
         try routes.on(
             endpoint: Endpoint.GetPerformanceRequests.self,
@@ -84,12 +82,6 @@ struct LiveController: RouteCollection {
         let input = try req.content.decode(Endpoint.ReserveTicket.Request.self)
         let useCase = JoinLiveUseCase(liveRepository: repository, eventLoop: req.eventLoop)
         return try useCase((liveId: input.liveId, user: user))
-    }
-
-    func getUpcomingLives(
-        req: Request, uri: GetUpcomingLives.URI, repository: Domain.LiveRepository
-    ) throws -> EventLoopFuture<GetUpcomingLives.Response> {
-        return repository.get(page: uri.page, per: uri.per)
     }
 
     func replyRequest(

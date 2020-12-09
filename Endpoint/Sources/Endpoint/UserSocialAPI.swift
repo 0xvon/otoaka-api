@@ -55,3 +55,25 @@ public struct FollowingGroups: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+public struct LiveFeed: Codable {
+    public var isLiked: Bool
+    public var live: Live
+
+    public init(isLiked: Bool, live: Live) {
+        self.isLiked = isLiked
+        self.live = live
+    }
+}
+
+public struct GetUpcomingLives: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<LiveFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "upcoming_lives") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}

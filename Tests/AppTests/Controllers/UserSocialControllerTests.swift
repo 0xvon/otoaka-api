@@ -97,4 +97,18 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(body.items.count, 2)
         }
     }
+
+    func testGetUpcomingLives() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createLive(hostGroup: groupX, with: userA)
+        try appClient.follow(group: groupX, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "lives/upcoming?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
 }

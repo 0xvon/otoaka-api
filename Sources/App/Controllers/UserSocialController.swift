@@ -42,5 +42,12 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.followings(selfUser: uri.id, page: uri.page, per: uri.per)
             })
+
+        try routes.on(
+            endpoint: GetUpcomingLives.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.upcomingLives(userId: user.id, page: uri.page, per: uri.per)
+            })
     }
 }

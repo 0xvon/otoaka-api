@@ -105,3 +105,16 @@ final class Following: Model {
 
     init() {}
 }
+
+final class LiveLike: Model {
+    static let schema = "live_likes"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Parent(key: "user_id")
+    var user: User
+
+    @Parent(key: "live_id")
+    var live: Live
+}
