@@ -64,11 +64,15 @@ extension LiveRepositoryMock {
         unimplemented()
     }
 
-    func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
+    func findLive(by id: Domain.Live.ID, selfUerId: Domain.User.ID) -> EventLoopFuture<
+        Domain.LiveDetail?
+    > {
         unimplemented()
     }
 
-    func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket> {
+    func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Domain.Ticket
+    > {
         unimplemented()
     }
 

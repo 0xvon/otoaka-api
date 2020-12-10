@@ -136,8 +136,8 @@ class LiveControllerTests: XCTestCase {
 
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
-            XCTAssertEqual(Set([]), Set(responseBody.style.performers.map(\.id)))
+            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
+            XCTAssertEqual(Set([]), Set(responseBody.live.style.performers.map(\.id)))
         }
         for artist in artists {
             let requests = try appClient.getPerformanceRequests(with: artist)
@@ -146,8 +146,9 @@ class LiveControllerTests: XCTestCase {
         }
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
-            XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.style.performers.map(\.id)))
+            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
+            XCTAssertEqual(
+                Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
         }
     }
 
