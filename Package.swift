@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.1"),
         .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
         .package(path: "Endpoint"),
     ],
@@ -35,6 +36,12 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
+        .target(name: "Seed", dependencies: [
+            .product(name: "Endpoint", package: "Endpoint"),
+            .product(name: "StubKit", package: "StubKit"),
+            .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        ]),
         .target(name: "LoggingDiscord", dependencies: [
             .product(name: "Logging", package: "swift-log"),
         ]),
