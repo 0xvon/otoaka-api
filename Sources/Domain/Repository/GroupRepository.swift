@@ -22,6 +22,7 @@ public protocol GroupRepository {
         GroupFeed
     >
     func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
+    func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Group>>
 }
 
 extension GroupRepository {

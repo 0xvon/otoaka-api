@@ -171,4 +171,15 @@ public class LiveRepository: Domain.LiveRepository {
             }
         }
     }
+
+    public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.Live>
+    > {
+        let lives = Live.query(on: db).filter(\.$title =~ query)
+        return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.Live.translate(fromPersistance: $0, on: db)
+            }
+        }
+    }
 }

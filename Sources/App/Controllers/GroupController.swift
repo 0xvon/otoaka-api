@@ -47,6 +47,11 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: Endpoint.SearchGroup.self,
+            use: injectProvider { req, uri, repository in
+                repository.search(query: uri.term, page: uri.page, per: uri.per)
+            })
     }
 
     func getGroupInfo(req: Request, uri: GetGroup.URI, repository: Domain.GroupRepository) throws

@@ -37,6 +37,11 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.get(page: uri.page, per: uri.per, group: uri.groupId)
             })
+        try routes.on(
+            endpoint: Endpoint.SearchLive.self,
+            use: injectProvider { req, uri, repository in
+                repository.search(query: uri.term, page: uri.page, per: uri.per)
+            })
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws

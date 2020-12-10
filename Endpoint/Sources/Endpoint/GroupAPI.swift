@@ -168,3 +168,16 @@ public struct GetGroupFeed: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+public struct SearchGroup: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<Group>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("groups", "search") public var prefix: Void
+        @Query public var term: String
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}

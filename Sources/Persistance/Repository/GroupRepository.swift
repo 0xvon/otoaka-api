@@ -191,4 +191,15 @@ public class GroupRepository: Domain.GroupRepository {
                 }
             }
     }
+
+    public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.Group>
+    > {
+        let lives = Group.query(on: db).filter(\.$name =~ query)
+        return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.Group.translate(fromPersistance: $0, on: db)
+            }
+        }
+    }
 }

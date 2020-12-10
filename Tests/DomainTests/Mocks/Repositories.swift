@@ -53,6 +53,9 @@ extension GroupRepositoryMock {
     func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>> {
         unimplemented()
     }
+    func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Group>> {
+        unimplemented()
+    }
 }
 
 protocol LiveRepositoryMock: LiveRepository {}
@@ -93,6 +96,9 @@ extension LiveRepositoryMock {
         unimplemented()
     }
     func get(page: Int, per: Int, group: Group.ID) -> EventLoopFuture<Page<Live>> {
+        unimplemented()
+    }
+    func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Live>> {
         unimplemented()
     }
 }

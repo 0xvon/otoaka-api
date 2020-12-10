@@ -133,3 +133,16 @@ public struct ReserveTicket: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
+
+public struct SearchLive: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<Live>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("lives", "search") public var prefix: Void
+        @Query public var term: String
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
