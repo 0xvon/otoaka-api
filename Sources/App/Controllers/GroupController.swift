@@ -57,8 +57,11 @@ struct GroupController: RouteCollection {
         let user = try req.auth.require(User.self)
         let group = repository.findGroup(by: uri.groupId).unwrap(or: Abort(.notFound))
         let isMember = repository.isMember(of: uri.groupId, member: user.id)
-        return group.and(isMember).map {
-            GetGroup.Response(group: $0, isMember: $1)
+        let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
+        let isFollowing = userSocialRepository.isFollowing(
+            selfUser: user.id, targetGroup: uri.groupId)
+        return group.and(isMember).and(isFollowing).map { ($0.0, $0.1, $1) }.map {
+            GetGroup.Response(group: $0, isMember: $1, isFollowing: $2)
         }
     }
 

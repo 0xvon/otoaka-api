@@ -79,6 +79,16 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
     }
 
+    public func isFollowing(
+        selfUser: Domain.User.ID,
+        targetGroup: Domain.Group.ID
+    ) -> EventLoopFuture<Bool> {
+        Following.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == targetGroup.rawValue)
+            .first().map { $0 != nil }
+    }
+
     public func upcomingLives(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
