@@ -103,9 +103,16 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                         .filter(\.$live.$id == live.id!)
                         .filter(\.$user.$id == userId.rawValue)
                         .count().map { $0 > 0 }
-                    return Domain.Live.translate(fromPersistance: live, on: db).and(isLiked).map {
-                        Domain.LiveFeed(isLiked: $1, live: $0)
-                    }
+                    let hasTicket = Ticket.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(\.$user.$id == userId.rawValue)
+                        .count().map { $0 > 0 }
+
+                    return Domain.Live.translate(fromPersistance: live, on: db)
+                        .and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }
+                        .map {
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2)
+                        }
                 }
             }
     }

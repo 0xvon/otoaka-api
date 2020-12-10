@@ -7,7 +7,9 @@ public protocol LiveRepository {
     func update(id: Live.ID, input: EditLive.Request, authorId: User.ID) -> EventLoopFuture<Live>
     func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
 
-    func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket>
+    func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Domain.Ticket
+    >
     func updatePerformerStatus(
         requestId: PerformanceRequest.ID,
         status: PerformanceRequest.Status

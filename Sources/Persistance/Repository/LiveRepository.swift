@@ -75,8 +75,9 @@ public class LiveRepository: Domain.LiveRepository {
             Domain.Live.translate(fromPersistance: $0, on: db)
         }
     }
-    public func join(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<Domain.Ticket>
-    {
+    public func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Domain.Ticket
+    > {
         let isLiveExist = Live.find(liveId.rawValue, on: db).map { $0 != nil }
         return isLiveExist.flatMapThrowing { isLiveExist -> Void in
             guard isLiveExist else { throw Error.liveNotFound }

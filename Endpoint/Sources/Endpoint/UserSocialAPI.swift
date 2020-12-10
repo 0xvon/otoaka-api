@@ -57,12 +57,14 @@ public struct FollowingGroups: EndpointProtocol {
 }
 
 public struct LiveFeed: Codable {
-    public var isLiked: Bool
     public var live: Live
+    public var isLiked: Bool
+    public var hasTicket: Bool
 
-    public init(isLiked: Bool, live: Live) {
-        self.isLiked = isLiked
+    public init(live: Live, isLiked: Bool, hasTicket: Bool) {
         self.live = live
+        self.isLiked = isLiked
+        self.hasTicket = hasTicket
     }
 }
 

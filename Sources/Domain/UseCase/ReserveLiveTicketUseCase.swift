@@ -1,7 +1,7 @@
 import Foundation
 import NIO
 
-public struct JoinLiveUseCase: UseCase {
+public struct ReserveLiveTicketUseCase: UseCase {
     public typealias Request = (
         liveId: Live.ID,
         user: User
@@ -25,6 +25,6 @@ public struct JoinLiveUseCase: UseCase {
     }
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        return liveRepository.join(liveId: request.liveId, user: request.user.id)
+        return liveRepository.reserveTicket(liveId: request.liveId, user: request.user.id)
     }
 }
