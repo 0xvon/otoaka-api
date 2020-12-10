@@ -70,9 +70,22 @@ public class LiveRepository: Domain.LiveRepository {
         return modified.flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
     }
 
-    public func findLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
-        Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
-            Domain.Live.translate(fromPersistance: $0, on: db)
+    public func findLive(by id: Domain.Live.ID, selfUerId: Domain.User.ID) -> EventLoopFuture<
+        Domain.LiveDetail?
+    > {
+        let isLiked = LiveLike.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .filter(\.$user.$id == selfUerId.rawValue)
+            .count().map { $0 > 0 }
+        let hasTicket = Ticket.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .filter(\.$user.$id == selfUerId.rawValue)
+            .count().map { $0 > 0 }
+        return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
+            let live = Domain.Live.translate(fromPersistance: $0, on: db)
+            return live.and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }.map {
+                Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2)
+            }
         }
     }
     public func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<

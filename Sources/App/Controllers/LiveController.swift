@@ -19,7 +19,13 @@ struct LiveController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
         try routes.on(endpoint: Endpoint.EditLive.self, use: injectProvider(edit))
-        try routes.on(endpoint: Endpoint.GetLive.self, use: injectProvider(getLiveInfo))
+        try routes.on(
+            endpoint: Endpoint.GetLive.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.findLive(by: uri.liveId, selfUerId: user.id).unwrap(
+                    or: Abort(.notFound))
+            })
         try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(reserveTicket))
         try routes.on(
             endpoint: Endpoint.ReplyPerformanceRequest.self, use: injectProvider(replyRequest))
@@ -31,14 +37,6 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.get(page: uri.page, per: uri.per, group: uri.groupId)
             })
-    }
-
-    func getLiveInfo(req: Request, uri: GetLive.URI, repository: Domain.LiveRepository) throws
-        -> EventLoopFuture<
-            Endpoint.Live
-        >
-    {
-        return repository.findLive(by: uri.liveId).unwrap(or: Abort(.notFound))
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws
@@ -111,6 +109,8 @@ extension Endpoint.Live: Content {}
 extension Endpoint.Ticket: Content {}
 
 extension Endpoint.Page: Content {}
+
+extension Endpoint.GetLive.Response: Content {}
 
 extension EditLiveUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {

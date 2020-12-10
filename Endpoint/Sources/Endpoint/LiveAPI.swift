@@ -96,9 +96,21 @@ public struct GetPerformanceRequests: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct LiveDetail: Codable {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool) {
+        self.live = live
+        self.isLiked = isLiked
+        self.hasTicket = hasTicket
+    }
+
+    public var live: Live
+    public var isLiked: Bool
+    public var hasTicket: Bool
+}
+
 public struct GetLive: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Live
+    public typealias Response = LiveDetail
     public struct URI: CodableURL {
         @StaticPath("lives") public var prefix: Void
         @DynamicPath public var liveId: Live.ID
