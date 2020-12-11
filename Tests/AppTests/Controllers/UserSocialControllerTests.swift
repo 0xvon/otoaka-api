@@ -112,6 +112,20 @@ class UserSocialControllerTests: XCTestCase {
         }
     }
 
+    func testGetFollowingGroupFeeds() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createGroupFeed(group: groupX, with: userA)
+        try appClient.follow(group: groupX, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/group_feeds?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetFollowingGroupFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
+
     func testLikeLive() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()

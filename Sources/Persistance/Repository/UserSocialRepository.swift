@@ -121,7 +121,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         Domain.Page<Domain.GroupFeed>
     > {
         return GroupFeed.query(on: db)
-            .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
+            .join(Following.self, on: \Following.$target.$id == \GroupFeed.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .sort(\.$createdAt)
             .paginate(PageRequest(page: page, per: per))
