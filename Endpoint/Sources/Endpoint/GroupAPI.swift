@@ -144,6 +144,11 @@ public struct CreateGroupFeed: EndpointProtocol {
         public var text: String
         public var feedType: FeedType
         public var groupId: Group.ID
+        public init(text: String, feedType: FeedType, groupId: Group.ID) {
+            self.text = text
+            self.feedType = feedType
+            self.groupId = groupId
+        }
     }
 
     public typealias Response = GroupFeed
