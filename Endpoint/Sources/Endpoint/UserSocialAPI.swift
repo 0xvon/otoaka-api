@@ -95,6 +95,9 @@ public struct GetFollowingGroupFeeds: EndpointProtocol {
 public struct LikeLive: EndpointProtocol {
     public struct Request: Codable {
         public var liveId: Live.ID
+        public init(liveId: Live.ID) {
+            self.liveId = liveId
+        }
     }
     public typealias Response = Empty
     public struct URI: CodableURL {
