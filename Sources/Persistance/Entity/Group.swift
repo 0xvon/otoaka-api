@@ -133,7 +133,7 @@ enum FeedType: String, Codable {
 }
 
 final class ArtistFeed: Model {
-    static let schema: String = "group_feeds"
+    static let schema: String = "artist_feeds"
     @ID(key: .id)
     var id: UUID?
 
@@ -153,9 +153,9 @@ final class ArtistFeed: Model {
     var createdAt: Date?
 }
 
-extension Endpoint.GroupFeed {
+extension Endpoint.ArtistFeed {
     static func translate(fromPersistance entity: ArtistFeed, on db: Database) -> EventLoopFuture<
-        Endpoint.GroupFeed
+        Endpoint.ArtistFeed
     > {
         let author = entity.$author.get(on: db)
         let feedType: Endpoint.FeedType
@@ -165,10 +165,47 @@ extension Endpoint.GroupFeed {
         }
         return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
             .flatMapThrowing { author in
-                try Endpoint.GroupFeed(
+                try Endpoint.ArtistFeed(
                     id: .init(entity.requireID()),
                     text: entity.text, feedType: feedType,
                     author: author, createdAt: entity.createdAt!
+                )
+            }
+    }
+}
+
+final class ArtistFeedComment: Model {
+    static let schema: String = "artist_feed_comments"
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "text")
+    var text: String
+
+    @Parent(key: "artist_feed_id")
+    var feed: ArtistFeed
+
+    @Parent(key: "author_id")
+    var author: User
+
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+}
+
+extension Endpoint.ArtistFeedComment {
+    static func translate(fromPersistance entity: ArtistFeedComment, on db: Database)
+        -> EventLoopFuture<
+            Endpoint.ArtistFeedComment
+        >
+    {
+        let author = entity.$author.get(on: db)
+        return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { author in
+                try Endpoint.ArtistFeedComment(
+                    id: .init(entity.requireID()),
+                    text: entity.text, author: author,
+                    artistFeedId: .init(entity.$feed.id),
+                    createdAt: entity.createdAt!
                 )
             }
     }

@@ -9,7 +9,7 @@ public protocol UserSocialRepository {
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>
     func upcomingLives(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
     func followingGroupFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Page<GroupFeed>
+        Page<ArtistFeed>
     >
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>

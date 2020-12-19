@@ -181,4 +181,22 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(firstItem.id, feed.id)
         }
     }
+
+    func testPostCommentOnFeed() throws {
+        let artistX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userY = try appClient.createUser(role: .fan(.init()))
+        let feed = try appClient.createGroupFeed(with: artistX)
+
+        let body = try! Stub.make(Endpoint.PostFeedComment.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        let headers = appClient.makeHeaders(for: userY)
+        try app.test(.POST, "user_social/feed_comment", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.PostFeedComment.Response.self)
+            XCTAssertEqual(responseBody.author.id, userY.user.id)
+        }
+    }
 }

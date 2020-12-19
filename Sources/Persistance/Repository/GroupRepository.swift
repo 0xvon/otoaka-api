@@ -164,7 +164,7 @@ public class GroupRepository: Domain.GroupRepository {
     }
 
     public func createFeed(for input: Endpoint.CreateArtistFeed.Request, authorId: Domain.User.ID)
-        -> EventLoopFuture<Domain.GroupFeed>
+        -> EventLoopFuture<Domain.ArtistFeed>
     {
         let feed = ArtistFeed()
         feed.text = input.text
@@ -175,12 +175,12 @@ public class GroupRepository: Domain.GroupRepository {
             feed.youtubeURL = url.absoluteString
         }
         return feed.create(on: db).flatMap { [db] in
-            Domain.GroupFeed.translate(fromPersistance: feed, on: db)
+            Domain.ArtistFeed.translate(fromPersistance: feed, on: db)
         }
     }
 
     public func feeds(groupId: Domain.Group.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.GroupFeed>
+        Domain.Page<Domain.ArtistFeed>
     > {
         ArtistFeed.query(on: db)
             .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
@@ -188,9 +188,23 @@ public class GroupRepository: Domain.GroupRepository {
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                    Domain.GroupFeed.translate(fromPersistance: $0, on: db)
+                    Domain.ArtistFeed.translate(fromPersistance: $0, on: db)
                 }
             }
+    }
+
+    public func addArtistFeedComment(userId: Domain.User.ID, input: PostFeedComment.Request)
+        -> EventLoopFuture<
+            Domain.ArtistFeedComment
+        >
+    {
+        let comment = ArtistFeedComment()
+        comment.$author.id = userId.rawValue
+        comment.$feed.id = input.feedId.rawValue
+        comment.text = input.text
+        return comment.save(on: db).flatMap { [db] in
+            Domain.ArtistFeedComment.translate(fromPersistance: comment, on: db)
+        }
     }
 
     public func search(query: String, page: Int, per: Int) -> EventLoopFuture<

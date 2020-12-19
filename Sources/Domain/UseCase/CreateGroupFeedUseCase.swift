@@ -5,7 +5,7 @@ public struct CreateGroupFeedUseCase: UseCase {
     public typealias Request = (
         user: User, input: CreateArtistFeed.Request
     )
-    public typealias Response = GroupFeed
+    public typealias Response = ArtistFeed
 
     public enum Error: Swift.Error {
         case fanCannotCreateGroupFeed

@@ -86,7 +86,7 @@ public enum FeedType: Codable {
         }
     }
 }
-public struct GroupFeed: Codable {
+public struct ArtistFeed: Codable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var text: String
@@ -94,11 +94,32 @@ public struct GroupFeed: Codable {
     public var author: User
     public var createdAt: Date
 
-    public init(id: GroupFeed.ID, text: String, feedType: FeedType, author: User, createdAt: Date) {
+    public init(id: ArtistFeed.ID, text: String, feedType: FeedType, author: User, createdAt: Date)
+    {
         self.id = id
         self.text = text
         self.feedType = feedType
         self.author = author
         self.createdAt = createdAt
     }
+}
+
+public struct ArtistFeedComment: Codable {
+    public init(
+        id: ArtistFeedComment.ID, text: String, author: User, artistFeedId: ArtistFeed.ID,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.text = text
+        self.author = author
+        self.artistFeedId = artistFeedId
+        self.createdAt = createdAt
+    }
+
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var text: String
+    public var author: User
+    public var artistFeedId: ArtistFeed.ID
+    public var createdAt: Date
 }

@@ -74,3 +74,21 @@ struct CreateGroupFeed: Migration {
         database.schema(GroupInvitation.schema).delete()
     }
 }
+
+struct CreateArtistFeedComment: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeedComment.schema)
+            .id()
+            .field("text", .string)
+            .field("artist_feed_id", .uuid, .required)
+            .foreignKey("artist_feed_id", references: ArtistFeed.schema, "id")
+            .field("author_id", .uuid, .required)
+            .foreignKey("author_id", references: User.schema, "id")
+            .field("created_at", .datetime, .required)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeedComment.schema).delete()
+    }
+}

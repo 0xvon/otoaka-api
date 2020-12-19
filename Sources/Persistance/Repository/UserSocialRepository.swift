@@ -119,7 +119,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     }
 
     public func followingGroupFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.GroupFeed>
+        Domain.Page<Domain.ArtistFeed>
     > {
         return ArtistFeed.query(on: db)
             .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
@@ -129,7 +129,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    return Domain.GroupFeed.translate(fromPersistance: live, on: db)
+                    return Domain.ArtistFeed.translate(fromPersistance: live, on: db)
                 }
             }
     }

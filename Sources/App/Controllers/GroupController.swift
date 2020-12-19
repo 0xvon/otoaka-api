@@ -43,6 +43,13 @@ struct GroupController: RouteCollection {
                 return try useCase((user: user, input: input))
             })
         try routes.on(
+            endpoint: PostFeedComment.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(PostFeedComment.Request.self)
+                return repository.addArtistFeedComment(userId: user.id, input: input)
+            })
+        try routes.on(
             endpoint: Endpoint.GetGroupFeed.self,
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
@@ -139,7 +146,9 @@ extension Endpoint.Group: Content {}
 
 extension Endpoint.InviteGroup.Response: Content {}
 
-extension Endpoint.GroupFeed: Content {}
+extension Endpoint.ArtistFeed: Content {}
+
+extension Endpoint.ArtistFeedComment: Content {}
 
 extension Endpoint.GetGroup.Response: Content {}
 

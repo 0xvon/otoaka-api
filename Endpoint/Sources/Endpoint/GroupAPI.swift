@@ -149,7 +149,7 @@ public struct CreateArtistFeed: EndpointProtocol {
         }
     }
 
-    public typealias Response = GroupFeed
+    public typealias Response = ArtistFeed
     public struct URI: CodableURL {
         @StaticPath("groups", "create_feed") public var prefix: Void
         public init() {}
@@ -159,7 +159,7 @@ public struct CreateArtistFeed: EndpointProtocol {
 
 public struct GetGroupFeed: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<GroupFeed>
+    public typealias Response = Page<ArtistFeed>
 
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void
