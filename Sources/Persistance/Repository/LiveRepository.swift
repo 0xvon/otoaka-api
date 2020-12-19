@@ -26,7 +26,8 @@ public class LiveRepository: Domain.LiveRepository {
         let live = Live(
             title: input.title, style: style, artworkURL: input.artworkURL,
             hostGroupId: input.hostGroupId, authorId: authorId,
-            openAt: input.openAt, startAt: input.startAt, endAt: input.endAt
+            liveHouse: input.liveHouse, openAt: input.openAt, startAt: input.startAt,
+            endAt: input.endAt
         )
         return db.transaction { (db) -> EventLoopFuture<Void> in
             live.save(on: db)

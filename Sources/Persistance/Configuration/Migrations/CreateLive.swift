@@ -20,6 +20,7 @@ struct CreateLive: Migration {
                 .foreignKey("host_group_id", references: Group.schema, .id)
                 .field("author_id", .uuid)
                 .foreignKey("author_id", references: User.schema, .id)
+                .field("live_house", .string)
                 .field("open_at", .datetime)
                 .field("start_at", .datetime)
                 .field("end_at", .datetime)

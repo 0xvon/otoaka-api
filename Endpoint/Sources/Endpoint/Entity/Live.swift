@@ -66,7 +66,7 @@ public struct Live: Codable, Identifiable {
     public var artworkURL: URL?
     public var hostGroup: Group
     public var author: User
-    // TODO: liveHouseId
+    public var liveHouse: String?
     public var openAt: Date?
     public var startAt: Date?
     public var endAt: Date?
@@ -75,7 +75,7 @@ public struct Live: Codable, Identifiable {
     public init(
         id: ID, title: String,
         style: LiveStyleOutput, artworkURL: URL?,
-        author: User, hostGroup: Group,
+        author: User, hostGroup: Group, liveHouse: String?,
         startAt: Date?, endAt: Date?, createdAt: Date
     ) {
         self.id = id
@@ -84,6 +84,7 @@ public struct Live: Codable, Identifiable {
         self.artworkURL = artworkURL
         self.author = author
         self.hostGroup = hostGroup
+        self.liveHouse = liveHouse
         self.startAt = startAt
         self.endAt = endAt
         self.createdAt = createdAt

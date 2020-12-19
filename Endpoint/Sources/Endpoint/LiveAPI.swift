@@ -6,19 +6,20 @@ public struct CreateLive: EndpointProtocol {
         public var style: LiveStyleInput
         public var artworkURL: Foundation.URL?
         public var hostGroupId: Group.ID
-        // TODO: liveHouseId
+        public var liveHouse: String?
         public var openAt: Date?
         public var startAt: Date?
         public var endAt: Date?
 
         public init(
             title: String, style: LiveStyleInput, artworkURL: URL?, hostGroupId: Group.ID,
-            openAt: Date?, startAt: Date?, endAt: Date?
+            liveHouse: String?, openAt: Date?, startAt: Date?, endAt: Date?
         ) {
             self.title = title
             self.style = style
             self.artworkURL = artworkURL
             self.hostGroupId = hostGroupId
+            self.liveHouse = liveHouse
             self.openAt = openAt
             self.startAt = startAt
             self.endAt = endAt

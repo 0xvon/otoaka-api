@@ -26,7 +26,9 @@ final class Live: Model {
     @Parent(key: "author_id")
     var author: User
 
-    // TODO: liveHouseId
+    @OptionalField(key: "live_house")
+    var liveHouse: String?
+
     @Timestamp(key: "open_at", on: .none)
     var openAt: Date?
     @Timestamp(key: "start_at", on: .none)
@@ -44,7 +46,7 @@ final class Live: Model {
         title: String, style: LiveStyle,
         artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
-        authorId: Domain.User.ID,
+        authorId: Domain.User.ID, liveHouse: String?,
         openAt: Date?, startAt: Date?, endAt: Date?
     ) {
         self.id = nil
@@ -53,6 +55,7 @@ final class Live: Model {
         self.artworkURL = artworkURL?.absoluteString
         self.$hostGroup.id = hostGroupId.rawValue
         self.$author.id = authorId.rawValue
+        self.liveHouse = liveHouse
         self.openAt = openAt
         self.startAt = startAt
         self.endAt = endAt
@@ -149,7 +152,7 @@ extension Endpoint.Live {
                     style: style,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     author: author,
-                    hostGroup: hostGroup,
+                    hostGroup: hostGroup, liveHouse: entity.liveHouse,
                     startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt
                 )
             }
