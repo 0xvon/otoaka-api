@@ -105,7 +105,9 @@ public class LiveRepository: Domain.LiveRepository {
         }
     }
 
-    public func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Ticket>> {
+    public func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.Ticket>
+    > {
         return Ticket.query(on: db).filter(\.$user.$id == userId.rawValue)
             .join(parent: \.$live)
             .sort(Live.self, \.$startAt)

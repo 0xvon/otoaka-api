@@ -140,7 +140,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         return like.create(on: db)
     }
 
-    public func unlikeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
+    public func unlikeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void>
+    {
         let like = LiveLike.query(on: db).filter(\.$user.$id == userId.rawValue)
             .filter(\.$live.$id == liveId.rawValue)
             .first()

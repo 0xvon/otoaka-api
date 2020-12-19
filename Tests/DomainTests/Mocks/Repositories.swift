@@ -101,7 +101,9 @@ extension LiveRepositoryMock {
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Live>> {
         unimplemented()
     }
-    func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Ticket>> {
+    func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.Ticket>
+    > {
         unimplemented()
     }
 }
