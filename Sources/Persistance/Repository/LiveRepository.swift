@@ -104,6 +104,19 @@ public class LiveRepository: Domain.LiveRepository {
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
     }
+
+    public func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Ticket>> {
+        return Ticket.query(on: db).filter(\.$user.$id == userId.rawValue)
+            .join(parent: \.$live)
+            .sort(Live.self, \.$startAt)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page<Domain.Ticket>.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.Ticket.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+
     public func updatePerformerStatus(
         requestId: Domain.PerformanceRequest.ID,
         status: Domain.PerformanceRequest.Status

@@ -134,6 +134,18 @@ public struct ReserveTicket: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct GetMyTickets: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<Ticket>
+    public struct URI: CodableURL {
+        @StaticPath("lives", "my_tickets") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct SearchLive: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>

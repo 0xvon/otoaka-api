@@ -42,6 +42,12 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.search(query: uri.term, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: Endpoint.GetMyTickets.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.getUserTickets(userId: user.id, page: uri.page, per: uri.per)
+            })
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws

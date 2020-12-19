@@ -169,6 +169,12 @@ class LiveControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.ReserveTicket.Response.self)
             XCTAssertEqual(responseBody.status, .registered)
         }
+
+        try app.test(.GET, "lives/my_tickets?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
+            XCTAssertEqual(response.items.count, 1)
+        }
     }
 
     func testGetGroupLives() throws {
