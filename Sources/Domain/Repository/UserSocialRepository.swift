@@ -12,4 +12,5 @@ public protocol UserSocialRepository {
         Page<GroupFeed>
     >
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
+    func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
 }

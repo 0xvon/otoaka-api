@@ -106,3 +106,18 @@ public struct LikeLive: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
+
+public struct UnlikeLive: EndpointProtocol {
+    public struct Request: Codable {
+        public var liveId: Live.ID
+        public init(liveId: Live.ID) {
+            self.liveId = liveId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "unlike_live") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}

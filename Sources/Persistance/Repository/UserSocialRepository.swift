@@ -11,6 +11,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case alreadyFollowing
         case notFollowing
         case targetGroupNotFound
+        case notHavingLiveLike
     }
 
     public func follow(
@@ -137,5 +138,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         like.$user.id = userId.rawValue
         like.$live.id = liveId.rawValue
         return like.create(on: db)
+    }
+
+    public func unlikeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
+        let like = LiveLike.query(on: db).filter(\.$user.$id == userId.rawValue)
+            .filter(\.$live.$id == liveId.rawValue)
+            .first()
+        return like.flatMapThrowing { like -> LiveLike in
+            guard let like = like else {
+                throw Error.notHavingLiveLike
+            }
+            return like
+        }
+        .flatMap { [db] in $0.delete(on: db) }
     }
 }

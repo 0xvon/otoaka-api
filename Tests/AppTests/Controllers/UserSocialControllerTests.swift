@@ -142,5 +142,12 @@ class UserSocialControllerTests: XCTestCase {
             let item = try XCTUnwrap(responseBody.items.first)
             XCTAssertTrue(item.isLiked)
         }
+        try appClient.unlike(live: liveA, with: userB)
+        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertFalse(item.isLiked)
+        }
     }
 }
