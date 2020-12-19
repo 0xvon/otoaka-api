@@ -19,7 +19,9 @@ public class GroupRepository: Domain.GroupRepository {
         let group = Group(
             name: input.name, englishName: input.englishName,
             biography: input.biography, since: input.since,
-            artworkURL: input.artworkURL, hometown: input.hometown)
+            artworkURL: input.artworkURL,
+            twitterId: input.twitterId, youtubeChannelId: input.youtubeChannelId,
+            hometown: input.hometown)
         return group.save(on: db).flatMap { [db] in
             Domain.Group.translate(fromPersistance: group, on: db)
         }

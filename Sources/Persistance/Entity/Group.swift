@@ -22,6 +22,12 @@ final class Group: Model {
     @OptionalField(key: "artwork_url")
     var artworkURL: String?
 
+    @OptionalField(key: "twitter_id")
+    var twitterId: String?
+
+    @OptionalField(key: "youtube_channel_id")
+    var youtubeChannelId: String?
+
     @OptionalField(key: "hometown")
     var hometown: String?
 
@@ -30,6 +36,7 @@ final class Group: Model {
     init(
         id: UUID? = nil, name: String, englishName: String?,
         biography: String?, since: Date?, artworkURL: URL?,
+        twitterId: String?, youtubeChannelId: String?,
         hometown: String?
     ) {
         self.id = id
@@ -38,6 +45,8 @@ final class Group: Model {
         self.biography = biography
         self.since = since
         self.artworkURL = artworkURL?.absoluteString
+        self.twitterId = twitterId
+        self.youtubeChannelId = youtubeChannelId
         self.hometown = hometown
     }
 }
@@ -53,6 +62,8 @@ extension Endpoint.Group {
                 name: entity.name, englishName: entity.englishName,
                 biography: entity.biography, since: entity.since,
                 artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
+                twitterId: entity.twitterId,
+                youtubeChannelId: entity.youtubeChannelId,
                 hometown: entity.hometown
             )
         }

@@ -9,6 +9,8 @@ struct CreateGroup: Migration {
             .field("biography", .string)
             .field("since", .date)
             .field("artwork_url", .string)
+            .field("twitter_id", .string)
+            .field("youtube_channel_id", .string)
             .field("hometown", .string)
             .create()
     }

@@ -8,12 +8,15 @@ public struct Group: Codable, Identifiable {
     public var biography: String?
     public var since: Date?
     public var artworkURL: URL?
+    public var twitterId: String?
+    public var youtubeChannelId: String?
     public var hometown: String?
     public var isVerified: Bool
 
     public init(
         id: ID, name: String, englishName: String?,
         biography: String?, since: Date?, artworkURL: URL?,
+        twitterId: String?, youtubeChannelId: String?,
         hometown: String?
     ) {
         self.id = id
@@ -22,6 +25,8 @@ public struct Group: Codable, Identifiable {
         self.biography = biography
         self.since = since
         self.artworkURL = artworkURL
+        self.twitterId = twitterId
+        self.youtubeChannelId = youtubeChannelId
         self.hometown = hometown
         isVerified = false
     }

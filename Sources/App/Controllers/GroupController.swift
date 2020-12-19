@@ -79,7 +79,9 @@ struct GroupController: RouteCollection {
         let isFollowing = userSocialRepository.isFollowing(
             selfUser: user.id, targetGroup: uri.groupId)
         let followersCount = userSocialRepository.followersCount(selfGroup: uri.groupId)
-        return group.and(isMember).and(isFollowing).and(followersCount).map { ($0.0.0, $0.0.1, $0.1, $1) }.map {
+        return group.and(isMember).and(isFollowing).and(followersCount).map {
+            ($0.0.0, $0.0.1, $0.1, $1)
+        }.map {
             GetGroup.Response(group: $0, isMember: $1, isFollowing: $2, followersCount: $3)
         }
     }

@@ -7,17 +7,22 @@ public struct CreateGroup: EndpointProtocol {
         public var biography: String?
         public var since: Date?
         public var artworkURL: Foundation.URL?
+        public var twitterId: String?
+        public var youtubeChannelId: String?
         public var hometown: String?
 
         public init(
             name: String, englishName: String?, biography: String?,
-            since: Date?, artworkURL: Foundation.URL?, hometown: String?
+            since: Date?, artworkURL: Foundation.URL?,
+            twitterId: String?, youtubeChannelId: String?, hometown: String?
         ) {
             self.name = name
             self.englishName = englishName
             self.biography = biography
             self.since = since
             self.artworkURL = artworkURL
+            self.twitterId = twitterId
+            self.youtubeChannelId = youtubeChannelId
             self.hometown = hometown
         }
     }
