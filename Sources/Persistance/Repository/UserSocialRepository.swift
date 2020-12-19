@@ -80,6 +80,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
     }
 
+    public func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
+        Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue).count()
+    }
+
     public func isFollowing(
         selfUser: Domain.User.ID,
         targetGroup: Domain.Group.ID
