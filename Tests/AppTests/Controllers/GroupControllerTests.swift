@@ -198,5 +198,12 @@ class GroupControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.PostFeedComment.Response.self)
             XCTAssertEqual(responseBody.author.id, userY.user.id)
         }
+
+        try app.test(.GET, "user_social/feed_comment/\(feed.id)?page=1&per=10", headers: headers) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetFeedComments.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
     }
 }

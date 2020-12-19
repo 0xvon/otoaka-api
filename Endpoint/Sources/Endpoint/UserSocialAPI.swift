@@ -138,3 +138,16 @@ public struct PostFeedComment: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
+
+public struct GetFeedComments: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<ArtistFeedComment>
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "feed_comment") public var prefix: Void
+        @DynamicPath public var feedId: ArtistFeed.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}

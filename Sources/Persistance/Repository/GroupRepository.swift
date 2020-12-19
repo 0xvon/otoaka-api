@@ -207,6 +207,19 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
+    public func getArtistFeedComments(feedId: Domain.ArtistFeed.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.ArtistFeedComment>>
+    {
+        ArtistFeedComment.query(on: db)
+            .filter(\.$feed.$id == feedId.rawValue)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.ArtistFeedComment.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+
     public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.Group>
     > {

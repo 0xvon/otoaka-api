@@ -50,6 +50,12 @@ struct GroupController: RouteCollection {
                 return repository.addArtistFeedComment(userId: user.id, input: input)
             })
         try routes.on(
+            endpoint: GetFeedComments.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getArtistFeedComments(
+                    feedId: uri.feedId, page: uri.page, per: uri.per)
+            })
+        try routes.on(
             endpoint: Endpoint.GetGroupFeed.self,
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
