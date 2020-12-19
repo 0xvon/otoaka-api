@@ -82,10 +82,14 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUerId.rawValue)
             .count().map { $0 > 0 }
+        let participants = Ticket.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .count()
         return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
-            return live.and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }.map {
-                Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2)
+            return live.and(isLiked).and(hasTicket).and(participants)
+                .map { ($0.0.0, $0.0.1, $0.1, $1) }.map {
+                Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2, participants: $3)
             }
         }
     }

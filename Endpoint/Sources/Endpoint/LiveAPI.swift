@@ -98,15 +98,17 @@ public struct GetPerformanceRequests: EndpointProtocol {
 }
 
 public struct LiveDetail: Codable {
-    public init(live: Live, isLiked: Bool, hasTicket: Bool) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, participants: Int) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
+        self.participants = participants
     }
 
     public var live: Live
     public var isLiked: Bool
     public var hasTicket: Bool
+    public var participants: Int
 }
 
 public struct GetLive: EndpointProtocol {
