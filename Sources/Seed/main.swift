@@ -75,6 +75,7 @@ func importSpotifyArtist(artistId: String, eventLoop: EventLoop) -> EventLoopFut
                 biography: "\(artist.name)として活動しています。(Imported from Spotify API)",
                 since: Date(),
                 artworkURL: URL(string: artist.bestQualityImage.url),
+                twitterId: nil, youtubeChannelId: nil,
                 hometown: nil
             ), as: leader)
 
