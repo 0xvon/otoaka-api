@@ -139,15 +139,13 @@ public struct GetGroupLives: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
-public struct CreateGroupFeed: EndpointProtocol {
+public struct CreateArtistFeed: EndpointProtocol {
     public struct Request: Codable {
         public var text: String
         public var feedType: FeedType
-        public var groupId: Group.ID
-        public init(text: String, feedType: FeedType, groupId: Group.ID) {
+        public init(text: String, feedType: FeedType) {
             self.text = text
             self.feedType = feedType
-            self.groupId = groupId
         }
     }
 

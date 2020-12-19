@@ -116,7 +116,7 @@ class UserSocialControllerTests: XCTestCase {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
         let groupX = try appClient.createGroup(with: userA)
-        _ = try appClient.createGroupFeed(group: groupX, with: userA)
+        _ = try appClient.createGroupFeed(with: userA)
         try appClient.follow(group: groupX, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)

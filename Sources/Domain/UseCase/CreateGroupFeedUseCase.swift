@@ -3,7 +3,7 @@ import NIO
 
 public struct CreateGroupFeedUseCase: UseCase {
     public typealias Request = (
-        user: User, input: CreateGroupFeed.Request
+        user: User, input: CreateArtistFeed.Request
     )
     public typealias Response = GroupFeed
 
@@ -29,15 +29,6 @@ public struct CreateGroupFeedUseCase: UseCase {
             return eventLoop.makeFailedFuture(Error.fanCannotCreateGroupFeed)
         }
         let input = request.input
-        let precondition = groupRepository.isMember(
-            of: input.groupId, member: request.user.id
-        )
-        .flatMapThrowing {
-            guard $0 else { throw Error.isNotMemberOfGroup }
-            return
-        }
-        return precondition.flatMap {
-            groupRepository.createFeed(for: input, authorId: request.user.id)
-        }
+        return groupRepository.createFeed(for: input, authorId: request.user.id)
     }
 }

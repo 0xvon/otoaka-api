@@ -121,8 +121,9 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     public func followingGroupFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.GroupFeed>
     > {
-        return GroupFeed.query(on: db)
-            .join(Following.self, on: \Following.$target.$id == \GroupFeed.$group.$id)
+        return ArtistFeed.query(on: db)
+            .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
+            .join(Following.self, on: \Following.$target.$id == \Membership.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .sort(\.$createdAt)
             .paginate(PageRequest(page: page, per: per))

@@ -18,7 +18,7 @@ public protocol GroupRepository {
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Group>>
     func getMemberships(for artistId: User.ID) -> EventLoopFuture<[Group]>
 
-    func createFeed(for input: CreateGroupFeed.Request, authorId: User.ID) -> EventLoopFuture<
+    func createFeed(for input: CreateArtistFeed.Request, authorId: User.ID) -> EventLoopFuture<
         GroupFeed
     >
     func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>

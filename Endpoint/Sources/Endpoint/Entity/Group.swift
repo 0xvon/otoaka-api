@@ -91,14 +91,14 @@ public struct GroupFeed: Codable {
     public var id: ID
     public var text: String
     public var feedType: FeedType
-    public var group: Group
+    public var author: User
     public var createdAt: Date
 
-    public init(id: GroupFeed.ID, text: String, feedType: FeedType, group: Group, createdAt: Date) {
+    public init(id: GroupFeed.ID, text: String, feedType: FeedType, author: User, createdAt: Date) {
         self.id = id
         self.text = text
         self.feedType = feedType
-        self.group = group
+        self.author = author
         self.createdAt = createdAt
     }
 }

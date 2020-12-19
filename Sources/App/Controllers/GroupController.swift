@@ -34,10 +34,10 @@ struct GroupController: RouteCollection {
                 repository.getMemberships(for: uri.artistId)
             })
         try routes.on(
-            endpoint: Endpoint.CreateGroupFeed.self,
+            endpoint: Endpoint.CreateArtistFeed.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
-                let input = try req.content.decode(CreateGroupFeed.Request.self)
+                let input = try req.content.decode(CreateArtistFeed.Request.self)
                 let useCase = CreateGroupFeedUseCase(
                     groupRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((user: user, input: input))

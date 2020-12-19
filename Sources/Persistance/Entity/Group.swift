@@ -132,7 +132,7 @@ enum FeedType: String, Codable {
     case youtube
 }
 
-final class GroupFeed: Model {
+final class ArtistFeed: Model {
     static let schema: String = "group_feeds"
     @ID(key: .id)
     var id: UUID?
@@ -146,9 +146,6 @@ final class GroupFeed: Model {
     @OptionalField(key: "youtube_url")
     var youtubeURL: String?
 
-    @Parent(key: "group_id")
-    var group: Group
-
     @Parent(key: "author_id")
     var author: User
 
@@ -157,21 +154,21 @@ final class GroupFeed: Model {
 }
 
 extension Endpoint.GroupFeed {
-    static func translate(fromPersistance entity: GroupFeed, on db: Database) -> EventLoopFuture<
+    static func translate(fromPersistance entity: ArtistFeed, on db: Database) -> EventLoopFuture<
         Endpoint.GroupFeed
     > {
-        let group = entity.$group.get(on: db)
+        let author = entity.$author.get(on: db)
         let feedType: Endpoint.FeedType
         switch entity.feedType {
         case .youtube:
             feedType = .youtube(URL(string: entity.youtubeURL!)!)
         }
-        return group.flatMap { Endpoint.Group.translate(fromPersistance: $0, on: db) }
-            .flatMapThrowing { group in
+        return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { author in
                 try Endpoint.GroupFeed(
                     id: .init(entity.requireID()),
                     text: entity.text, feedType: feedType,
-                    group: group, createdAt: entity.createdAt!
+                    author: author, createdAt: entity.createdAt!
                 )
             }
     }

@@ -163,12 +163,11 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
-    public func createFeed(for input: Endpoint.CreateGroupFeed.Request, authorId: Domain.User.ID)
+    public func createFeed(for input: Endpoint.CreateArtistFeed.Request, authorId: Domain.User.ID)
         -> EventLoopFuture<Domain.GroupFeed>
     {
-        let feed = GroupFeed()
+        let feed = ArtistFeed()
         feed.text = input.text
-        feed.$group.id = input.groupId.rawValue
         feed.$author.id = authorId.rawValue
         switch input.feedType {
         case .youtube(let url):
@@ -183,7 +182,9 @@ public class GroupRepository: Domain.GroupRepository {
     public func feeds(groupId: Domain.Group.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.GroupFeed>
     > {
-        GroupFeed.query(on: db).filter(\.$group.$id == groupId.rawValue).sort(\.$createdAt)
+        ArtistFeed.query(on: db)
+            .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
+            .filter(Membership.self, \Membership.$group.$id == groupId.rawValue)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
