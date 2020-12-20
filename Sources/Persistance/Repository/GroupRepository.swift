@@ -37,6 +37,8 @@ public class GroupRepository: Domain.GroupRepository {
             group.biography = input.biography
             group.since = input.since
             group.artworkURL = input.artworkURL?.absoluteString
+            group.twitterId = input.twitterId
+            group.youtubeChannelId = input.youtubeChannelId
             group.hometown = input.hometown
             return group
         }
