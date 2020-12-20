@@ -140,7 +140,7 @@ public struct ReserveTicket: EndpointProtocol {
 public struct GetMyTickets: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Ticket>
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "my_tickets") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int
