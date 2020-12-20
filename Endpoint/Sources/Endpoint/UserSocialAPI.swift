@@ -142,7 +142,7 @@ public struct PostFeedComment: EndpointProtocol {
 public struct GetFeedComments: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<ArtistFeedComment>
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "feed_comment") public var prefix: Void
         @DynamicPath public var feedId: ArtistFeed.ID
         @Query public var page: Int
