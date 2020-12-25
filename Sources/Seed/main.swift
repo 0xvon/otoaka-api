@@ -11,8 +11,33 @@ let spotify = SpotifyAPIClient(http: httpClient)
 let client = AppClient(
     baseURL: URL(string: baseURL)!, http: httpClient, cognito: cognito
 )
+let scrapedCachePath = URL(fileURLWithPath: #file)
+    .deletingLastPathComponent()
+    .appendingPathComponent(".cache.json")
+
+func exportScrapedCache(_ users: [SpotifyAPI.GetArtist.Response]) {
+    let data = try! JSONEncoder().encode(users)
+    try! data.write(to: scrapedCachePath)
+}
+
+func importScrapedCache() -> [SpotifyAPI.GetArtist.Response]? {
+    do {
+        let data = try Data(contentsOf: scrapedCachePath)
+        return try! JSONDecoder().decode([SpotifyAPI.GetArtist.Response].self, from: data)
+    } catch {
+        return nil
+    }
+}
 
 func importSpotifyDataSoruces(eventLoop: EventLoop) throws {
+    if let cache = importScrapedCache() {
+        let future = EventLoopFuture.whenAllSucceed(
+            cache.map { importSpotifyArtist(artist: $0, eventLoop: eventLoop) },
+            on: eventLoop
+        )
+        _ = try future.wait()
+        return
+    }
     let playlists = ["37i9dQZF1DX54Fkcz35jfT"]
     _ = try EventLoopFuture.whenAllSucceed(
         playlists.map { playlist in
@@ -29,40 +54,46 @@ func importSpotifyDataSoruces(eventLoop: EventLoop) throws {
     )
     .map { Set($0.flatMap { $0 }) }
     .flatMap {
+        EventLoopFuture.whenAllSucceed($0.map { user -> EventLoopFuture<SpotifyAPI.GetArtist.Response> in
+            var uri = SpotifyAPI.GetArtist.URI()
+            uri.artistId = user.id
+            return spotify.execute(SpotifyAPI.GetArtist.self, uri: uri)
+        }, on: eventLoop)
+    }
+    .always {
+        guard case .success(let users) = $0 else { return }
+        exportScrapedCache(Array(users))
+    }
+    .flatMap {
         EventLoopFuture.whenAllSucceed(
-            $0.map { importSpotifyArtist(artistId: $0.id, eventLoop: eventLoop) }, on: eventLoop)
+            $0.map { importSpotifyArtist(artist: $0, eventLoop: eventLoop) }, on: eventLoop)
     }
     .wait()
 }
 
-func importSpotifyArtist(artistId: String, eventLoop: EventLoop) -> EventLoopFuture<Void> {
-    var uri = SpotifyAPI.GetArtist.URI()
-    uri.artistId = artistId
-    return spotify.execute(SpotifyAPI.GetArtist.self, uri: uri).flatMap {
-        artist
-            -> EventLoopFuture<(artist: SpotifyAPI.GetArtist.Response, users: [AppUser])> in
-        let thumbnail = artist.bestQualityImage
-        let futures = (0..<Int.random(in: 1..<5)).map { i -> EventLoopFuture<AppUser> in
-            let userName = "\(artist.name) メンバー\(i)"
-            let cognitoUserName = UUID().uuidString
-            let user = cognito.createToken(userName: cognitoUserName)
-            let request = Signup.Request(
-                name: userName,
-                biography: "\(userName)です。\(artist.name)で活動しています。(Imported from Spotify API)",
-                thumbnailURL: thumbnail.url, role: .artist(Artist(part: "メンバー\(i)"))
-            )
-            return user.flatMap { cognitoUser in
-                client.execute(Signup.self, request: request, as: cognitoUser.token)
-                    .map {
-                        AppUser(
-                            userName: cognitoUserName, cognito: cognito, token: cognitoUser.token,
-                            user: $0)
-                    }
-            }
+func importSpotifyArtist(artist: SpotifyAPI.GetArtist.Response, eventLoop: EventLoop) -> EventLoopFuture<Void> {
+
+    let thumbnail = artist.bestQualityImage
+    let futures = (0..<Int.random(in: 1..<5)).map { i -> EventLoopFuture<AppUser> in
+        let userName = "\(artist.name) メンバー\(i)"
+        let cognitoUserName = UUID().uuidString
+        let user = cognito.createToken(userName: cognitoUserName)
+        let request = Signup.Request(
+            name: userName,
+            biography: "\(userName)です。\(artist.name)で活動しています。(Imported from Spotify API)",
+            thumbnailURL: thumbnail.url, role: .artist(Artist(part: "メンバー\(i)"))
+        )
+        return user.flatMap { cognitoUser in
+            client.execute(Signup.self, request: request, as: cognitoUser.token)
+                .map {
+                    AppUser(
+                        userName: cognitoUserName, cognito: cognito, token: cognitoUser.token,
+                        user: $0)
+                }
         }
-        return EventLoopFuture.whenAllSucceed(futures, on: eventLoop).map {
-            (artist: artist, users: $0)
-        }
+    }
+    return EventLoopFuture.whenAllSucceed(futures, on: eventLoop).map {
+        (artist: artist, users: $0)
     }
     .flatMap { (artist, users) -> EventLoopFuture<Void> in
         let leader = users.first!

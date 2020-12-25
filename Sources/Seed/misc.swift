@@ -5,3 +5,8 @@ struct Environment {
         return ProcessInfo.processInfo.environment[key]
     }
 }
+
+struct WrappingError: Error {
+    let error: Error
+    let message: String
+}

@@ -100,8 +100,15 @@ class SpotifyAPIClient {
             return http.execute(request: request)
                 .flatMapThrowing { [decoder] in
                     var body = $0.body ?? ByteBuffer()
-                    return try! body.readJSONDecodable(
-                        E.Response.self, decoder: decoder, length: body.readableBytes)!
+                    do {
+                        return try body.readJSONDecodable(
+                            E.Response.self, decoder: decoder, length: body.readableBytes)!
+                    } catch {
+                        throw WrappingError(
+                            error: error,
+                            message: "\(body.getString(at: 0, length: body.readableBytes) ?? "nil")"
+                        )
+                    }
                 }
         } catch {
             fatalError()
