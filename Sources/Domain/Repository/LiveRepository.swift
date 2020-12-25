@@ -12,6 +12,9 @@ public protocol LiveRepository {
     func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
         Domain.Ticket
     >
+    func refundTicket(ticketId: Domain.Ticket.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Domain.Ticket
+    >
     func updatePerformerStatus(
         requestId: PerformanceRequest.ID,
         status: PerformanceRequest.Status

@@ -112,4 +112,12 @@ extension LiveRepositoryMock {
     > {
         unimplemented()
     }
+    
+    func refundTicket(ticketId: Ticket.ID, user: User.ID) -> EventLoopFuture<Ticket> {
+        unimplemented()
+    }
+    
+    func getPendingRequestCount(for user: User.ID) -> EventLoopFuture<Int> {
+        unimplemented()
+    }
 }

@@ -27,6 +27,11 @@ struct LiveController: RouteCollection {
                     or: Abort(.notFound))
             })
         try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(reserveTicket))
+        try routes.on(endpoint: Endpoint.RefundTicket.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(Domain.User.self)
+            let input = try req.content.decode(Endpoint.RefundTicket.Request.self)
+            return repository.refundTicket(ticketId: input.ticketId, user: user.id)
+        })
         try routes.on(
             endpoint: Endpoint.ReplyPerformanceRequest.self, use: injectProvider(replyRequest))
         try routes.on(

@@ -10,6 +10,8 @@ public class LiveRepository: Domain.LiveRepository {
 
     public enum Error: Swift.Error {
         case liveNotFound
+        case ticketNotFound
+        case ticketPermissionError
         case requestNotFound
     }
 
@@ -112,6 +114,21 @@ public class LiveRepository: Domain.LiveRepository {
         .flatMap { [db] in
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
+    }
+
+    public func refundTicket(ticketId: Domain.Ticket.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Domain.Ticket
+    > {
+        let ticket = Ticket.find(ticketId.rawValue, on: db)
+        return ticket.unwrap(orError: Error.ticketNotFound)
+            .guard({ $0.$user.id == user.rawValue }, else: Error.ticketPermissionError)
+            .flatMap { [db] ticket -> EventLoopFuture<Ticket> in
+                ticket.status = .refunded
+                return ticket.update(on: db).map { _ in ticket }
+            }
+            .flatMap { [db] in
+                Domain.Ticket.translate(fromPersistance: $0, on: db)
+            }
     }
 
     public func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<

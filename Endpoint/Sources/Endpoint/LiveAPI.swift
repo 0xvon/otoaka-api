@@ -144,6 +144,21 @@ public struct GetLive: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct RefundTicket: EndpointProtocol {
+    public struct Request: Codable {
+        public let ticketId: Ticket.ID
+        public init(ticketId: Ticket.ID) {
+            self.ticketId = ticketId
+        }
+    }
+    public typealias Response = Ticket
+    public struct URI: CodableURL {
+        @StaticPath("lives", "refund") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct ReserveTicket: EndpointProtocol {
     public struct Request: Codable {
         public let liveId: Live.ID

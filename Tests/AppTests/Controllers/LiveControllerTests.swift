@@ -158,22 +158,37 @@ class LiveControllerTests: XCTestCase {
         let hostGroup = try appClient.createGroup(with: user)
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: []), with: user)
-
-        let body = try! Stub.make(Endpoint.ReserveTicket.Request.self) {
-            $0.set(\.liveId, value: live.id)
-        }
-        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-
-        try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.ReserveTicket.Response.self)
-            XCTAssertEqual(responseBody.status, .registered)
+        var ticket: Ticket!
+        do {
+            let body = try! Stub.make(Endpoint.ReserveTicket.Request.self) {
+                $0.set(\.liveId, value: live.id)
+            }
+            let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+            
+            try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
+                XCTAssertEqual(res.status, .ok, res.body.string)
+                ticket = try res.content.decode(Endpoint.ReserveTicket.Response.self)
+                XCTAssertEqual(ticket.status, .reserved)
+            }
         }
 
         try app.test(.GET, "lives/my_tickets?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
             XCTAssertEqual(response.items.count, 1)
+        }
+        
+        do {
+            let body = try! Stub.make(Endpoint.RefundTicket.Request.self) {
+                $0.set(\.ticketId, value: ticket.id)
+            }
+            let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+            
+            try app.test(.POST, "lives/refund", headers: headers, body: bodyData) { res in
+                XCTAssertEqual(res.status, .ok, res.body.string)
+                let responseBody = try res.content.decode(Endpoint.RefundTicket.Response.self)
+                XCTAssertEqual(responseBody.status, .refunded)
+            }
         }
     }
 
