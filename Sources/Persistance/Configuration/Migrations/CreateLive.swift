@@ -16,6 +16,7 @@ struct CreateLive: Migration {
                 .field("title", .string, .required)
                 .field("style", styleEnum, .required)
                 .field("artwork_url", .string)
+                .field("price", .int64, .required)
                 .field("host_group_id", .uuid)
                 .foreignKey("host_group_id", references: Group.schema, .id)
                 .field("author_id", .uuid)
@@ -33,20 +34,6 @@ struct CreateLive: Migration {
         database.schema(Live.schema).delete()
             .and(database.enum("live_style").delete())
             .map { _ in }
-    }
-}
-
-struct AddPriceFieldToLive: Migration {
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(Live.schema)
-            .field("price", .int64)
-            .update()
-    }
-
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(Live.schema)
-            .deleteField("price")
-            .update()
     }
 }
 
@@ -92,6 +79,7 @@ struct CreateTicket: Migration {
             .case("registered")
             .case("paid")
             .case("joined")
+            .case("refunded")
             .create()
         return statusEnum.flatMap { statusEnum in
             database.schema(Ticket.schema)

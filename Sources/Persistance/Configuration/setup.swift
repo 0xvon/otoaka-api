@@ -32,7 +32,6 @@ public func setup(
         CreateLive(), CreateLivePerformer(), CreatePerformanceRequest(),
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
         CreateLiveLike(), CreateGroupFeed(), CreateArtistFeedComment(),
-        AddPriceFieldToLive(),
     ])
 
     try migrator.setupIfNeeded().flatMap {
