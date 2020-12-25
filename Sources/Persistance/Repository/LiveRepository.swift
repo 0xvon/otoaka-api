@@ -62,6 +62,7 @@ public class LiveRepository: Domain.LiveRepository {
         let modified = live.map { live -> Live in
             live.title = input.title
             live.artworkURL = input.artworkURL?.absoluteString
+            live.liveHouse = input.liveHouse
             live.openAt = input.openAt
             live.startAt = input.startAt
             live.endAt = input.endAt

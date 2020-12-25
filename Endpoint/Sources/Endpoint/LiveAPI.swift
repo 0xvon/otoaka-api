@@ -40,17 +40,18 @@ public struct EditLive: EndpointProtocol {
     public struct Request: Codable {
         public var title: String
         public var artworkURL: Foundation.URL?
-        // TODO: liveHouseId
+        public var liveHouse: String?
         public var openAt: Date?
         public var startAt: Date?
         public var endAt: Date?
 
         public init(
-            title: String, artworkURL: URL?,
+            title: String, artworkURL: URL?, liveHouse: String?,
             openAt: Date?, startAt: Date?, endAt: Date?
         ) {
             self.title = title
             self.artworkURL = artworkURL
+            self.liveHouse = liveHouse
             self.openAt = openAt
             self.startAt = startAt
             self.endAt = endAt
