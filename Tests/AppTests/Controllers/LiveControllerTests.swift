@@ -37,7 +37,7 @@ class LiveControllerTests: XCTestCase {
 
         try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: bodyData) {
             res in
-            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
             XCTAssertEqual(responseBody.title, body.title)
         }

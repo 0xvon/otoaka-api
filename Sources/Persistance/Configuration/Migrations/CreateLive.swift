@@ -36,6 +36,20 @@ struct CreateLive: Migration {
     }
 }
 
+struct AddPriceFieldToLive: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(Live.schema)
+            .field("price", .int64)
+            .update()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Live.schema)
+            .deleteField("price")
+            .update()
+    }
+}
+
 struct CreatePerformanceRequest: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         let statusEnum = database.enum("performance_request_status")
