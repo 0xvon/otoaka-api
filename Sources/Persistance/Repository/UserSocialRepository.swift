@@ -135,7 +135,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
-                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { feed -> EventLoopFuture<ArtistFeedSummary> in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<ArtistFeedSummary> in
                     return Domain.ArtistFeed.translate(fromPersistance: feed, on: db).map {
                         ArtistFeedSummary(feed: $0, commentCount: feed.comments.count)
                     }

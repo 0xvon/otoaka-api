@@ -54,11 +54,12 @@ func importSpotifyDataSoruces(eventLoop: EventLoop) throws {
     )
     .map { Set($0.flatMap { $0 }) }
     .flatMap {
-        EventLoopFuture.whenAllSucceed($0.map { user -> EventLoopFuture<SpotifyAPI.GetArtist.Response> in
-            var uri = SpotifyAPI.GetArtist.URI()
-            uri.artistId = user.id
-            return spotify.execute(SpotifyAPI.GetArtist.self, uri: uri)
-        }, on: eventLoop)
+        EventLoopFuture.whenAllSucceed(
+            $0.map { user -> EventLoopFuture<SpotifyAPI.GetArtist.Response> in
+                var uri = SpotifyAPI.GetArtist.URI()
+                uri.artistId = user.id
+                return spotify.execute(SpotifyAPI.GetArtist.self, uri: uri)
+            }, on: eventLoop)
     }
     .always {
         guard case .success(let users) = $0 else { return }
@@ -71,7 +72,9 @@ func importSpotifyDataSoruces(eventLoop: EventLoop) throws {
     .wait()
 }
 
-func importSpotifyArtist(artist: SpotifyAPI.GetArtist.Response, eventLoop: EventLoop) -> EventLoopFuture<Void> {
+func importSpotifyArtist(artist: SpotifyAPI.GetArtist.Response, eventLoop: EventLoop)
+    -> EventLoopFuture<Void>
+{
 
     let thumbnail = artist.bestQualityImage
     let futures = (0..<Int.random(in: 1..<5)).map { i -> EventLoopFuture<AppUser> in
