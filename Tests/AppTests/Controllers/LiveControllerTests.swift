@@ -164,7 +164,7 @@ class LiveControllerTests: XCTestCase {
                 $0.set(\.liveId, value: live.id)
             }
             let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-            
+
             try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
                 ticket = try res.content.decode(Endpoint.ReserveTicket.Response.self)
@@ -177,13 +177,13 @@ class LiveControllerTests: XCTestCase {
             let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
             XCTAssertEqual(response.items.count, 1)
         }
-        
+
         do {
             let body = try! Stub.make(Endpoint.RefundTicket.Request.self) {
                 $0.set(\.ticketId, value: ticket.id)
             }
             let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-            
+
             try app.test(.POST, "lives/refund", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
                 let responseBody = try res.content.decode(Endpoint.RefundTicket.Response.self)

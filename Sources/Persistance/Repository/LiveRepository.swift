@@ -95,7 +95,8 @@ public class LiveRepository: Domain.LiveRepository {
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
             return live.and(isLiked).and(hasTicket).and(participants).and(likeCount)
                 .map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }.map {
-                    Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2, participants: $3, likeCount: $4)
+                    Domain.LiveDetail(
+                        live: $0, isLiked: $1, hasTicket: $2, participants: $3, likeCount: $4)
                 }
         }
     }
