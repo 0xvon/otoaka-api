@@ -26,7 +26,7 @@ public protocol GroupRepository {
     >
     func getArtistFeedComments(feedId: ArtistFeed.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<ArtistFeedComment>>
-    func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeed>>
+    func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeedSummary>>
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Group>>
 }
 

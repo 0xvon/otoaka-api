@@ -166,7 +166,7 @@ public struct CreateArtistFeed: EndpointProtocol {
 
 public struct GetGroupFeed: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<ArtistFeed>
+    public typealias Response = Page<ArtistFeedSummary>
 
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void

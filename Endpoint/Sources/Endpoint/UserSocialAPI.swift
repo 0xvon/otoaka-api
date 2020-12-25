@@ -85,7 +85,7 @@ public struct ArtistFeedSummary: Codable {
     public var feed: ArtistFeed
     public var commentCount: Int
 
-    subscript<T>(dynamicMember keyPath: KeyPath<ArtistFeed, T>) -> T {
+    public subscript<T>(dynamicMember keyPath: KeyPath<ArtistFeed, T>) -> T {
         feed[keyPath: keyPath]
     }
 

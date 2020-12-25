@@ -179,6 +179,7 @@ class GroupControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetGroupFeed.Response.self)
             let firstItem = try XCTUnwrap(responseBody.items.first)
             XCTAssertEqual(firstItem.id, feed.id)
+            XCTAssertEqual(firstItem.commentCount, 0)
         }
     }
 

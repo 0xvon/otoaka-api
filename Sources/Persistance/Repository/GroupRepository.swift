@@ -184,15 +184,19 @@ public class GroupRepository: Domain.GroupRepository {
     }
 
     public func feeds(groupId: Domain.Group.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.ArtistFeed>
+        Domain.Page<Domain.ArtistFeedSummary>
     > {
         ArtistFeed.query(on: db)
             .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
             .filter(Membership.self, \Membership.$group.$id == groupId.rawValue)
+            .with(\.$comments)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                    Domain.ArtistFeed.translate(fromPersistance: $0, on: db)
+                    feed -> EventLoopFuture<ArtistFeedSummary> in
+                    return Domain.ArtistFeed.translate(fromPersistance: feed, on: db).map {
+                        ArtistFeedSummary(feed: $0, commentCount: feed.comments.count)
+                    }
                 }
             }
     }
