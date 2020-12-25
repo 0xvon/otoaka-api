@@ -220,6 +220,7 @@ public class GroupRepository: Domain.GroupRepository {
     {
         ArtistFeedComment.query(on: db)
             .filter(\.$feed.$id == feedId.rawValue)
+            .sort(\.$createdAt)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
