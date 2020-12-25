@@ -10,11 +10,6 @@ class UserSocialControllerTests: XCTestCase {
     var appClient: AppClient!
 
     override func setUp() {
-        LoggingSystem.bootstrap { label in
-            var logHandler = StreamLogHandler.standardOutput(label: label)
-            logHandler.logLevel = .debug
-            return logHandler
-        }
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))

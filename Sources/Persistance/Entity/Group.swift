@@ -162,6 +162,10 @@ final class ArtistFeed: Model {
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
+    
+    
+    @Children(for: \.$feed)
+    var comments: [ArtistFeedComment]
 }
 
 extension Endpoint.ArtistFeed {

@@ -80,9 +80,24 @@ public struct GetUpcomingLives: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+@dynamicMemberLookup
+public struct ArtistFeedSummary: Codable {
+    public var feed: ArtistFeed
+    public var commentCount: Int
+
+    subscript<T>(dynamicMember keyPath: KeyPath<ArtistFeed, T>) -> T {
+        feed[keyPath: keyPath]
+    }
+
+    public init(feed: ArtistFeed, commentCount: Int) {
+        self.feed = feed
+        self.commentCount = commentCount
+    }
+}
+
 public struct GetFollowingGroupFeeds: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<ArtistFeed>
+    public typealias Response = Page<ArtistFeedSummary>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "group_feeds") public var prefix: Void
         @Query public var page: Int

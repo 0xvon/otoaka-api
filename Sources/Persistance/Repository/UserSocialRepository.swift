@@ -123,19 +123,22 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     }
 
     public func followingGroupFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.ArtistFeed>
+        Domain.Page<Domain.ArtistFeedSummary>
     > {
         return ArtistFeed.query(on: db)
             .join(Membership.self, on: \Membership.$artist.$id == \ArtistFeed.$author.$id)
             .join(Following.self, on: \Following.$target.$id == \Membership.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .with(\.$comments)
             .sort(\.$createdAt)
             .fields(for: ArtistFeed.self)
             .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
-                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    return Domain.ArtistFeed.translate(fromPersistance: live, on: db)
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { feed -> EventLoopFuture<ArtistFeedSummary> in
+                    return Domain.ArtistFeed.translate(fromPersistance: feed, on: db).map {
+                        ArtistFeedSummary(feed: $0, commentCount: feed.comments.count)
+                    }
                 }
             }
     }
