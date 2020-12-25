@@ -130,6 +130,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .join(Following.self, on: \Following.$target.$id == \Membership.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .sort(\.$createdAt)
+            .fields(for: ArtistFeed.self)
+            .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { live in

@@ -10,6 +10,11 @@ class UserSocialControllerTests: XCTestCase {
     var appClient: AppClient!
 
     override func setUp() {
+        LoggingSystem.bootstrap { label in
+            var logHandler = StreamLogHandler.standardOutput(label: label)
+            logHandler.logLevel = .debug
+            return logHandler
+        }
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))
@@ -123,6 +128,23 @@ class UserSocialControllerTests: XCTestCase {
         try app.test(.GET, "user_social/group_feeds?page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetFollowingGroupFeeds.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
+
+    func testGetFollowingGroupFeedsForDuplicatedArtist() throws {
+        let artistA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let groupX = try appClient.createGroup(with: artistA)
+        let groupY = try appClient.createGroup(with: artistA)
+        _ = try appClient.createGroupFeed(with: artistA)
+
+        let userB = try appClient.createUser()
+        try appClient.follow(group: groupX, with: userB)
+        try appClient.follow(group: groupY, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/group_feeds?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetFollowingGroupFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1, String(describing: responseBody.items))
         }
     }
 
