@@ -101,6 +101,22 @@ public struct GetPerformanceRequests: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetPendingRequestCount: EndpointProtocol {
+    public typealias Request = Empty
+    public struct Response: Codable {
+        public init(pendingRequestCount: Int) {
+            self.pendingRequestCount = pendingRequestCount
+        }
+        
+        public var pendingRequestCount: Int
+    }
+    public struct URI: CodableURL {
+        @StaticPath("lives", "pending_request_count") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct LiveDetail: Codable {
     public init(live: Live, isLiked: Bool, hasTicket: Bool, participants: Int, likeCount: Int) {
         self.live = live

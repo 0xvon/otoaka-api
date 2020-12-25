@@ -106,7 +106,7 @@ public class LiveRepository: Domain.LiveRepository {
             return ()
         }
         .flatMap { [db] _ -> EventLoopFuture<Ticket> in
-            let ticket = Ticket(status: .registered, liveId: liveId.rawValue, userId: user.rawValue)
+            let ticket = Ticket(status: .reserved, liveId: liveId.rawValue, userId: user.rawValue)
             return ticket.save(on: db).map { _ in ticket }
         }
         .flatMap { [db] in
@@ -194,6 +194,15 @@ public class LiveRepository: Domain.LiveRepository {
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
             }
         }
+    }
+
+    public func getPendingRequestCount(for user: Domain.User.ID) -> EventLoopFuture<Int> {
+        PerformanceRequest.query(on: db)
+            .join(Membership.self, on: \PerformanceRequest.$group.$id == \Membership.$group.$id)
+            .filter(Membership.self, \.$artist.$id == user.rawValue)
+            .filter(Membership.self, \.$isLeader == true)
+            .filter(\.$status == .pending)
+            .count()
     }
 
     public func search(query: String, page: Int, per: Int) -> EventLoopFuture<

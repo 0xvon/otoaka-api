@@ -26,5 +26,6 @@ public protocol LiveRepository {
     func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<PerformanceRequest>
     >
+    func getPendingRequestCount(for user: Domain.User.ID) -> EventLoopFuture<Int>
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Live>>
 }

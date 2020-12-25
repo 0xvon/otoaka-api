@@ -76,11 +76,10 @@ struct CreateLivePerformer: Migration {
 struct CreateTicket: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         let statusEnum = database.enum("ticket_status")
-            .case("registered")
-            .case("paid")
-            .case("joined")
+            .case("reserved")
             .case("refunded")
             .create()
+
         return statusEnum.flatMap { statusEnum in
             database.schema(Ticket.schema)
                 .id()

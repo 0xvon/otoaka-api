@@ -33,6 +33,13 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetPerformanceRequests.self,
             use: injectProvider(getPerformanceRequests))
         try routes.on(
+            endpoint: Endpoint.GetPendingRequestCount.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.getPendingRequestCount(for: user.id)
+                    .map { GetPendingRequestCount.Response(pendingRequestCount: $0) }
+            })
+        try routes.on(
             endpoint: Endpoint.GetGroupLives.self,
             use: injectProvider { req, uri, repository in
                 repository.get(page: uri.page, per: uri.per, group: uri.groupId)
@@ -122,6 +129,8 @@ extension Endpoint.Ticket: Content {}
 extension Endpoint.Page: Content {}
 
 extension Endpoint.GetLive.Response: Content {}
+
+extension Endpoint.GetPendingRequestCount.Response: Content {}
 
 extension EditLiveUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {

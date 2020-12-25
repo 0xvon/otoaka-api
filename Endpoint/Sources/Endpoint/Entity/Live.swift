@@ -119,7 +119,7 @@ public struct Ticket: Codable {
     public typealias ID = Identifier<Self>
 
     public enum Status: String, Codable {
-        case registered, paid, joined
+        case reserved, refunded
     }
 
     public var id: ID
