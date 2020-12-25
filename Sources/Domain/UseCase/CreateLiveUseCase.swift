@@ -11,6 +11,7 @@ public struct CreateLiveUseCase: UseCase {
         case fanCannotCreateLive
         case isNotMemberOfHostGroup
         case onemanStylePerformerShouldBeHostGroup
+        case invalidPrice
     }
 
     public let groupRepository: GroupRepository
@@ -46,6 +47,9 @@ public struct CreateLiveUseCase: UseCase {
     }
 
     func validateInput(request: Request) throws {
+        guard request.input.price >= 0 else {
+            throw Error.invalidPrice
+        }
         switch request.input.style {
         case .oneman(let performer):
             guard request.input.hostGroupId == performer else {

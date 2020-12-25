@@ -17,6 +17,9 @@ final class Live: Model {
     @Enum(key: "style")
     var style: LiveStyle
 
+    @Field(key: "price")
+    var price: Int
+
     @OptionalField(key: "artwork_url")
     var artworkURL: String?
 
@@ -44,7 +47,7 @@ final class Live: Model {
     init(
         id: UUID? = nil,
         title: String, style: LiveStyle,
-        artworkURL: URL?,
+        price: Int, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
         authorId: Domain.User.ID, liveHouse: String?,
         openAt: Date?, startAt: Date?, endAt: Date?
@@ -52,6 +55,7 @@ final class Live: Model {
         self.id = nil
         self.title = title
         self.style = style
+        self.price = price
         self.artworkURL = artworkURL?.absoluteString
         self.$hostGroup.id = hostGroupId.rawValue
         self.$author.id = authorId.rawValue
@@ -149,7 +153,7 @@ extension Endpoint.Live {
                 return try Self.init(
                     id: Endpoint.Live.ID(entity.requireID()),
                     title: entity.title,
-                    style: style,
+                    style: style, price: entity.price,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     author: author,
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,

@@ -24,7 +24,7 @@ public class LiveRepository: Domain.LiveRepository {
         }
         let performerGroups = input.style.performers
         let live = Live(
-            title: input.title, style: style, artworkURL: input.artworkURL,
+            title: input.title, style: style, price: input.price, artworkURL: input.artworkURL,
             hostGroupId: input.hostGroupId, authorId: authorId,
             liveHouse: input.liveHouse, openAt: input.openAt, startAt: input.startAt,
             endAt: input.endAt
@@ -78,6 +78,9 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUerId.rawValue)
             .count().map { $0 > 0 }
+        let likeCount = LiveLike.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .count()
         let hasTicket = Ticket.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUerId.rawValue)
@@ -87,9 +90,9 @@ public class LiveRepository: Domain.LiveRepository {
             .count()
         return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
-            return live.and(isLiked).and(hasTicket).and(participants)
-                .map { ($0.0.0, $0.0.1, $0.1, $1) }.map {
-                    Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2, participants: $3)
+            return live.and(isLiked).and(hasTicket).and(participants).and(likeCount)
+                .map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }.map {
+                    Domain.LiveDetail(live: $0, isLiked: $1, hasTicket: $2, participants: $3, likeCount: $4)
                 }
         }
     }

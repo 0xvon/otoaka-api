@@ -56,7 +56,7 @@ extension GroupRepositoryMock {
     func getArtistFeedComments(feedId: ArtistFeed.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<ArtistFeedComment>>
     { unimplemented() }
-    func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeed>> {
+    func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeedSummary>> {
         unimplemented()
     }
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Group>> {

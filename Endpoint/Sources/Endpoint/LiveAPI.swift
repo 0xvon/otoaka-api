@@ -4,6 +4,7 @@ public struct CreateLive: EndpointProtocol {
     public struct Request: Codable {
         public var title: String
         public var style: LiveStyleInput
+        public var price: Int
         public var artworkURL: Foundation.URL?
         public var hostGroupId: Group.ID
         public var liveHouse: String?
@@ -12,11 +13,13 @@ public struct CreateLive: EndpointProtocol {
         public var endAt: Date?
 
         public init(
-            title: String, style: LiveStyleInput, artworkURL: URL?, hostGroupId: Group.ID,
-            liveHouse: String?, openAt: Date?, startAt: Date?, endAt: Date?
+            title: String, style: LiveStyleInput, price: Int, artworkURL: URL?,
+            hostGroupId: Group.ID, liveHouse: String?, openAt: Date?,
+            startAt: Date?, endAt: Date?
         ) {
             self.title = title
             self.style = style
+            self.price = price
             self.artworkURL = artworkURL
             self.hostGroupId = hostGroupId
             self.liveHouse = liveHouse
@@ -98,17 +101,19 @@ public struct GetPerformanceRequests: EndpointProtocol {
 }
 
 public struct LiveDetail: Codable {
-    public init(live: Live, isLiked: Bool, hasTicket: Bool, participants: Int) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, participants: Int, likeCount: Int) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
         self.participants = participants
+        self.likeCount = likeCount
     }
 
     public var live: Live
     public var isLiked: Bool
     public var hasTicket: Bool
     public var participants: Int
+    public var likeCount: Int
 }
 
 public struct GetLive: EndpointProtocol {
