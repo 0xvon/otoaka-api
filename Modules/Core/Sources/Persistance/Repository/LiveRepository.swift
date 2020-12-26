@@ -74,7 +74,7 @@ public class LiveRepository: Domain.LiveRepository {
         return modified.flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
     }
 
-    public func findLive(by id: Domain.Live.ID, selfUerId: Domain.User.ID) -> EventLoopFuture<
+    public func getLiveDetail(by id: Domain.Live.ID, selfUerId: Domain.User.ID) -> EventLoopFuture<
         Domain.LiveDetail?
     > {
         let isLiked = LiveLike.query(on: db)
@@ -110,6 +110,26 @@ public class LiveRepository: Domain.LiveRepository {
                 }
         }
     }
+
+    public func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
+        Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
+            Domain.Live.translate(fromPersistance: $0, on: db)
+        }
+    }
+
+    public func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>  {
+        return Ticket.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue)
+            .filter(\.$status == .reserved)
+            .with(\.$user)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page<Domain.User>.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.User.translate(fromPersistance: $0.user, on: db)
+                }
+            }
+    }
+
     public func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
         Domain.Ticket
     > {

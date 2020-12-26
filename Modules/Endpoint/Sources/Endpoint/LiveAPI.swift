@@ -189,6 +189,19 @@ public struct GetMyTickets: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetLiveParticipants: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("lives", "participants") public var prefix: Void
+        @DynamicPath public var liveId: Live.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct SearchLive: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Live>
