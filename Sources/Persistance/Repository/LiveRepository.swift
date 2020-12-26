@@ -84,19 +84,29 @@ public class LiveRepository: Domain.LiveRepository {
         let likeCount = LiveLike.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
-        let hasTicket = Ticket.query(on: db)
+        let ticket = Ticket.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUerId.rawValue)
-            .count().map { $0 > 0 }
+            .filter(\.$status == .reserved)
+            .first()
+            .optionalFlatMap { [db] in
+                Domain.Ticket.translate(fromPersistance: $0, on: db)
+            }
         let participants = Ticket.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
         return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
-            return live.and(isLiked).and(hasTicket).and(participants).and(likeCount)
-                .map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }.map {
-                    Domain.LiveDetail(
-                        live: $0, isLiked: $1, hasTicket: $2, participants: $3, likeCount: $4)
+            return live.and(isLiked).and(participants).and(likeCount).and(ticket)
+                .map { ($0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1) }
+                .map {
+                    (
+                        live: Domain.Live, isLiked: Bool, participants: Int, likeCount: Int,
+                        ticket: Domain.Ticket?
+                    ) -> Domain.LiveDetail in
+                    return Domain.LiveDetail(
+                        live: live, isLiked: isLiked, participants: participants,
+                        likeCount: likeCount, ticket: ticket)
                 }
         }
     }
