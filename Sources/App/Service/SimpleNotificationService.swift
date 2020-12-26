@@ -5,6 +5,8 @@ import SNS
 class SimpleNotificationService: PushNotificationService {
     let sns: SNS
     let platformApplicationArn: String
+    let userSocialRepository: UserSocialRepository
+    let groupRepository: GroupRepository
     let userRepository: UserRepository
 
     let eventLoop: EventLoop
@@ -13,7 +15,13 @@ class SimpleNotificationService: PushNotificationService {
         case endpointArnNotReturned
     }
 
-    convenience init(secrets: Secrets, userRepository: UserRepository, eventLoop: EventLoop) {
+    convenience init(
+        secrets: Secrets,
+        userRepository: UserRepository,
+        groupRepository: GroupRepository,
+        userSocialRepository: UserSocialRepository,
+        eventLoop: EventLoop
+    ) {
         let sns = SNS(
             accessKeyId: secrets.awsAccessKeyId,
             secretAccessKey: secrets.awsSecretAccessKey,
@@ -22,17 +30,22 @@ class SimpleNotificationService: PushNotificationService {
         )
         self.init(
             sns: sns, platformApplicationArn: secrets.snsPlatformApplicationArn,
-            eventLoop: eventLoop, userRepository: userRepository
+            eventLoop: eventLoop, userRepository: userRepository,
+            groupRepository: groupRepository,
+            userSocialRepository: userSocialRepository
         )
     }
     init(
         sns: SNS, platformApplicationArn: String,
         eventLoop: EventLoop,
-        userRepository: UserRepository
+        userRepository: UserRepository, groupRepository: GroupRepository,
+        userSocialRepository: UserSocialRepository
     ) {
         self.sns = sns
         self.platformApplicationArn = platformApplicationArn
         self.userRepository = userRepository
+        self.groupRepository = groupRepository
+        self.userSocialRepository = userSocialRepository
         self.eventLoop = eventLoop
     }
     func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void> {
@@ -49,6 +62,36 @@ class SimpleNotificationService: PushNotificationService {
         return input.flatMap { [sns, eventLoop] in
             $0.map { sns.publish($0) }.flatten(on: eventLoop)
         }.map { _ in }
+    }
+
+    func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
+        -> EventLoopFuture<Void>
+    {
+        let groups = groupRepository.getMemberships(for: artist)
+        let followers = groups.flatMap { groups in
+            EventLoopFuture.whenAllSucceed(
+                groups.map {
+                    self.userSocialRepository.followers(selfGroup: $0.id)
+                }, on: self.eventLoop)
+        }
+        .map { Set($0.flatMap { $0 }) }
+
+        return followers.flatMap { followers in
+            EventLoopFuture.andAllSucceed(
+                followers.map { self.publish(to: $0, notification: notification) },
+                on: self.eventLoop)
+        }
+    }
+
+    func publish(toGroupFollowers group: Group.ID, notification: PushNotification)
+        -> EventLoopFuture<Void>
+    {
+        let followers = userSocialRepository.followers(selfGroup: group)
+        return followers.flatMap { followers in
+            EventLoopFuture.andAllSucceed(
+                followers.map { self.publish(to: $0, notification: notification) },
+                on: self.eventLoop)
+        }
     }
 
     func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {

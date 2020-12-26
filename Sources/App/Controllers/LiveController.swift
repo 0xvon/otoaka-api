@@ -72,18 +72,11 @@ struct LiveController: RouteCollection {
         let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.CreateLive.Request.self)
 
-        let groupRepository = Persistance.GroupRepository(db: req.db)
-        let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
-        let userRepository = Persistance.UserRepository(db: req.db)
-        let notificationService = SimpleNotificationService(
-            secrets: req.application.secrets,
-            userRepository: userRepository,
-            eventLoop: req.eventLoop
-        )
+        let groupRepository = makeGroupRepository(request: req)
+        let notificationService = makePushNotificationService(request: req)
         let useCase = CreateLiveUseCase(
             groupRepository: groupRepository,
             liveRepository: repository,
-            userSocialRepository: userSocialRepository,
             notificationService: notificationService,
             eventLoop: req.eventLoop
         )

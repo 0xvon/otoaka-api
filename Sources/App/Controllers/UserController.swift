@@ -63,11 +63,7 @@ struct UserController: RouteCollection {
     ) throws -> EventLoopFuture<RegisterDeviceToken.Response> {
         let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(RegisterDeviceToken.Request.self)
-        let service = SimpleNotificationService(
-            secrets: req.application.secrets,
-            userRepository: repository,
-            eventLoop: req.eventLoop
-        )
+        let service = makePushNotificationService(request: req)
         return service.register(deviceToken: input.deviceToken, for: user.id)
             .map { Empty() }
     }

@@ -38,16 +38,9 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreateArtistFeed.Request.self)
-                let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
-                let userRepository = Persistance.UserRepository(db: req.db)
-                let notificationService = SimpleNotificationService(
-                    secrets: req.application.secrets,
-                    userRepository: userRepository,
-                    eventLoop: req.eventLoop
-                )
+                let notificationService = makePushNotificationService(request: req)
                 let useCase = CreateGroupFeedUseCase(
                     groupRepository: repository,
-                    userSocialRepository: userSocialRepository,
                     notificationService: notificationService,
                     eventLoop: req.eventLoop)
                 return try useCase((user: user, input: input))

@@ -16,20 +16,17 @@ public struct CreateLiveUseCase: UseCase {
 
     public let groupRepository: GroupRepository
     public let liveRepository: LiveRepository
-    public let userSocialRepository: UserSocialRepository
     public let notificationService: PushNotificationService
     public let eventLoop: EventLoop
 
     public init(
         groupRepository: GroupRepository,
         liveRepository: LiveRepository,
-        userSocialRepository: UserSocialRepository,
         notificationService: PushNotificationService,
         eventLoop: EventLoop
     ) {
         self.groupRepository = groupRepository
         self.liveRepository = liveRepository
-        self.userSocialRepository = userSocialRepository
         self.notificationService = notificationService
         self.eventLoop = eventLoop
     }
@@ -51,8 +48,11 @@ public struct CreateLiveUseCase: UseCase {
             liveRepository.create(input: input, authorId: request.user.id)
         }
         .flatMap { live in
-            notifyGroupFollowers(group: request.input.hostGroupId, live: live)
-                .map { _ in live }
+            let notification = PushNotification(message: "\(live.hostGroup.name) さんが新しいライブを公開しました")
+            return notificationService.publish(
+                toGroupFollowers: request.input.hostGroupId, notification: notification
+            )
+            .map { live }
         }
     }
 
@@ -68,21 +68,5 @@ public struct CreateLiveUseCase: UseCase {
         default:
             break
         }
-    }
-
-    func notifyGroupFollowers(group: Group.ID, live: Live) -> EventLoopFuture<Void> {
-        let followers = userSocialRepository.followers(selfGroup: group)
-        return followers.flatMap { followers in
-            EventLoopFuture.andAllSucceed(
-                followers.map {
-                    notifyGroupFollower(group: group, follower: $0, live: live)
-                }, on: eventLoop)
-        }
-    }
-    func notifyGroupFollower(group: Group.ID, follower: User.ID, live: Live)
-        -> EventLoopFuture<Void>
-    {
-        let notification = PushNotification(message: "\(live.hostGroup.name) さんが新しいライブを公開しました")
-        return notificationService.publish(to: follower, notification: notification)
     }
 }
