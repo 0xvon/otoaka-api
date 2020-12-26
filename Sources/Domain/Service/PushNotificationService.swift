@@ -1,6 +1,10 @@
 import NIO
 
 public struct PushNotification {
+    public init(message: String) {
+        self.message = message
+    }
+
     public let message: String
 }
 

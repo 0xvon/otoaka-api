@@ -50,8 +50,20 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(PostFeedComment.Request.self)
+                let notificationService = makePushNotificationService(request: req)
+                // FIXME: Move to use case
                 return repository.addArtistFeedComment(userId: user.id, input: input)
+                    .and(repository.getArtistFeed(feedId: input.feedId))
+                    .flatMap { (comment, feed) in
+                        let notification = PushNotification(
+                            message: "\(user.name) さんがあなたの投稿にコメントしました")
+                        return notificationService.publish(
+                            to: feed.author.id, notification: notification
+                        )
+                        .map { comment }
+                    }
             })
+
         try routes.on(
             endpoint: GetFeedComments.self,
             use: injectProvider { req, uri, repository in

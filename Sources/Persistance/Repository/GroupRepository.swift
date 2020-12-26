@@ -13,6 +13,7 @@ public class GroupRepository: Domain.GroupRepository {
         case groupNotFound
         case invitationNotFound
         case notMemberOfGroup
+        case feedNotFound
     }
 
     public func create(input: Endpoint.CreateGroup.Request) -> EventLoopFuture<Domain.Group> {
@@ -199,6 +200,11 @@ public class GroupRepository: Domain.GroupRepository {
                     }
                 }
             }
+    }
+
+    public func getArtistFeed(feedId: Domain.ArtistFeed.ID) -> EventLoopFuture<Domain.ArtistFeed> {
+        ArtistFeed.find(feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+            .flatMap { [db] in Domain.ArtistFeed.translate(fromPersistance: $0, on: db) }
     }
 
     public func addArtistFeedComment(userId: Domain.User.ID, input: PostFeedComment.Request)
