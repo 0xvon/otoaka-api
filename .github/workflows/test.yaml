@@ -1,7 +1,7 @@
 name: Build and test project
 on: [push]
 jobs:
-  test_project:
+  test-project:
     runs-on: ubuntu-18.04
     services:
       mysql:

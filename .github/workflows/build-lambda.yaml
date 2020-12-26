@@ -1,0 +1,22 @@
+name: Build Lambda batch
+on: [push]
+jobs:
+  build-lambda:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: Products/Batch/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('Products/Batch/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+      - name: Build lambda binary
+        run: ./Scripts/package.sh NotifyTomorrowLives
+        working-directory: ./Products/Batch
+      - name: Upload Lambda binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: NotifyTomorrowLives
+          path: Products/Batch/.build/lambda/NotifyTomorrowLives/lambda.zip
+
