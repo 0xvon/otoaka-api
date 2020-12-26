@@ -83,10 +83,6 @@ class CreateLiveUseCaseTests: XCTestCase {
             groupX.id: [artistA.id, artistB.id],
             groupY.id: [artistB.id, artistC.id],
         ]
-        let followers: [Group.ID: [User.ID]] = [
-            groupX.id: [fanD.id],
-            groupY.id: [],
-        ]
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let repositoryLoop = eventLoopGroup.next()
