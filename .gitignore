@@ -8,4 +8,4 @@ db.sqlite
 .swiftpm
 Tests/.env.testing
 .env.development
-Sources/Seed/.cache.json
+Products/Seed/Sources/Seed/.cache.json

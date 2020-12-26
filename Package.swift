@@ -12,7 +12,6 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.1"),
         .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
@@ -27,6 +26,7 @@ let package = Package(
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "Persistance", package: "Core"),
                 .product(name: "Service", package: "Core"),
+                .product(name: "Endpoint", package: "Endpoint"),
                 .product(name: "LoggingDiscord", package: "LoggingDiscord"),
             ],
             swiftSettings: [
@@ -36,12 +36,6 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
-        .target(name: "Seed", dependencies: [
-            .product(name: "Endpoint", package: "Endpoint"),
-            .product(name: "StubKit", package: "StubKit"),
-            .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
-        ]),
         .target(name: "Run", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
