@@ -1,4 +1,4 @@
-import Fluent
+import FluentKit
 
 struct CreateUser: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {

@@ -1,5 +1,5 @@
 import Domain
-import Fluent
+import FluentKit
 
 public class UserRepository: Domain.UserRepository {
     private let db: Database

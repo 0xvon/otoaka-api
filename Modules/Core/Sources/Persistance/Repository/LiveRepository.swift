@@ -1,5 +1,5 @@
 import Domain
-import Fluent
+import FluentKit
 import Foundation
 
 public class LiveRepository: Domain.LiveRepository {
@@ -161,7 +161,7 @@ public class LiveRepository: Domain.LiveRepository {
         status: Domain.PerformanceRequest.Status
     ) -> EventLoopFuture<Void> {
         let request = PerformanceRequest.find(requestId.rawValue, on: db).unwrap(
-            or: Error.requestNotFound)
+            orError: Error.requestNotFound)
         return request.flatMap { [db] request in
             request.status = status
             return db.transaction { db -> EventLoopFuture<Void> in
@@ -182,7 +182,7 @@ public class LiveRepository: Domain.LiveRepository {
     public func find(requestId: Domain.PerformanceRequest.ID) -> EventLoopFuture<
         Domain.PerformanceRequest
     > {
-        PerformanceRequest.find(requestId.rawValue, on: db).unwrap(or: Error.requestNotFound)
+        PerformanceRequest.find(requestId.rawValue, on: db).unwrap(orError: Error.requestNotFound)
             .flatMap { [db] in
                 Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
             }

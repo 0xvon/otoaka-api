@@ -1,9 +1,9 @@
 import Endpoint
-import Fluent
+import FluentKit
 
 extension Endpoint.Page {
     static func translate<T>(
-        page: Fluent.Page<T>, eventLoop: EventLoop, item: (T) -> EventLoopFuture<Item>
+        page: FluentKit.Page<T>, eventLoop: EventLoop, item: (T) -> EventLoopFuture<Item>
     ) -> EventLoopFuture<Endpoint.Page<Item>> {
         let metadata = Endpoint.PageMetadata(
             page: page.metadata.page, per: page.metadata.per, total: page.metadata.total)

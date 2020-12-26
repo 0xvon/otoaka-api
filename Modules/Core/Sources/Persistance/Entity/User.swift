@@ -1,5 +1,5 @@
 import Domain
-import Fluent
+import FluentKit
 import Foundation
 
 public enum Role: String, Codable {

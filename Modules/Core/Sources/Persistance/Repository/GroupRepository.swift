@@ -1,5 +1,5 @@
 import Domain
-import Fluent
+import FluentKit
 import Foundation
 
 public class GroupRepository: Domain.GroupRepository {
@@ -31,7 +31,7 @@ public class GroupRepository: Domain.GroupRepository {
     public func update(id: Domain.Group.ID, input: Endpoint.EditGroup.Request) -> EventLoopFuture<
         Domain.Group
     > {
-        let group = Group.find(id.rawValue, on: db).unwrap(or: Error.groupNotFound)
+        let group = Group.find(id.rawValue, on: db).unwrap(orError: Error.groupNotFound)
         let modified = group.map { (group) -> Group in
             group.name = input.name
             group.englishName = input.englishName
@@ -138,7 +138,7 @@ public class GroupRepository: Domain.GroupRepository {
         Membership.query(on: db)
             .filter(\.$artist.$id == member.rawValue)
             .filter(\.$group.$id == groupId.rawValue)
-            .first().unwrap(or: Error.notMemberOfGroup)
+            .first().unwrap(orError: Error.notMemberOfGroup)
             .map { $0.isLeader }
     }
 
