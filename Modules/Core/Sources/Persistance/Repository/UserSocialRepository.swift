@@ -138,7 +138,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .join(Following.self, on: \Following.$target.$id == \Membership.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .with(\.$comments)
-            .sort(\.$createdAt)
+            .sort(\.$createdAt, .descending)
             .fields(for: ArtistFeed.self)
             .unique()
             .paginate(PageRequest(page: page, per: per))
