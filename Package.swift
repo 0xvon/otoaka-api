@@ -9,6 +9,7 @@ let package = Package(
     dependencies: [
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.1"),
@@ -22,6 +23,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
+                .product(name: "Fluent", package: "fluent"),
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "Persistance", package: "Core"),
                 .product(name: "Service", package: "Core"),

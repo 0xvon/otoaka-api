@@ -19,7 +19,10 @@ WORKDIR /build
 # as long as your Package.swift/Package.resolved
 # files do not change.
 COPY ./Package.* ./
-COPY ./Endpoint ./
+COPY ./Modules/Core/Package.* ./Modules/Core/
+COPY ./Modules/Endpoint/Package.* ./Modules/Endpoint/
+COPY ./Modules/LoggingDiscord/Package.* ./Modules/LoggingDiscord/
+
 RUN swift package resolve
 
 # Copy entire repo into container
