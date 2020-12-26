@@ -168,6 +168,16 @@ extension PushNotificationServiceMock {
     func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void> {
         unimplemented()
     }
+    func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
+        -> EventLoopFuture<Void>
+    {
+        unimplemented()
+    }
+    func publish(toGroupFollowers: Group.ID, notification: PushNotification) -> EventLoopFuture<
+        Void
+    > {
+        unimplemented()
+    }
     func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {
         unimplemented()
     }
