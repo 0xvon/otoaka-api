@@ -83,8 +83,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     public func followers(selfGroup: Domain.Group.ID) -> EventLoopFuture<[Domain.User.ID]> {
         Following.query(on: db)
             .filter(\.$target.$id == selfGroup.rawValue).all()
-            .flatMapEachThrowing {
-                try Domain.User.ID($0.user.requireID())
+            .mapEach {
+                Domain.User.ID($0.$user.id)
             }
     }
 
