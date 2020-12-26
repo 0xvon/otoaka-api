@@ -18,7 +18,7 @@ set -eu
 
 executable=$1
 
-swift build --product "$executable" -c release -Xswiftc -static-stdlib
+swift build --product "$executable" -c release
 
 target=".build/lambda/$executable"
 rm -rf "$target"
