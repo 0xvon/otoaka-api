@@ -27,7 +27,7 @@ jobs:
           path: Products/Batch/.build/lambda/NotifyTomorrowLives/lambda.zip
       - name: Upload Lambda zip to S3
         run: |
-          aws s3 sync Products/Batch/.build/lambda/NotifyTomorrowLives/lambda.zip "s3://$LAMBDA_S3_UPLOAD_BUCKET/NotifyTomorrowLives.zip"
+          aws s3 cp Products/Batch/.build/lambda/NotifyTomorrowLives/lambda.zip "s3://$LAMBDA_S3_UPLOAD_BUCKET/NotifyTomorrowLives.zip"
         env:
           LAMBDA_S3_UPLOAD_BUCKET: ${{ secrets.LAMBDA_S3_UPLOAD_BUCKET }}
 
