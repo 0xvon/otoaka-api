@@ -26,6 +26,17 @@ public struct Signup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct EditUserInfo: EndpointProtocol {
+    public typealias Request = Signup.Request
+
+    public typealias Response = User
+    public struct URI: CodableURL {
+        @StaticPath("users", "edit_user_info") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct SignupStatus: EndpointProtocol {
     public typealias Request = Empty
     public struct Response: Codable {

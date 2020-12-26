@@ -7,6 +7,7 @@ public class UserRepository: Domain.UserRepository {
         case alreadyCreated
         case userNotFound
         case deviceAlreadyRegistered
+        case cantChangeRole
     }
 
     public init(db: Database) {
@@ -28,6 +29,31 @@ public class UserRepository: Domain.UserRepository {
                     Endpoint.User.translate(fromPersistance: storedUser, on: db)
                 }
             }
+    }
+
+    public func editInfo(userId: Domain.User.ID, input: EditUserInfo.Request)
+        -> EventLoopFuture<Endpoint.User>
+    {
+        let user = User.find(userId.rawValue, on: db).unwrap(orError: Error.userNotFound)
+        return user.flatMapThrowing { user -> User in
+            user.name = input.name
+            user.biography = input.biography
+            user.thumbnailURL = input.thumbnailURL
+            switch (user.role, input.role) {
+            case (.artist, .artist(let artist)):
+                user.part = artist.part
+            case (.fan, .fan): break
+            default:
+                throw Error.cantChangeRole
+            }
+            return user
+        }
+        .flatMap { [db] user in
+            return user.update(on: db).transform(to: user)
+        }
+        .flatMap { [db] user in
+            Endpoint.User.translate(fromPersistance: user, on: db)
+        }
     }
 
     public func find(by cognitoId: Domain.CognitoID) -> EventLoopFuture<Endpoint.User?> {

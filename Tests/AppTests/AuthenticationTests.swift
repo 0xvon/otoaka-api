@@ -49,6 +49,10 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func editInfo(userId: User.ID, input: EditUserInfo.Request) -> EventLoopFuture<User> {
+            fatalError("unimplemented")
+        }
+
         func endpointArns(for id: User.ID) -> EventLoopFuture<[String]> {
             fatalError("unimplemented")
         }

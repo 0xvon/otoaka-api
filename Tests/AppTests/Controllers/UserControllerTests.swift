@@ -39,15 +39,15 @@ class UserControllerTests: XCTestCase {
         }
 
         let dummyUserName = UUID().uuidString
-        let body = Endpoint.Signup.Request(name: dummyUserName, role: .fan(Fan()))
-        let bodyData = try ByteBuffer(data: JSONEncoder().encode(body))
+        let signupBody = Endpoint.Signup.Request(name: dummyUserName, role: .fan(Fan()))
+        let signupBodyData = try ByteBuffer(data: JSONEncoder().encode(signupBody))
 
         try app.test(.GET, "users/get_signup_status", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(SignupStatus.Response.self)
             XCTAssertFalse(responseBody.isSignedup)
         }
-        try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "users/signup", headers: headers, body: signupBodyData) { res in
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(Signup.Response.self)
             XCTAssertEqual(responseBody.name, dummyUserName)
@@ -59,15 +59,32 @@ class UserControllerTests: XCTestCase {
         }
 
         // Try to create same id user again
-        try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "users/signup", headers: headers, body: signupBodyData) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         // Try to get user info after create user
-        try app.test(.GET, "users/get_info", headers: headers, body: bodyData) { res in
+        try app.test(.GET, "users/get_info", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             let responseBody = try res.content.decode(Signup.Response.self)
             XCTAssertEqual(responseBody.name, dummyUserName)
+        }
+
+        let updatedName = UUID().uuidString
+        let editBody = Endpoint.Signup.Request(name: updatedName, role: .fan(Fan()))
+        let editBodyData = try ByteBuffer(data: JSONEncoder().encode(editBody))
+        try app.test(.POST, "users/edit_user_info", headers: headers, body: editBodyData) { res in
+            XCTAssertEqual(res.status, .ok)
+            let responseBody = try res.content.decode(Signup.Response.self)
+            XCTAssertEqual(responseBody.name, updatedName)
+        }
+
+        let changeRoleBody = Endpoint.EditUserInfo.Request(
+            name: UUID().uuidString, role: .artist(try! Stub.make()))
+        let changeRoleBodyData = try ByteBuffer(data: JSONEncoder().encode(changeRoleBody))
+        try app.test(.POST, "users/edit_user_info", headers: headers, body: changeRoleBodyData) {
+            res in
+            XCTAssertEqual(res.status, .badRequest)
         }
     }
 

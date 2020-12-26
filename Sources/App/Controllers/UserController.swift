@@ -26,6 +26,13 @@ struct UserController: RouteCollection {
         let loggedIn = routes.grouped(User.guardMiddleware())
         try loggedIn.on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
         try loggedIn.on(
+            endpoint: Endpoint.EditUserInfo.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(EditUserInfo.Request.self)
+                return repository.editInfo(userId: user.id, input: input)
+            })
+        try loggedIn.on(
             endpoint: Endpoint.RegisterDeviceToken.self,
             use: injectProvider(registerDeviceToken))
     }
@@ -80,6 +87,7 @@ extension Persistance.UserRepository.Error: AbortError {
         case .alreadyCreated: return .badRequest
         case .userNotFound: return .forbidden
         case .deviceAlreadyRegistered: return .ok
+        case .cantChangeRole: return .badRequest
         }
     }
 }
