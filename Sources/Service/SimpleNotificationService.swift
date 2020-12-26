@@ -2,7 +2,14 @@ import Domain
 import NIO
 import SNS
 
-class SimpleNotificationService: PushNotificationService {
+public protocol SimpleNotificationServiceSecrets {
+    var awsAccessKeyId: String { get }
+    var awsSecretAccessKey: String { get }
+    var awsRegion: String { get }
+    var snsPlatformApplicationArn: String { get }
+}
+
+public class SimpleNotificationService: PushNotificationService {
     let sns: SNS
     let platformApplicationArn: String
     let userSocialRepository: UserSocialRepository
@@ -15,8 +22,8 @@ class SimpleNotificationService: PushNotificationService {
         case endpointArnNotReturned
     }
 
-    convenience init(
-        secrets: Secrets,
+    public convenience init(
+        secrets: SimpleNotificationServiceSecrets,
         userRepository: UserRepository,
         groupRepository: GroupRepository,
         userSocialRepository: UserSocialRepository,
@@ -48,7 +55,7 @@ class SimpleNotificationService: PushNotificationService {
         self.userSocialRepository = userSocialRepository
         self.eventLoop = eventLoop
     }
-    func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void> {
+    public func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void> {
         // FIXME: Use topic intead of multicast to endpoints?
         let endpointArms = userRepository.endpointArns(for: user)
         let input = endpointArms.map {
@@ -60,11 +67,11 @@ class SimpleNotificationService: PushNotificationService {
             }
         }
         return input.flatMap { [sns, eventLoop] in
-            $0.map { sns.publish($0) }.flatten(on: eventLoop)
+            EventLoopFuture.andAllSucceed($0.map { sns.publish($0) }, on: eventLoop)
         }.map { _ in }
     }
 
-    func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
+    public func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
         -> EventLoopFuture<Void>
     {
         let groups = groupRepository.getMemberships(for: artist)
@@ -83,7 +90,7 @@ class SimpleNotificationService: PushNotificationService {
         }
     }
 
-    func publish(toGroupFollowers group: Group.ID, notification: PushNotification)
+    public func publish(toGroupFollowers group: Group.ID, notification: PushNotification)
         -> EventLoopFuture<Void>
     {
         let followers = userSocialRepository.followers(selfGroup: group)
@@ -94,7 +101,7 @@ class SimpleNotificationService: PushNotificationService {
         }
     }
 
-    func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {
+    public func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {
         let input = SNS.CreatePlatformEndpointInput(
             platformApplicationArn: platformApplicationArn, token: deviceToken
         )

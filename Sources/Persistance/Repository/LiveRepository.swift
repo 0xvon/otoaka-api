@@ -243,4 +243,14 @@ public class LiveRepository: Domain.LiveRepository {
             }
         }
     }
+
+    public func getLiveTickets(until: Date) -> EventLoopFuture<[Domain.Ticket]> {
+        let tickets = Ticket.query(on: db)
+            .join(parent: \.$live)
+            .filter(Live.self, \Live.$startAt > until)
+            .all()
+        return tickets.flatMapEach(on: db.eventLoop) { [db] in
+            Domain.Ticket.translate(fromPersistance: $0, on: db)
+        }
+    }
 }

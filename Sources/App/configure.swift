@@ -1,9 +1,10 @@
 import Fluent
 import FluentMySQLDriver
 import Persistance
+import Service
 import Vapor
 
-protocol Secrets {
+protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
     var awsSecretAccessKey: String { get }
     var awsRegion: String { get }
@@ -11,7 +12,7 @@ protocol Secrets {
     var cognitoUserPoolId: String { get }
 }
 
-struct EnvironmentSecrets: Secrets, DatabaseSecrets {
+struct EnvironmentSecrets: Secrets {
     init() {
         func require(_ key: String) -> String {
             guard let value = Environment.get(key) else {
@@ -55,9 +56,11 @@ public func configure(_ app: Application) throws {
     app.secrets = secrets
     try Persistance.setup(
         databases: app.databases,
-        migrator: app.migrator,
-        migrations: app.migrations,
         secrets: secrets
+    )
+    try Persistance.setupMigration(
+        migrator: app.migrator,
+        migrations: app.migrations
     )
     try routes(app)
 }

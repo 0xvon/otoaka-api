@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.1"),
         .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", from: "0.3.0"),
         .package(path: "Endpoint"),
     ],
     targets: [
@@ -25,9 +26,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "JWTKit", package: "jwt-kit"),
-                .product(name: "SNS", package: "AWSSDKSwift"),
                 .target(name: "Persistance"),
                 .target(name: "LoggingDiscord"),
+                .target(name: "Service")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -36,6 +37,11 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
+        .target(name: "NotifyTomorrowLives", dependencies: [
+            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+            .target(name: "Persistance"),
+            .target(name: "Service")
+        ]),
         .target(name: "Seed", dependencies: [
             .product(name: "Endpoint", package: "Endpoint"),
             .product(name: "StubKit", package: "StubKit"),
@@ -44,6 +50,11 @@ let package = Package(
         ]),
         .target(name: "LoggingDiscord", dependencies: [
             .product(name: "Logging", package: "swift-log"),
+        ]),
+        .target(name: "Service", dependencies: [
+            .product(name: "NIO", package: "swift-nio"),
+            .target(name: "Domain"),
+            .product(name: "SNS", package: "AWSSDKSwift"),
         ]),
         .target(name: "Domain", dependencies: [
             .product(name: "NIO", package: "swift-nio"),

@@ -155,6 +155,15 @@
         }
       },
       {
+        "package": "swift-aws-lambda-runtime",
+        "repositoryURL": "https://github.com/swift-server/swift-aws-lambda-runtime.git",
+        "state": {
+          "branch": null,
+          "revision": "944e16495aca7f2415f1bf11671d01615f2c51f5",
+          "version": "0.3.0"
+        }
+      },
+      {
         "package": "swift-backtrace",
         "repositoryURL": "https://github.com/swift-server/swift-backtrace.git",
         "state": {

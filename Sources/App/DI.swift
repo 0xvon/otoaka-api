@@ -1,5 +1,6 @@
 import Domain
 import Persistance
+import Service
 import Vapor
 
 func makePushNotificationService(request: Request) -> Domain.PushNotificationService {

@@ -15,8 +15,6 @@ public protocol DatabaseSecrets {
 // configures persistance system
 public func setup(
     databases: Databases,
-    migrator: Migrator,
-    migrations: Migrations,
     secrets: DatabaseSecrets
 ) throws {
     guard let databaseURL = URL(string: secrets.databaseURL),
@@ -24,8 +22,13 @@ public func setup(
     else {
         fatalError("Invalid database url: \(secrets.databaseURL)")
     }
-    databases.use(.mysql(configuration: config), as: .mysql)
+    databases.use(.mysql(configuration: config), as: .mysql, isDefault: true)
+}
 
+public func setupMigration(
+    migrator: Migrator,
+    migrations: Migrations
+) throws {
     migrations.add([
         CreateUser(),
         CreateGroup(), CreateMembership(), CreateGroupInvitation(),
