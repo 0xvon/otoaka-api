@@ -36,14 +36,18 @@ enum Expect<Success> {
 
 class CreateLiveUseCaseTests: XCTestCase {
     func testCreateOneman() throws {
-        class Mock: GroupRepositoryMock, LiveRepositoryMock {
+        class Mock: GroupRepositoryMock, LiveRepositoryMock, UserSocialRepositoryMock,
+            PushNotificationServiceMock
+        {
             let eventLoop: EventLoop
             let memberships: [Group.ID: [User.ID]]
+            let followers: [Group.ID: [User.ID]]
 
             func isMember(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool> {
                 eventLoop.makeSucceededFuture(memberships[groupId]?.contains(member) ?? false)
             }
             var createdLives: [Live] = []
+            var sentNotifications: [(user: User.ID, notification: PushNotification)] = []
             func create(input: CreateLive.Request, authorId: User.ID) -> EventLoopFuture<Live> {
                 let live = try! Stub.make(Live.self) {
                     $0.set(\.author.id, value: authorId)
@@ -51,10 +55,23 @@ class CreateLiveUseCaseTests: XCTestCase {
                 createdLives.append(live)
                 return eventLoop.makeSucceededFuture(live)
             }
+            func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]> {
+                eventLoop.makeSucceededFuture(followers[selfGroup] ?? [])
+            }
 
-            init(eventLoop: EventLoop, memberships: [Group.ID: [User.ID]]) {
+            func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void>
+            {
+                sentNotifications.append((user: user, notification: notification))
+                return eventLoop.makeSucceededFuture(())
+            }
+
+            init(
+                eventLoop: EventLoop, memberships: [Group.ID: [User.ID]],
+                followers: [Group.ID: [User.ID]]
+            ) {
                 self.eventLoop = eventLoop
                 self.memberships = memberships
+                self.followers = followers
             }
         }
 
@@ -69,10 +86,14 @@ class CreateLiveUseCaseTests: XCTestCase {
             groupX.id: [artistA.id, artistB.id],
             groupY.id: [artistB.id, artistC.id],
         ]
+        let followers: [Group.ID: [User.ID]] = [
+            groupX.id: [fanD.id],
+            groupY.id: [],
+        ]
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let repositoryLoop = eventLoopGroup.next()
-        var mock = Mock(eventLoop: repositoryLoop, memberships: memberships)
+        var mock = Mock(eventLoop: repositoryLoop, memberships: memberships, followers: followers)
 
         typealias Input = (
             request: CreateLiveUseCase.Request,
@@ -91,6 +112,9 @@ class CreateLiveUseCaseTests: XCTestCase {
                 expect: .success { _ in
                     let live = try XCTUnwrap(mock.createdLives.first)
                     XCTAssertEqual(live.author.id, artistA.id)
+                    XCTAssertEqual(mock.sentNotifications.count, 1)
+                    let notification = try XCTUnwrap(mock.sentNotifications.first)
+                    XCTAssertEqual(notification.user, fanD.id)
                 }
             ),
             (
@@ -124,10 +148,11 @@ class CreateLiveUseCaseTests: XCTestCase {
         for input in inputs {
             let useCase = CreateLiveUseCase(
                 groupRepository: mock, liveRepository: mock,
+                userSocialRepository: mock, notificationService: mock,
                 eventLoop: eventLoopGroup.next())
             let response = Result { try useCase(input.request).wait() }
             try input.expect.receive(result: response)
-            mock = Mock(eventLoop: repositoryLoop, memberships: memberships)
+            mock = Mock(eventLoop: repositoryLoop, memberships: memberships, followers: followers)
         }
     }
 }

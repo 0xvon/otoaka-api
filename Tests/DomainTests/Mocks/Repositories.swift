@@ -121,3 +121,54 @@ extension LiveRepositoryMock {
         unimplemented()
     }
 }
+
+protocol UserSocialRepositoryMock: UserSocialRepository {}
+
+extension UserSocialRepositoryMock {
+    func follow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+    func unfollow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+    func followings(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<Group>> {
+        unimplemented()
+    }
+    func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>> {
+        unimplemented()
+    }
+    func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]> {
+        unimplemented()
+    }
+    func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool> {
+        unimplemented()
+    }
+    func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
+        unimplemented()
+    }
+    func upcomingLives(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>> {
+        unimplemented()
+    }
+    func followingGroupFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Page<ArtistFeedSummary>
+    > {
+        unimplemented()
+    }
+    func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+    func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+}
+
+protocol PushNotificationServiceMock: PushNotificationService {}
+
+extension PushNotificationServiceMock {
+    func publish(to user: User.ID, notification: PushNotification) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+    func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {
+        unimplemented()
+    }
+}
