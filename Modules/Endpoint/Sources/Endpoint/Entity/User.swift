@@ -1,15 +1,15 @@
-public struct Artist: Codable {
+public struct Artist: Codable, Equatable {
     public var part: String
     public init(part: String) {
         self.part = part
     }
 }
 
-public struct Fan: Codable {
+public struct Fan: Codable, Equatable {
     public init() {}
 }
 
-public enum RoleProperties: Codable {
+public enum RoleProperties: Codable, Equatable {
     case artist(Artist)
     case fan(Fan)
 
@@ -45,7 +45,7 @@ public enum RoleProperties: Codable {
     }
 }
 
-public struct User: Codable, Identifiable {
+public struct User: Codable, Identifiable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var name: String
