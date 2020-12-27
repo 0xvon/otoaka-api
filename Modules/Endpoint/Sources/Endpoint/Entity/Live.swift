@@ -1,6 +1,6 @@
 import Foundation
 
-public enum LiveStyle<Performer>: Codable where Performer: Codable {
+public enum LiveStyle<Performer>: Codable, Equatable where Performer: Codable, Performer: Equatable {
     case oneman(performer: Performer)
     case battle(performers: [Performer])
     case festival(performers: [Performer])
@@ -56,7 +56,7 @@ public enum LiveStyle<Performer>: Codable where Performer: Codable {
 public typealias LiveStyleInput = LiveStyle<Group.ID>
 public typealias LiveStyleOutput = LiveStyle<Group>
 
-public struct Live: Codable, Identifiable {
+public struct Live: Codable, Identifiable, Equatable {
 
     public typealias ID = Identifier<Self>
     public let id: ID

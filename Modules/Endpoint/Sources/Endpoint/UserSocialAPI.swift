@@ -81,7 +81,7 @@ public struct GetUpcomingLives: EndpointProtocol {
 }
 
 @dynamicMemberLookup
-public struct ArtistFeedSummary: Codable {
+public struct ArtistFeedSummary: Codable, Equatable {
     public var feed: ArtistFeed
     public var commentCount: Int
 

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Group: Codable, Identifiable {
+public struct Group: Codable, Identifiable, Equatable {
     public typealias ID = Identifier<Self>
     public let id: ID
     public var name: String
@@ -62,7 +62,7 @@ public struct GroupInvitation {
     }
 }
 
-public enum FeedType: Codable {
+public enum FeedType: Codable, Equatable {
     case youtube(URL)
 
     enum CodingKeys: CodingKey {
@@ -91,7 +91,7 @@ public enum FeedType: Codable {
         }
     }
 }
-public struct ArtistFeed: Codable {
+public struct ArtistFeed: Codable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var text: String
