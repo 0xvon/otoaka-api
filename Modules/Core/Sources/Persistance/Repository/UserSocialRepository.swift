@@ -52,7 +52,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return following
         }
         return precondition.flatMap { [db] following in
-            following.delete(on: db)
+            following.delete(force: true, on: db)
         }
     }
 
