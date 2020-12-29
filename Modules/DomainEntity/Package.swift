@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "DomainEntity",
     products: [
-        .library(name: "DomainEntity", type: .dynamic, targets: ["DomainEntity"]),
+        .library(name: "DomainEntity", targets: ["DomainEntity"]),
     ],
     targets: [
         .target(name: "DomainEntity"),
