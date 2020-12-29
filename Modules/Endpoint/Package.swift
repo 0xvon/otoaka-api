@@ -8,9 +8,10 @@ let package = Package(
         .library(name: "Endpoint", targets: ["Endpoint"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/kateinoigakukun/CodableURL.git", from: "0.3.1")
+        .package(url: "https://github.com/kateinoigakukun/CodableURL.git", from: "0.3.1"),
+        .package(path: "../DomainEntity"),
     ],
     targets: [
-        .target(name: "Endpoint", dependencies: ["CodableURL"]),
+        .target(name: "Endpoint", dependencies: ["DomainEntity", "CodableURL"]),
     ]
 )
