@@ -20,6 +20,7 @@ WORKDIR /build
 # files do not change.
 COPY ./Package.* ./
 COPY ./Modules/Core/Package.* ./Modules/Core/
+COPY ./Modules/DomainEntity/Package.* ./Modules/DomainEntity/
 COPY ./Modules/Endpoint/Package.* ./Modules/Endpoint/
 COPY ./Modules/LoggingDiscord/Package.* ./Modules/LoggingDiscord/
 
