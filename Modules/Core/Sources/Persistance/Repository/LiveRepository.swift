@@ -94,6 +94,7 @@ public class LiveRepository: Domain.LiveRepository {
             }
         let participants = Ticket.query(on: db)
             .filter(\.$live.$id == id.rawValue)
+            .filter(\.$status == .reserved)
             .count()
         return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
