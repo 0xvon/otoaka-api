@@ -103,5 +103,10 @@ class UserControllerTests: XCTestCase {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
+
+        try app.test(.POST, "users/register_device_token", headers: headers, body: bodyData) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
     }
 }

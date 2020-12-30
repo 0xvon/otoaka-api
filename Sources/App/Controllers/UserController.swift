@@ -72,6 +72,13 @@ struct UserController: RouteCollection {
         let input = try req.content.decode(RegisterDeviceToken.Request.self)
         let service = makePushNotificationService(request: req)
         return service.register(deviceToken: input.deviceToken, for: user.id)
+            .flatMapErrorThrowing {
+                guard let error = $0 as? Persistance.UserRepository.Error,
+                      case .deviceAlreadyRegistered = error else {
+                    throw $0
+                }
+                return
+            }
             .map { Empty() }
     }
 }
