@@ -74,7 +74,8 @@ struct UserController: RouteCollection {
         return service.register(deviceToken: input.deviceToken, for: user.id)
             .flatMapErrorThrowing {
                 guard let error = $0 as? Persistance.UserRepository.Error,
-                      case .deviceAlreadyRegistered = error else {
+                    case .deviceAlreadyRegistered = error
+                else {
                     throw $0
                 }
                 return

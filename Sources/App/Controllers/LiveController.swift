@@ -62,19 +62,22 @@ struct LiveController: RouteCollection {
                 let user = try req.auth.require(Domain.User.self)
                 return repository.getUserTickets(userId: user.id, page: uri.page, per: uri.per)
             })
-        try routes.on(endpoint: Endpoint.GetLiveParticipants.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(Domain.User.self)
-            let groupRepository = makeGroupRepository(request: req)
-            let live = repository.getLive(by: uri.liveId)
-            let precondition = live.unwrap(orError: Abort(.notFound))
-                .flatMap {
-                    groupRepository.isMember(of: $0.hostGroup.id, member: user.id).and(value: $0)
+        try routes.on(
+            endpoint: Endpoint.GetLiveParticipants.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let groupRepository = makeGroupRepository(request: req)
+                let live = repository.getLive(by: uri.liveId)
+                let precondition = live.unwrap(orError: Abort(.notFound))
+                    .flatMap {
+                        groupRepository.isMember(of: $0.hostGroup.id, member: user.id).and(
+                            value: $0)
+                    }
+                    .guard({ $0.0 }, else: Abort(.badRequest))
+                return precondition.flatMap { _, live in
+                    repository.getParticipants(liveId: live.id, page: uri.page, per: uri.per)
                 }
-                .guard({ $0.0 }, else: Abort(.badRequest))
-            return precondition.flatMap { _, live in
-                repository.getParticipants(liveId: live.id, page: uri.page, per: uri.per)
-            }
-        })
+            })
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) throws

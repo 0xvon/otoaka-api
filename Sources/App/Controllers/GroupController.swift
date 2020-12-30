@@ -17,7 +17,15 @@ private func injectProvider<T, URI>(
 
 struct GroupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        try routes.on(endpoint: Endpoint.CreateGroup.self, use: injectProvider(create))
+        try routes.on(
+            endpoint: Endpoint.CreateGroup.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
+                let useCase = CreateGroupUseCase(
+                    groupRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((input: input, user: user.id))
+            })
         try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
         try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
@@ -99,20 +107,6 @@ struct GroupController: RouteCollection {
         }.map {
             GetGroup.Response(group: $0, isMember: $1, isFollowing: $2, followersCount: $3)
         }
-    }
-
-    func create(req: Request, uri: CreateGroup.URI, repository: Domain.GroupRepository) throws
-        -> EventLoopFuture<
-            Endpoint.Group
-        >
-    {
-        let user = try req.auth.require(Domain.User.self)
-        let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
-        return repository.create(input: input)
-            .flatMap { group in
-                repository.join(toGroup: group.id, artist: user.id, asLeader: true)
-                    .map { _ in group }
-            }
     }
 
     func invite(req: Request, uri: InviteGroup.URI, repository: Domain.GroupRepository) throws
