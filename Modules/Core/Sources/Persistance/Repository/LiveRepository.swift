@@ -12,6 +12,7 @@ public class LiveRepository: Domain.LiveRepository {
         case liveNotFound
         case ticketNotFound
         case ticketPermissionError
+        case ticketAlreadyReserved
         case requestNotFound
     }
 
@@ -135,8 +136,17 @@ public class LiveRepository: Domain.LiveRepository {
         Domain.Ticket
     > {
         let isLiveExist = Live.find(liveId.rawValue, on: db).map { $0 != nil }
-        return isLiveExist.flatMapThrowing { isLiveExist -> Void in
+        let hasValidTicket = Ticket.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue)
+            .filter(\.$user.$id == user.rawValue)
+            .filter(\.$status == .reserved)
+            .first().map { $0 != nil }
+
+        return isLiveExist.and(hasValidTicket).flatMapThrowing { isLiveExist, hasValidTicket -> Void in
             guard isLiveExist else { throw Error.liveNotFound }
+            guard !hasValidTicket else {
+                throw Error.ticketAlreadyReserved
+            }
             return ()
         }
         .flatMap { [db] _ -> EventLoopFuture<Ticket> in

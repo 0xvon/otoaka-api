@@ -170,6 +170,9 @@ class LiveControllerTests: XCTestCase {
                 ticket = try res.content.decode(Endpoint.ReserveTicket.Response.self)
                 XCTAssertEqual(ticket.status, .reserved)
             }
+            try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
+                XCTAssertNotEqual(res.status, .ok, res.body.string)
+            }
         }
 
         try app.test(.GET, "lives/my_tickets?page=1&per=10", headers: headers) { res in
