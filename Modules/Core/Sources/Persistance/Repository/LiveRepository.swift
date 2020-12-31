@@ -71,7 +71,7 @@ public class LiveRepository: Domain.LiveRepository {
             live.endAt = input.endAt
             return live
         }
-        .flatMap { [db] live in live.save(on: db).map { live } }
+        .flatMap { [db] live in live.update(on: db).map { live } }
         return modified.flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
     }
 
