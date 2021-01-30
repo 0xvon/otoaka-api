@@ -123,16 +123,16 @@ class GroupControllerTests: XCTestCase {
         }
     }
 
-    func testJoinTwice() throws {
+    func testJoinTwiceWithSameInvitations() throws {
         // try to create without login
         try app.test(.POST, "groups") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
 
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let invitedUser = try appClient.createUser(role: .artist(Artist(part: "foo")))
         let encoder = appClient.encoder
 
-        let headers = appClient.makeHeaders(for: user)
         let createdGroup = try appClient.createGroup(with: user)
         let createdInvitation = try appClient.createInvitation(group: createdGroup, with: user)
 
@@ -140,13 +140,38 @@ class GroupControllerTests: XCTestCase {
             $0.set(\.invitationId, value: createdInvitation.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        try app.test(.POST, "groups/join", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData) { res in
             XCTAssertEqual(res.status, .ok)
             _ = try res.content.decode(JoinGroup.Response.self)
         }
 
         // Try to join again with the same invitation
-        try app.test(.POST, "groups/join", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
+
+    func testJoinTwiceWithDifferentInvitations() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let invitedUser = try appClient.createUser(role: .artist(Artist(part: "foo")))
+        let createdGroup = try appClient.createGroup(with: user)
+        let createdInvitation1 = try appClient.createInvitation(group: createdGroup, with: user)
+
+        let body1 = try! Stub.make(JoinGroup.Request.self) {
+            $0.set(\.invitationId, value: createdInvitation1.id)
+        }
+        let bodyData1 = try ByteBuffer(data: appClient.encoder.encode(body1))
+        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData1) { res in
+            XCTAssertEqual(res.status, .ok)
+            _ = try res.content.decode(JoinGroup.Response.self)
+        }
+
+        let createdInvitation2 = try appClient.createInvitation(group: createdGroup, with: user)
+        let body2 = try! Stub.make(JoinGroup.Request.self) {
+            $0.set(\.invitationId, value: createdInvitation2.id)
+        }
+        let bodyData2 = try ByteBuffer(data: appClient.encoder.encode(body2))
+        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData2) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }

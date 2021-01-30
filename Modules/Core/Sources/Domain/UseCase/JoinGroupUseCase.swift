@@ -1,4 +1,5 @@
 import NIO
+import DomainEntity
 
 public struct JoinGroupUseCase: UseCase {
     public typealias Request = (
@@ -10,6 +11,7 @@ public struct JoinGroupUseCase: UseCase {
     public enum Error: Swift.Error {
         case userNotFound
         case groupNotFound
+        case alreadyJoined
         case invitationNotFound
         case invitationAlreadyUsed
     }
@@ -42,6 +44,13 @@ public struct JoinGroupUseCase: UseCase {
             guard !invitation.invited else {
                 throw Error.invitationAlreadyUsed
             }
+            return invitation
+        }
+        .flatMap { invitation in
+            groupRepository.isMember(of: invitation.group.id, member: request.userId).map { ($0, invitation) }
+        }
+        .flatMapThrowing { (isAlreadyJoined, invitation) -> GroupInvitation in
+            guard !isAlreadyJoined else { throw Error.alreadyJoined }
             return invitation
         }
         .flatMap { invitation in
