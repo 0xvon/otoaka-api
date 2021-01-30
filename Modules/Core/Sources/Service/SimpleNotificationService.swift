@@ -1,6 +1,7 @@
 import Domain
 import NIO
 import SNS
+import Logging
 
 public protocol SimpleNotificationServiceSecrets {
     var awsAccessKeyId: String { get }
@@ -17,6 +18,7 @@ public class SimpleNotificationService: PushNotificationService {
     let userRepository: UserRepository
 
     let eventLoop: EventLoop
+    let logger = Logger(label: "simple-notification-service-logger")
 
     enum Error: Swift.Error {
         case endpointArnNotReturned
@@ -69,6 +71,10 @@ public class SimpleNotificationService: PushNotificationService {
         return input.flatMap { [sns, eventLoop] in
             EventLoopFuture.andAllSucceed($0.map { sns.publish($0) }, on: eventLoop)
         }.map { _ in }
+        .flatMapError { [logger, eventLoop] error in
+            logger.error(Logger.Message(stringLiteral: String(describing: error)))
+            return eventLoop.makeSucceededFuture(())
+        }
     }
 
     public func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
