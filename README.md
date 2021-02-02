@@ -1,33 +1,33 @@
-## Rocket API
+# Rocket API
 
-### Environment
+ツールのバージョンやインストール方法はDocument as a CodeとしてCIやバージョンファイルに記述されているのでそれを見てほしい。
 
-- Swift 5.2
-- Vapor 4.0 (Server Side Swift)
-- Xcode 11.7
-- Fluent 4.0 (ORM)
-- Fluent MySQL Driver
-- Kubernetes
-- EKS
-- Clean Architecture
+## 実行
 
-### How to run
+```bash
+# 開発環境向けシークレット環境変数の設定
+# 中身の値はキー名とマスクしてる値からだいたいわかるはず。
+$ cp .env.development{.sample,}
 
-#### 1. setup
-
-```
-$ docker-compose up --build app
+$ swift run
+# or
+$ swift pacakge generate-xcodeproj
+$ open rocket-api.xcodeproj # Xcodeで実行
 ```
 
-#### 2. migrate
 
-```
-$ vapor run migrate
+## テスト
+
+```bash
+# テスト環境向けのシークレットを設定
+$ cp ./Tests/.env.development{.sample,}
+$ docker-compose up db
+$ swift test
+# or Xcodeでテスト実行
 ```
 
-#### 3. enjoy
+## パッケージ分割戦略
 
-```
-$ curl -X localhost:8080
-```
+メインのアプリケーション以外にいくつかExecutableなターゲットがあり、それらをビルドするときに不必要な依存をビルド/チェックアウトせずに済むようにパッケージを細かく切っている。
 
+各パッケージの役割についてはそれぞれのパッケージのREADMEに書いてる。

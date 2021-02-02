@@ -1,3 +1,6 @@
 # Endpoint
 
-A description of this package.
+APIエンドポイントの入出力を定義するモジュールです。
+クライアントアプリと共有して使っているため、VaporやSwiftNIOなどServer Side Swift向けのライブラリ依存が入らないようにしています。
+
+当初はSwiftの型を生かしたRPCとして使う予定だったが、中途半端にRESTを意識したURL設計にしてしまい、クライアント側の使い心地が微妙になってしまった。
