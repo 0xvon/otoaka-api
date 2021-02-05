@@ -31,6 +31,9 @@ final class Group: Model {
     @OptionalField(key: "hometown")
     var hometown: String?
 
+    @Timestamp(key: "deleted_at", on: .delete)
+    var deletedAt: Date?
+
     init() {}
 
     init(

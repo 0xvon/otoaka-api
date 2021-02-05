@@ -46,6 +46,22 @@ public struct EditGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct DeleteGroup: EndpointProtocol {
+    public struct Request: Codable {
+        public let id: Group.ID
+
+        public init(id: Group.ID) {
+            self.id = id
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("groups", "delete") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .delete
+}
+
 public struct InviteGroup: EndpointProtocol {
     public struct Request: Codable {
         public var groupId: Group.ID

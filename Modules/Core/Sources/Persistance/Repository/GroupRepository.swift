@@ -11,6 +11,7 @@ public class GroupRepository: Domain.GroupRepository {
     public enum Error: Swift.Error {
         case userNotFound
         case groupNotFound
+        case groupDeleted
         case invitationNotFound
         case notMemberOfGroup
         case feedNotFound
@@ -155,6 +156,16 @@ public class GroupRepository: Domain.GroupRepository {
                 Domain.Group.translate(fromPersistance: $0, on: db)
             }
         }
+    }
+
+    public func deleteGroup(id: Domain.Group.ID) -> EventLoopFuture<Void> {
+        return Group.find(id.rawValue, on: db)
+            .unwrap(orError: Error.groupNotFound)
+            .flatMapThrowing { group -> Group in
+                guard group.$id.exists else { throw Error.groupDeleted }
+                return group
+            }
+            .flatMap { [db] in $0.delete(on: db) }
     }
 
     public func getMemberships(for artistId: Domain.User.ID) -> EventLoopFuture<[Domain.Group]> {

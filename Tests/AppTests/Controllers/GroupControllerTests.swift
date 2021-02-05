@@ -37,6 +37,33 @@ class GroupControllerTests: XCTestCase {
         }
     }
 
+    func testDeleteGroup() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let createdGroup = try appClient.createGroup(with: user)
+        let body = try! Stub.make(DeleteGroup.Request.self) {
+            $0.set(\.id, value: createdGroup.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        try app.test(
+            .DELETE, "groups/delete/", headers: appClient.makeHeaders(for: user),
+            body: bodyData
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+
+        // try to delete twice
+        try app.test(
+            .DELETE, "groups/delete/", headers: appClient.makeHeaders(for: user),
+            body: bodyData
+        ) { res in
+            XCTAssertNotEqual(res.status, .ok, res.body.string)
+        }
+
+        try app.test(.GET, "groups/\(createdGroup.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertNotEqual(res.status, .ok, res.body.string)
+        }
+    }
+
     func testInviteForNonExistingGroup() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let body = try! Stub.make(InviteGroup.Request.self)

@@ -73,3 +73,34 @@ fileprivate func validate(request: CreateGroup.Request) throws {
     try assertNotEmpty(\.twitterId, context: "Twitter ID")
     try assertNotEmpty(\.youtubeChannelId, context: "Youtube Channel ID")
 }
+
+
+public struct DeleteGroupUseCase: UseCase {
+    public typealias Request = (id: Group.ID, user: User.ID)
+    public typealias Response = Void
+
+    public enum Error: Swift.Error {
+        case notLeader
+    }
+
+    public let groupRepository: GroupRepository
+    public let eventLoop: EventLoop
+
+    public init(
+        groupRepository: GroupRepository,
+        eventLoop: EventLoop
+    ) {
+        self.groupRepository = groupRepository
+        self.eventLoop = eventLoop
+    }
+
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        let precondition = groupRepository.isLeader(of: request.id, member: request.user).flatMapThrowing {
+            guard $0 else { throw Error.notLeader }
+            return
+        }
+        return precondition.flatMap {
+            groupRepository.deleteGroup(id: request.id)
+        }
+    }
+}

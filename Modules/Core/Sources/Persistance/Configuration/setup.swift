@@ -35,6 +35,7 @@ public func setupMigration(
         CreateLive(), CreateLivePerformer(), CreatePerformanceRequest(),
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
         CreateLiveLike(), CreateGroupFeed(), CreateArtistFeedComment(),
+        AddDeletedAtFieldToGroup(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

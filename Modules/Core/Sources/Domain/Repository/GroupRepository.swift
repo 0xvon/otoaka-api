@@ -16,6 +16,7 @@ public protocol GroupRepository {
     func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
 
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Group>>
+    func deleteGroup(id: Group.ID) -> EventLoopFuture<Void>
     func getMemberships(for artistId: User.ID) -> EventLoopFuture<[Group]>
 
     func createFeed(for input: CreateArtistFeed.Request, authorId: User.ID) -> EventLoopFuture<
