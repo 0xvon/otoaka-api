@@ -59,7 +59,8 @@ class GroupControllerTests: XCTestCase {
             XCTAssertNotEqual(res.status, .ok, res.body.string)
         }
 
-        try app.test(.GET, "groups/\(createdGroup.id)", headers: appClient.makeHeaders(for: user)) { res in
+        try app.test(.GET, "groups/\(createdGroup.id)", headers: appClient.makeHeaders(for: user)) {
+            res in
             XCTAssertNotEqual(res.status, .ok, res.body.string)
         }
     }
@@ -167,13 +168,17 @@ class GroupControllerTests: XCTestCase {
             $0.set(\.invitationId, value: createdInvitation.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData) { res in
+        try app.test(
+            .POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             _ = try res.content.decode(JoinGroup.Response.self)
         }
 
         // Try to join again with the same invitation
-        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData) { res in
+        try app.test(
+            .POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData
+        ) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -188,7 +193,9 @@ class GroupControllerTests: XCTestCase {
             $0.set(\.invitationId, value: createdInvitation1.id)
         }
         let bodyData1 = try ByteBuffer(data: appClient.encoder.encode(body1))
-        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData1) { res in
+        try app.test(
+            .POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData1
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             _ = try res.content.decode(JoinGroup.Response.self)
         }
@@ -198,7 +205,9 @@ class GroupControllerTests: XCTestCase {
             $0.set(\.invitationId, value: createdInvitation2.id)
         }
         let bodyData2 = try ByteBuffer(data: appClient.encoder.encode(body2))
-        try app.test(.POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData2) { res in
+        try app.test(
+            .POST, "groups/join", headers: appClient.makeHeaders(for: invitedUser), body: bodyData2
+        ) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -234,7 +243,6 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
 
-        
         // try to delete twice
         try app.test(.DELETE, "groups/delete_feed", headers: headers, body: bodyData) { res in
             XCTAssertNotEqual(res.status, .ok, res.body.string)

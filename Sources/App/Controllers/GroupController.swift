@@ -27,12 +27,15 @@ struct GroupController: RouteCollection {
                 return try useCase((input: input, user: user.id))
             })
         try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
-        try routes.on(endpoint: Endpoint.DeleteGroup.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(User.self)
-            let input = try req.content.decode(DeleteGroup.Request.self)
-            let useCase = DeleteGroupUseCase(groupRepository: repository, eventLoop: req.eventLoop)
-            return try useCase((id: input.id, user: user.id)).map { Empty() }
-        })
+        try routes.on(
+            endpoint: Endpoint.DeleteGroup.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(DeleteGroup.Request.self)
+                let useCase = DeleteGroupUseCase(
+                    groupRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((id: input.id, user: user.id)).map { Empty() }
+            })
         try routes.on(endpoint: Endpoint.InviteGroup.self, use: injectProvider(invite))
         try routes.on(endpoint: Endpoint.JoinGroup.self, use: injectProvider(join))
         try routes.on(endpoint: Endpoint.GetGroup.self, use: injectProvider(getGroupInfo))
@@ -83,10 +86,11 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(DeleteArtistFeed.Request.self)
-                let useCase = DeleteArtistFeedUseCase(groupRepository: repository, eventLoop: req.eventLoop)
+                let useCase = DeleteArtistFeedUseCase(
+                    groupRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((id: input.id, user: user.id)).map { Empty() }
             })
-        
+
         try routes.on(
             endpoint: GetFeedComments.self,
             use: injectProvider { req, uri, repository in
