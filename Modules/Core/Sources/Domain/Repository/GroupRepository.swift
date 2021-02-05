@@ -22,6 +22,7 @@ public protocol GroupRepository {
     func createFeed(for input: CreateArtistFeed.Request, authorId: User.ID) -> EventLoopFuture<
         ArtistFeed
     >
+    func deleteFeed(id: ArtistFeed.ID) -> EventLoopFuture<Void>
     func getArtistFeed(feedId: Domain.ArtistFeed.ID) -> EventLoopFuture<Domain.ArtistFeed>
     func addArtistFeedComment(userId: User.ID, input: PostFeedComment.Request) -> EventLoopFuture<
         ArtistFeedComment

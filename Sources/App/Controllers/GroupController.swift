@@ -79,6 +79,15 @@ struct GroupController: RouteCollection {
             })
 
         try routes.on(
+            endpoint: DeleteArtistFeed.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(DeleteArtistFeed.Request.self)
+                let useCase = DeleteArtistFeedUseCase(groupRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((id: input.id, user: user.id)).map { Empty() }
+            })
+        
+        try routes.on(
             endpoint: GetFeedComments.self,
             use: injectProvider { req, uri, repository in
                 return repository.getArtistFeedComments(

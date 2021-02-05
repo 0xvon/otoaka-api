@@ -109,3 +109,17 @@ struct AddDeletedAtFieldToGroup: Migration {
             .update()
     }
 }
+
+struct AddDeletedAtFieldToArtistFeed: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeed.schema)
+            .field("deleted_at", .datetime)
+            .update()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeed.schema)
+            .deleteField("deleted_at")
+            .update()
+    }
+}

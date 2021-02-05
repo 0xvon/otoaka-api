@@ -166,6 +166,9 @@ final class ArtistFeed: Model {
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
+    @Timestamp(key: "deleted_at", on: .delete)
+    var deletedAt: Date?
+
     @Children(for: \.$feed)
     var comments: [ArtistFeedComment]
 }

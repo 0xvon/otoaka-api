@@ -220,6 +220,33 @@ class GroupControllerTests: XCTestCase {
         }
     }
 
+    func testDeleteArtistFeeds() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createGroupFeed(with: user)
+        let body = try! Stub.make(DeleteArtistFeed.Request.self) {
+            $0.set(\.id, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.DELETE, "groups/delete_feed", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+
+        
+        // try to delete twice
+        try app.test(.DELETE, "groups/delete_feed", headers: headers, body: bodyData) { res in
+            XCTAssertNotEqual(res.status, .ok, res.body.string)
+        }
+
+        try app.test(.GET, "groups/\(groupX.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetGroupFeed.Response.self)
+            XCTAssertEqual(responseBody.items, [])
+        }
+    }
+
     func testGetGroupFeeds() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)

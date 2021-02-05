@@ -180,6 +180,22 @@ public struct CreateArtistFeed: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct DeleteArtistFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public let id: ArtistFeed.ID
+
+        public init(id: ArtistFeed.ID) {
+            self.id = id
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("groups", "delete_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .delete
+}
+
 public struct GetGroupFeed: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<ArtistFeedSummary>

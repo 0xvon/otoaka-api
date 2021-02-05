@@ -12,6 +12,7 @@ public class GroupRepository: Domain.GroupRepository {
         case userNotFound
         case groupNotFound
         case groupDeleted
+        case feedDeleted
         case invitationNotFound
         case notMemberOfGroup
         case feedNotFound
@@ -193,6 +194,16 @@ public class GroupRepository: Domain.GroupRepository {
         return feed.create(on: db).flatMap { [db] in
             Domain.ArtistFeed.translate(fromPersistance: feed, on: db)
         }
+    }
+
+    public func deleteFeed(id: Domain.ArtistFeed.ID) -> EventLoopFuture<Void> {
+        return ArtistFeed.find(id.rawValue, on: db)
+            .unwrap(orError: Error.feedNotFound)
+            .flatMapThrowing { feed -> ArtistFeed in
+                guard feed.$id.exists else { throw Error.feedDeleted }
+                return feed
+            }
+            .flatMap { [db] in $0.delete(on: db) }
     }
 
     public func feeds(groupId: Domain.Group.ID, page: Int, per: Int) -> EventLoopFuture<
