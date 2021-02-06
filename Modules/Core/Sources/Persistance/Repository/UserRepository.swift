@@ -56,6 +56,12 @@ public class UserRepository: Domain.UserRepository {
         }
     }
 
+    public func all() -> EventLoopFuture<[Domain.User]> {
+        User.query(on: db).all().flatMapEach(on: db.eventLoop) { [db] in
+            Domain.User.translate(fromPersistance: $0, on: db)
+        }
+    }
+
     public func find(by cognitoId: Domain.CognitoID) -> EventLoopFuture<Endpoint.User?> {
         let maybeUser = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return maybeUser.optionalFlatMap { [db] user in
