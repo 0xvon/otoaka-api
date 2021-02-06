@@ -12,6 +12,6 @@ echo "done"
 echo "-------------------------------------------------------------------------"
 echo "building \"$executable\" lambda"
 echo "-------------------------------------------------------------------------"
-docker run --rm -v "$workspace":/workspace -w /workspace/Products/Batch builder \
+docker run --rm -v "$workspace":/workspace -w /workspace/Products/Admin builder \
        bash -cl "./Scripts/package-on-docker.sh $executable"
 echo "done"
