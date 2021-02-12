@@ -76,3 +76,53 @@ class JWTAuthenticator: BearerAuthenticator {
 
 extension Domain.User: Authenticatable {}
 extension JWTAuthenticator.Payload: Authenticatable {}
+
+import CognitoIdentityProvider
+
+struct UserPoolMigrator_20210213 {
+    typealias User = PersistanceUser
+    let userPoolId: String
+
+    func migrateUsers(
+        users: [User]
+    ) -> EventLoopFuture<Void> {
+        let region: String = Environment.get("AWS_REGION")!
+        let cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
+        let cognitoUsers = cognito.listUsers(.init(userPoolId: userPoolId))
+        return cognitoUsers.map { cognitoUsers in
+            users.forEach {
+                migrateUser(
+                    user: $0, cognitoId: $0.cognitoId,
+                    cognitoUsers: cognitoUsers.users ?? []
+                )
+            }
+        }
+    }
+
+    func migrateUser(
+        user: User, cognitoId: String,
+        cognitoUsers: [CognitoIdentityProvider.UserType]
+    ) {
+        guard let username = getUsername(cognitoId: cognitoId, cognitoUsers: cognitoUsers) else {
+            fatalError()
+        }
+        user.cognitoUsername = username
+    }
+
+    fileprivate func getUsername(cognitoId: String, cognitoUsers: [CognitoIdentityProvider.UserType]) -> String? {
+        guard let user = cognitoUsers.first(where: { $0.sub == cognitoId }) else {
+            return nil
+        }
+        return user.username
+    }
+}
+
+
+extension CognitoIdentityProvider.UserType {
+    fileprivate var sub: String? {
+        attributes?.first(where: { $0.name == "sub" })?.value
+    }
+    fileprivate var username: String? {
+        attributes?.first(where: { $0.name == "cognito:username" })?.value
+    }
+}

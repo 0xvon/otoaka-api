@@ -27,7 +27,8 @@ public func setup(
 
 public func setupMigration(
     migrator: Migrator,
-    migrations: Migrations
+    migrations: Migrations,
+    cognitoUserMigrator: @escaping (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
 ) throws {
     migrations.add([
         CreateUser(),
@@ -36,6 +37,7 @@ public func setupMigration(
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
         CreateLiveLike(), CreateGroupFeed(), CreateArtistFeedComment(),
         AddDeletedAtFieldToGroup(), AddDeletedAtFieldToArtistFeed(),
+        CognitoSubToUsername(migrator: cognitoUserMigrator),
     ])
 
     try migrator.setupIfNeeded().flatMap {

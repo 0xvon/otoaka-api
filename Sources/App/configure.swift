@@ -60,7 +60,10 @@ public func configure(_ app: Application) throws {
     )
     try Persistance.setupMigration(
         migrator: app.migrator,
-        migrations: app.migrations
+        migrations: app.migrations,
+        cognitoUserMigrator: {
+            UserPoolMigrator_20210213(userPoolId: secrets.cognitoUserPoolId).migrateUsers(users: $0)
+        }
     )
     try routes(app)
 }

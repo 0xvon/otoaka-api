@@ -24,8 +24,8 @@ final class User: Model {
     @Field(key: "cognito_id")
     var cognitoId: String
 
-    @Field(key: "cognito_username")
-    var cognitoUsername: CognitoUsername
+    @OptionalField(key: "cognito_username")
+    var cognitoUsername: CognitoUsername?
 
     @Field(key: "email")
     var email: String

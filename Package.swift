@@ -31,6 +31,7 @@ let package = Package(
                 .product(name: "Service", package: "Core"),
                 .product(name: "Endpoint", package: "Endpoint"),
                 .product(name: "LoggingDiscord", package: "LoggingDiscord"),
+                .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

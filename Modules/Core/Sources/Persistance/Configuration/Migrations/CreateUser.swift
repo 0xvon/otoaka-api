@@ -74,3 +74,34 @@ struct CreateLiveLike: Migration {
         database.schema(LiveLike.schema).delete()
     }
 }
+
+public protocol PersistanceUser: AnyObject {
+    var cognitoId: String { get }
+    var cognitoUsername: String? { get set }
+}
+
+extension User: PersistanceUser {}
+
+struct CognitoSubToUsername: Migration {
+    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
+
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let addColumn = database.schema(User.schema)
+            .field("cognito_username", .string)
+            .unique(on: "cognito_username")
+            .update()
+
+        return addColumn.flatMap {
+            User.query(on: database)
+                .filter(\.$cognitoUsername == nil)
+                .all()
+                .flatMap { migrator($0) }
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("cognito_username")
+            .update()
+    }
+}

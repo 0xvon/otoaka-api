@@ -49,6 +49,7 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+
         func editInfo(userId: User.ID, input: EditUserInfo.Request) -> EventLoopFuture<User> {
             fatalError("unimplemented")
         }
@@ -67,19 +68,22 @@ class AuthenticationTests: XCTestCase {
             self.eventLoop = eventLoop
         }
 
-        func create(cognitoId: CognitoID, email: String, input: Signup.Request) -> EventLoopFuture<
+        func create(cognitoId: CognitoID, cognitoUsername: CognitoUsername, email: String, input: Signup.Request) -> EventLoopFuture<
             Endpoint.User
         > {
             let newUser = Endpoint.User(
                 id: .init(UUID()), name: input.name, biography: input.biography,
                 thumbnailURL: input.thumbnailURL, role: input.role
             )
-            users[cognitoId] = newUser
+            users[cognitoUsername.lowercased()] = newUser
             return eventLoop.makeSucceededFuture(newUser)
         }
 
         func find(by foreignId: Domain.CognitoID) -> EventLoopFuture<Endpoint.User?> {
             eventLoop.makeSucceededFuture(users[foreignId])
+        }
+        func findByUsername(username: CognitoUsername) -> EventLoopFuture<User?> {
+            eventLoop.makeSucceededFuture(users[username.lowercased()])
         }
         func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
             eventLoop.makeSucceededFuture(users.contains(where: { $0.value.id == id }))
@@ -95,8 +99,11 @@ class AuthenticationTests: XCTestCase {
 
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
-            _ = try! repo.create(cognitoId: dummyUser.sub, email: dummyEmail, input: Stub.make())
-                .wait()
+            _ = try! repo.create(
+                cognitoId: dummyUser.sub, cognitoUsername: dummyUserName,
+                email: dummyEmail, input: Stub.make()
+            )
+            .wait()
             return repo
         })
         app.grouped(authenticator, User.guardMiddleware()).get("secure") { _ in
