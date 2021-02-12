@@ -24,6 +24,9 @@ final class User: Model {
     @Field(key: "cognito_id")
     var cognitoId: String
 
+    @Field(key: "cognito_username")
+    var cognitoUsername: CognitoUsername
+
     @Field(key: "email")
     var email: String
 
@@ -36,10 +39,12 @@ final class User: Model {
 
     init() {}
     init(
-        cognitoId: Domain.CognitoID, email: String, name: String,
+        cognitoId: Domain.CognitoID, cognitoUsername: CognitoUsername,
+        email: String, name: String,
         biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
     ) {
         self.cognitoId = cognitoId
+        self.cognitoUsername = cognitoUsername
         self.email = email
         self.name = name
         self.biography = biography

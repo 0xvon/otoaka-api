@@ -14,14 +14,14 @@ public class UserRepository: Domain.UserRepository {
         self.db = db
     }
 
-    public func create(cognitoId: CognitoID, email: String, input: Signup.Request)
+    public func create(cognitoId: CognitoID, cognitoUsername: CognitoUsername, email: String, input: Signup.Request)
         -> EventLoopFuture<Endpoint.User>
     {
         let existing = User.query(on: db).filter(\.$cognitoId == cognitoId).first()
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
             .flatMap { [db] _ -> EventLoopFuture<Endpoint.User> in
                 let storedUser = User(
-                    cognitoId: cognitoId, email: email,
+                    cognitoId: cognitoId, cognitoUsername: cognitoUsername, email: email,
                     name: input.name, biography: input.biography,
                     thumbnailURL: input.thumbnailURL, role: input.role
                 )
@@ -69,6 +69,12 @@ public class UserRepository: Domain.UserRepository {
         }
     }
 
+    public func findByUsername(username: CognitoUsername) -> EventLoopFuture<Domain.User?> {
+        let maybeUser = User.query(on: db).filter(\.$cognitoUsername == username).first()
+        return maybeUser.optionalFlatMap { [db] user in
+            Endpoint.User.translate(fromPersistance: user, on: db)
+        }
+    }
     public func isExists(by id: Domain.User.ID) -> EventLoopFuture<Bool> {
         User.find(id.rawValue, on: db).map { $0 != nil }
     }

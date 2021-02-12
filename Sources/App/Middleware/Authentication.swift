@@ -29,9 +29,17 @@ class JWTAuthenticator: BearerAuthenticator {
     }
 
     struct Payload: JWTPayload {
+        enum CodingKeys: String, CodingKey {
+            case sub
+            case iss
+            case email
+            case username = "cognito:username"
+            case exp
+        }
         let sub: SubjectClaim
         let iss: IssuerClaim
         let email: String
+        let username: String
         let exp: ExpirationClaim
         func verify(using _: JWTSigner) throws {
             try exp.verifyNotExpired()
@@ -48,7 +56,7 @@ class JWTAuthenticator: BearerAuthenticator {
             return eventLoop.makeFailedFuture(error)
         }
         let repository = userRepositoryFactory(request)
-        let maybeUser = repository.find(by: payload.sub.value)
+        let maybeUser = repository.findByUsername(username: payload.username)
         return maybeUser.always { result in
             guard case let .success(.some(user)) = result else { return }
             request.auth.login(user)
