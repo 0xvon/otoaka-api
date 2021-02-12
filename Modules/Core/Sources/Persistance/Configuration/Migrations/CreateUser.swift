@@ -95,7 +95,13 @@ struct CognitoSubToUsername: Migration {
             User.query(on: database)
                 .filter(\.$cognitoUsername == nil)
                 .all()
-                .flatMap { migrator($0) }
+                .flatMap { users in
+                    migrator(users).map { users }
+                }
+                .flatMapEach(on: database.eventLoop) {
+                    $0.save(on: database)
+                }
+                .transform(to: ())
         }
     }
 
