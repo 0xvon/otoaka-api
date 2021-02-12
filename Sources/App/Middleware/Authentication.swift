@@ -77,23 +77,37 @@ class JWTAuthenticator: BearerAuthenticator {
 extension Domain.User: Authenticatable {}
 extension JWTAuthenticator.Payload: Authenticatable {}
 
-import CognitoIdentityProvider
+import SotoCognitoIdentityProvider
 
-struct UserPoolMigrator_20210213 {
+class UserPoolMigrator_20210213 {
     typealias User = PersistanceUser
     let userPoolId: String
+    let region: String = Environment.get("AWS_REGION")!
+    lazy var cognito = CognitoIdentityProvider(client: AWSClient(httpClientProvider: .createNew), region: Region(rawValue: region))
+
+    init(userPoolId: String) {
+        self.userPoolId = userPoolId
+    }
+    deinit {
+        try! cognito.client.syncShutdown()
+    }
 
     func migrateUsers(
         users: [User]
     ) -> EventLoopFuture<Void> {
-        let region: String = Environment.get("AWS_REGION")!
-        let cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
-        let cognitoUsers = cognito.listUsers(.init(userPoolId: userPoolId))
-        return cognitoUsers.map { cognitoUsers in
+
+        let cognitoUsers = cognito.listUsersPaginator(
+            CognitoIdentityProvider.ListUsersRequest(userPoolId: userPoolId), [CognitoIdentityProvider.UserType]()
+        ) { (users, response, eventLoop) -> EventLoopFuture<(Bool, [CognitoIdentityProvider.UserType])> in
+            eventLoop.makeSucceededFuture((true, users + (response.users ?? [])))
+        }
+
+        return cognitoUsers
+            .map { cognitoUsers in
             users.forEach {
-                migrateUser(
+                self.migrateUser(
                     user: $0, cognitoId: $0.cognitoId,
-                    cognitoUsers: cognitoUsers.users ?? []
+                    cognitoUsers: cognitoUsers
                 )
             }
         }

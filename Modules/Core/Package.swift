@@ -16,14 +16,14 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-mysql-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.18.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
-        .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
+        .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
         .package(path: "../Endpoint"),
     ],
     targets: [
         .target(name: "Service", dependencies: [
             .product(name: "NIO", package: "swift-nio"),
             .target(name: "Domain"),
-            .product(name: "SNS", package: "AWSSDKSwift"),
+            .product(name: "SotoSNS", package: "soto"),
         ]),
         .target(name: "Persistance", dependencies: [
             .product(name: "FluentKit", package: "fluent-kit"),

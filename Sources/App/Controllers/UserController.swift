@@ -2,7 +2,6 @@ import Domain
 import Endpoint
 import Foundation
 import Persistance
-import SNS
 import Vapor
 
 private func injectProvider<T, URI>(

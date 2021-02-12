@@ -1,4 +1,4 @@
-import CognitoIdentityProvider
+import SotoCognitoIdentityProvider
 import Foundation
 import NIO
 import Vapor
@@ -14,7 +14,10 @@ class CognitoClient {
     let region: String = Environment.get("AWS_REGION")!
     let clientId: String = Environment.get("CONGNITO_IDP_CLIENT_ID")!
     init() {
-        cognito = CognitoIdentityProvider(region: Region(rawValue: region)!)
+        cognito = CognitoIdentityProvider(
+            client: .init(httpClientProvider: .createNew),
+            region: Region(rawValue: region)
+        )
     }
 
     func createToken(userName: String, email: String? = nil, password: String = "Passw0rd!!")
@@ -64,5 +67,8 @@ class CognitoClient {
 
     func destroyUser(userName: String) -> EventLoopFuture<Void> {
         cognito.adminDeleteUser(.init(username: userName, userPoolId: userPoolId))
+    }
+    deinit {
+        try! cognito.client.syncShutdown()
     }
 }

@@ -1,6 +1,6 @@
 import Domain
 import NIO
-import SNS
+import SotoSNS
 import Logging
 
 public protocol SimpleNotificationServiceSecrets {
@@ -32,10 +32,11 @@ public class SimpleNotificationService: PushNotificationService {
         eventLoop: EventLoop
     ) {
         let sns = SNS(
-            accessKeyId: secrets.awsAccessKeyId,
-            secretAccessKey: secrets.awsSecretAccessKey,
-            region: Region(rawValue: secrets.awsRegion),
-            eventLoopGroupProvider: .shared(eventLoop)
+            client: AWSClient(
+                credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
+                httpClientProvider: .createNew
+            ),
+            region: Region(rawValue: secrets.awsRegion)
         )
         self.init(
             sns: sns, platformApplicationArn: secrets.snsPlatformApplicationArn,
@@ -116,5 +117,9 @@ public class SimpleNotificationService: PushNotificationService {
             .flatMap { [userRepository] in
                 userRepository.setEndpointArn($0, for: user)
             }
+    }
+
+    deinit {
+        try! sns.client.syncShutdown()
     }
 }

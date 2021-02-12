@@ -15,7 +15,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
-        .package(name: "AWSSDKSwift", url: "https://github.com/soto-project/soto.git", from: "4.0.0"),
+        .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
         .package(path: "Modules/Endpoint"),
@@ -31,7 +31,7 @@ let package = Package(
                 .product(name: "Service", package: "Core"),
                 .product(name: "Endpoint", package: "Endpoint"),
                 .product(name: "LoggingDiscord", package: "LoggingDiscord"),
-                .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
+                .product(name: "SotoCognitoIdentityProvider", package: "soto"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -44,7 +44,7 @@ let package = Package(
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
-            .product(name: "CognitoIdentityProvider", package: "AWSSDKSwift"),
+            .product(name: "SotoCognitoIdentityProvider", package: "soto"),
             .product(name: "StubKit", package: "StubKit"),
         ]),
     ]
