@@ -4,6 +4,7 @@ import Foundation
 import NIO
 import Persistance
 import Service
+import SotoCore
 
 import struct Domain.PushNotification
 
@@ -32,8 +33,13 @@ let secrets = EnvironmentSecrets()
 
 class Handler: Lambda.Handler {
     let databases: Databases
+    let awsClient: AWSClient
     init(context: Lambda.InitializationContext) throws {
         databases = Databases(threadPool: NIOThreadPool(numberOfThreads: 1), on: context.eventLoop)
+        awsClient = AWSClient(
+            credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
+            httpClientProvider: .createNew
+        )
         try Persistance.setup(
             databases: databases,
             secrets: secrets
@@ -51,6 +57,7 @@ class Handler: Lambda.Handler {
         let userSocialRepository = UserSocialRepository(db: db)
         let notificationService = SimpleNotificationService(
             secrets: secrets,
+            client: awsClient,
             userRepository: userRepository,
             groupRepository: groupRepository,
             userSocialRepository: userSocialRepository,
@@ -61,6 +68,18 @@ class Handler: Lambda.Handler {
             return notificationService.publish(to: ticket.user.id, notification: notification)
         }
         .transform(to: nil)
+    }
+
+    func shutdown(context: Lambda.ShutdownContext) -> EventLoopFuture<Void> {
+        let promise = context.eventLoop.makePromise(of: Void.self)
+        awsClient.shutdown { error in
+            if let error = error {
+                promise.completeWith(.failure(error))
+            } else {
+                promise.completeWith(.success(()))
+            }
+        }
+        return promise.futureResult
     }
 }
 

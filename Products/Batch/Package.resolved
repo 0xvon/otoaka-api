@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "async-http-client",
+        "repositoryURL": "https://github.com/swift-server/async-http-client.git",
+        "state": {
+          "branch": null,
+          "revision": "a72c5adce3986ff6b5092ae0464a8f2675087860",
+          "version": "1.2.3"
+        }
+      },
+      {
         "package": "async-kit",
         "repositoryURL": "https://github.com/vapor/async-kit.git",
         "state": {
@@ -24,8 +33,8 @@
         "repositoryURL": "https://github.com/vapor/fluent-kit.git",
         "state": {
           "branch": null,
-          "revision": "86ebecdb98981b7a242746209b4335770bf0bd11",
-          "version": "1.10.2"
+          "revision": "7f1a5fe1effeee258ef0012def798e4bad43303d",
+          "version": "1.10.3"
         }
       },
       {
@@ -35,15 +44,6 @@
           "branch": null,
           "revision": "699e164880387349bf04c2329fe53097524a5904",
           "version": "4.0.0"
-        }
-      },
-      {
-        "package": "HypertextApplicationLanguage",
-        "repositoryURL": "https://github.com/swift-aws/HypertextApplicationLanguage.git",
-        "state": {
-          "branch": null,
-          "revision": "aa2c9141d491682f17b2310aed17b9adfc006256",
-          "version": "1.1.1"
         }
       },
       {
@@ -65,30 +65,21 @@
         }
       },
       {
-        "package": "INIParser",
-        "repositoryURL": "https://github.com/swift-aws/Perfect-INIParser.git",
-        "state": {
-          "branch": null,
-          "revision": "42de0efc7a01105e19b80d533d3d282a98277f6c",
-          "version": "3.0.3"
-        }
-      },
-      {
-        "package": "AWSSDKSwift",
+        "package": "soto",
         "repositoryURL": "https://github.com/soto-project/soto.git",
         "state": {
           "branch": null,
-          "revision": "b402b8a434ca39f24d189289ab93fbee96664502",
-          "version": "4.9.0"
+          "revision": "f5b1610fe320d81160bc2079317a4e89e7fb6d51",
+          "version": "5.2.0"
         }
       },
       {
-        "package": "AWSSDKSwiftCore",
+        "package": "soto-core",
         "repositoryURL": "https://github.com/soto-project/soto-core.git",
         "state": {
           "branch": null,
-          "revision": "856a7df0c15763de4f9f3e3d7baea4a8aa009d22",
-          "version": "4.7.2"
+          "revision": "4b19caaf8645726949f299209ec0b4902d347c43",
+          "version": "5.1.2"
         }
       },
       {
@@ -96,8 +87,8 @@
         "repositoryURL": "https://github.com/vapor/sql-kit.git",
         "state": {
           "branch": null,
-          "revision": "ea9928b7f4a801b175a00b982034d9c54ecb6167",
-          "version": "3.7.0"
+          "revision": "cc045001a03d1ec8de34b7be2f262d681fef90a1",
+          "version": "3.7.2"
         }
       },
       {
@@ -137,6 +128,15 @@
         }
       },
       {
+        "package": "swift-metrics",
+        "repositoryURL": "https://github.com/apple/swift-metrics.git",
+        "state": {
+          "branch": null,
+          "revision": "e382458581b05839a571c578e90060fff499f101",
+          "version": "2.1.1"
+        }
+      },
+      {
         "package": "swift-nio",
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
@@ -146,21 +146,21 @@
         }
       },
       {
+        "package": "swift-nio-extras",
+        "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
+        "state": {
+          "branch": null,
+          "revision": "e5b5d191a80667a14827bfeb0ae4a511f7677942",
+          "version": "1.7.0"
+        }
+      },
+      {
         "package": "swift-nio-ssl",
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
           "revision": "62bf5083df970e67c886210fa5b857eacf044b7c",
           "version": "2.10.2"
-        }
-      },
-      {
-        "package": "swift-nio-ssl-support",
-        "repositoryURL": "https://github.com/apple/swift-nio-ssl-support.git",
-        "state": {
-          "branch": null,
-          "revision": "c02eec4e0e6d351cd092938cf44195a8e669f555",
-          "version": "1.0.0"
         }
       },
       {
