@@ -116,7 +116,7 @@ class UserPoolMigrator_20210213 {
         cognitoUsers: [CognitoIdentityProvider.UserType]
     ) {
         guard let username = getUsername(cognitoId: cognitoId, cognitoUsers: cognitoUsers) else {
-            fatalError()
+            return
         }
         user.cognitoUsername = username
     }
