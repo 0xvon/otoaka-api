@@ -83,13 +83,11 @@ class UserPoolMigrator_20210213 {
     typealias User = PersistanceUser
     let userPoolId: String
     let region: String = Environment.get("AWS_REGION")!
-    lazy var cognito = CognitoIdentityProvider(client: AWSClient(httpClientProvider: .createNew), region: Region(rawValue: region))
+    let cognito: CognitoIdentityProvider
 
-    init(userPoolId: String) {
+    init(awsClient: AWSClient, userPoolId: String) {
+        self.cognito = CognitoIdentityProvider(client: awsClient, region: Region(rawValue: region))
         self.userPoolId = userPoolId
-    }
-    deinit {
-        try! cognito.client.syncShutdown()
     }
 
     func migrateUsers(

@@ -26,16 +26,14 @@ public class SimpleNotificationService: PushNotificationService {
 
     public convenience init(
         secrets: SimpleNotificationServiceSecrets,
+        client: AWSClient,
         userRepository: UserRepository,
         groupRepository: GroupRepository,
         userSocialRepository: UserSocialRepository,
         eventLoop: EventLoop
     ) {
         let sns = SNS(
-            client: AWSClient(
-                credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
-                httpClientProvider: .createNew
-            ),
+            client: client,
             region: Region(rawValue: secrets.awsRegion)
         )
         self.init(
@@ -117,9 +115,5 @@ public class SimpleNotificationService: PushNotificationService {
             .flatMap { [userRepository] in
                 userRepository.setEndpointArn($0, for: user)
             }
-    }
-
-    deinit {
-        try! sns.client.syncShutdown()
     }
 }

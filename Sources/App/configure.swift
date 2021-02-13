@@ -3,6 +3,7 @@ import FluentMySQLDriver
 import Persistance
 import Service
 import Vapor
+import SotoCore
 
 protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
@@ -50,10 +51,21 @@ extension Application {
     }
 }
 
+struct AWSClientLifecycle: LifecycleHandler {
+    func shutdown(_ application: Application) {
+        try! application.awsClient.syncShutdown()
+    }
+}
+
 // configures your application
 public func configure(_ app: Application) throws {
     let secrets = EnvironmentSecrets()
     app.secrets = secrets
+    app.awsClient = AWSClient(
+        credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
+        httpClientProvider: .createNew
+    )
+    app.lifecycle.use(AWSClientLifecycle())
     try Persistance.setup(
         databases: app.databases,
         secrets: secrets
@@ -62,7 +74,7 @@ public func configure(_ app: Application) throws {
         migrator: app.migrator,
         migrations: app.migrations,
         cognitoUserMigrator: {
-            UserPoolMigrator_20210213(userPoolId: secrets.cognitoUserPoolId).migrateUsers(users: $0)
+            UserPoolMigrator_20210213(awsClient: app.awsClient, userPoolId: secrets.cognitoUserPoolId).migrateUsers(users: $0)
         }
     )
     try routes(app)

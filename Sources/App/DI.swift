@@ -6,6 +6,7 @@ import Vapor
 func makePushNotificationService(request: Request) -> Domain.PushNotificationService {
     SimpleNotificationService(
         secrets: request.application.secrets,
+        client: request.application.awsClient,
         userRepository: makeUserRepository(request: request),
         groupRepository: makeGroupRepository(request: request),
         userSocialRepository: makeUserSocialRepository(request: request),
@@ -23,4 +24,24 @@ func makeUserRepository(request: Request) -> Domain.UserRepository {
 
 func makeUserSocialRepository(request: Request) -> Domain.UserSocialRepository {
     Persistance.UserSocialRepository(db: request.db)
+}
+
+
+import SotoCore
+
+extension Application {
+    struct AWSClientKey: StorageKey {
+        typealias Value = AWSClient
+    }
+    var awsClient: AWSClient {
+        get {
+            guard let client = storage[AWSClientKey.self] else {
+                fatalError("awsClient has been uninitialized")
+            }
+            return client
+        }
+        set {
+            storage[AWSClientKey.self] = newValue
+        }
+    }
 }
