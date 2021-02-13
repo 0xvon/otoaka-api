@@ -134,7 +134,4 @@ extension CognitoIdentityProvider.UserType {
     fileprivate var sub: String? {
         attributes?.first(where: { $0.name == "sub" })?.value
     }
-    fileprivate var username: String? {
-        attributes?.first(where: { $0.name == "cognito:username" })?.value
-    }
 }
