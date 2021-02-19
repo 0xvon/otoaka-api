@@ -58,6 +58,8 @@ class Handler: EventLoopLambdaHandler {
     let awsClient: AWSClient
     init(context: Lambda.InitializationContext) throws {
         databases = Databases(threadPool: NIOThreadPool(numberOfThreads: 1), on: context.eventLoop)
+        print(secrets.awsAccessKeyId)
+        
         awsClient = AWSClient(
             credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
             httpClientProvider: .createNew
