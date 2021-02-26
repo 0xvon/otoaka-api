@@ -97,6 +97,81 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(body.items.count, 2)
         }
     }
+    
+    func testFollowUser() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let body = try! Stub.make(Endpoint.FollowUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/follow_user", headers: appClient.makeHeaders(for: userB),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+
+    func testUnfollowUser() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+
+        try appClient.followUser(target: userA, with: userB)
+
+        let body = try! Stub.make(Endpoint.UnfollowUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unfollow_user", headers: appClient.makeHeaders(for: userB),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+    
+    func testGetFollowingUsers() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser(role: .artist(Artist(part: "bass")))
+
+        try appClient.followUser(target: userB, with: userA)
+        try appClient.followUser(target: userC, with: userA)
+
+        try app.test(
+            .GET, "user_social/following_users/\(userA.user.id)?page=1&per=10",
+            headers: appClient.makeHeaders(for: userA)
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(FollowingUsers.Response.self)
+            XCTAssertEqual(body.items.count, 2)
+        }
+    }
+
+    func testGetUserFollowers() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser(role: .artist(Artist(part: "bass")))
+
+        try appClient.followUser(target: userA, with: userB)
+        try appClient.followUser(target: userA, with: userC)
+
+        try app.test(
+            .GET, "user_social/user_followers/\(userA.user.id)?page=1&per=10",
+            headers: appClient.makeHeaders(for: userA)
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(UserFollowers.Response.self)
+            XCTAssertEqual(body.items.count, 2)
+        }
+    }
 
     func testGetUpcomingLives() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))

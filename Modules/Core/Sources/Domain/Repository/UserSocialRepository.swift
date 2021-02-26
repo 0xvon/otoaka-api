@@ -9,6 +9,13 @@ public protocol UserSocialRepository {
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>
     func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int>
+    func followUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
+    func unfollowUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
+    func followingUsers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
+    func userFollowers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
+    func userFollowers(selfUser: User.ID) -> EventLoopFuture<[User.ID]>
+    func isUserFollowing(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Bool>
+    func userFollowersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func upcomingLives(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
     func followingGroupFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<ArtistFeedSummary>

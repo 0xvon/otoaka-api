@@ -111,3 +111,19 @@ struct CognitoSubToUsername: Migration {
             .update()
     }
 }
+
+struct CreateUserFollowing: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema)
+            .id()
+            .field("self_user_id", .uuid, .required)
+            .foreignKey("self_user_id", references: User.schema, .id)
+            .field("target_user_id", .uuid, .required)
+            .foreignKey("target_user_id", references: User.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema).delete()
+    }
+}

@@ -42,7 +42,32 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.followings(selfUser: uri.id, page: uri.page, per: uri.per)
             })
-
+        try routes.on(
+            endpoint: FollowUser.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(FollowUser.Request.self)
+                return repository.followUser(selfUser: user.id, targetUser: input.id)
+                    .map { Empty() }
+            })
+        try routes.on(
+            endpoint: UnfollowUser.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(UnfollowUser.Request.self)
+                return repository.unfollowUser(selfUser: user.id, targetUser: input.id)
+                    .map { Empty() }
+            })
+        try routes.on(
+            endpoint: UserFollowers.self,
+            use: injectProvider { req, uri, repository in
+                repository.userFollowers(selfUser: uri.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: FollowingUsers.self,
+            use: injectProvider { req, uri, repository in
+                repository.followingUsers(selfUser: uri.id, page: uri.page, per: uri.per)
+            })
         try routes.on(
             endpoint: GetUpcomingLives.self,
             use: injectProvider { req, uri, repository in

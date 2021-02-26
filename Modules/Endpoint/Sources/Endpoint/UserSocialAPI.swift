@@ -56,6 +56,62 @@ public struct FollowingGroups: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct FollowUser: EndpointProtocol {
+    public struct Request: Codable {
+        public var id: User.ID
+        public init(userId: User.ID) {
+            self.id = userId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "follow_user") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct UnfollowUser: EndpointProtocol {
+    public struct Request: Codable {
+        public var id: User.ID
+        public init(userId: User.ID) {
+            self.id = userId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "unfollow_user") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct UserFollowers: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "user_followers") public var prefix: Void
+        @DynamicPath public var id: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct FollowingUsers: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "following_users") public var prefix: Void
+        @DynamicPath public var id: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct LiveFeed: Codable {
     public var live: Live
     public var isLiked: Bool
@@ -100,6 +156,45 @@ public struct GetFollowingGroupFeeds: EndpointProtocol {
     public typealias Response = Page<ArtistFeedSummary>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "group_feeds") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+@dynamicMemberLookup
+public struct UserFeedSummary: Codable, Equatable {
+    public var feed: UserFeed
+    public var commentCount: Int
+
+    public subscript<T>(dynamicMember keyPath: KeyPath<UserFeed, T>) -> T {
+        feed[keyPath: keyPath]
+    }
+
+    public init(feed: UserFeed, commentCount: Int) {
+        self.feed = feed
+        self.commentCount = commentCount
+    }
+}
+
+public struct GetFollowingUserFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "following_user_feeds") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct GetAllUserFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "all_user_feeds") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
@@ -160,6 +255,36 @@ public struct GetFeedComments: EndpointProtocol {
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "feed_comment") public var prefix: Void
         @DynamicPath public var feedId: ArtistFeed.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct PostUserFeedComment: EndpointProtocol {
+    public struct Request: Codable {
+        public var feedId: UserFeed.ID
+        public var text: String
+        public init(feedId: UserFeed.ID, text: String) {
+            self.feedId = feedId
+            self.text = text
+        }
+    }
+    public typealias Response = UserFeedComment
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "user_feed_comment") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct GetUserFeedComments: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedComment>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "user_feed_comment") public var prefix: Void
+        @DynamicPath public var feedId: UserFeed.ID
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
