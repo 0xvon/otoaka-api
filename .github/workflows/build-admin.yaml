@@ -27,14 +27,14 @@ jobs:
           path: Products/Admin/.build/lambda/RocketAdmin/lambda.zip
 
       - name: Deploy Function dev
-        if: github.ref == 'ref/head/develop'
+        if: github.ref == 'refs/heads/develop'
         run: |
           aws lambda update-function-code --function-name rocket-api-dev-lambda-rocketapidevadminLambdaCE16A-14PLYRDTD867U --zip-file Products/Admin/.build/lambda/RocketAdmin/lambda.zip
         env:
           LAMBDA_S3_UPLOAD_BUCKET: ${{ secrets.LAMBDA_S3_UPLOAD_BUCKET }}
       
       - name: Deploy Function
-        if: github.ref == 'ref/head/master'
+        if: github.ref == 'refs/heads/master'
         run: |
           aws s3 cp Products/Admin/.build/lambda/RocketAdmin/lambda.zip "s3://$LAMBDA_S3_UPLOAD_BUCKET/RocketAdmin.zip"
           aws lambda update-function-code --function-name rocket-api-lambda-rocketapiadminLambdaC04873BD-15GYLOQKLEJ7W --zip-file Products/Admin/.build/lambda/RocketAdmin/lambda.zip
