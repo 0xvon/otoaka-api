@@ -11,7 +11,7 @@ $ cp .env.development{.sample,}
 
 $ swift run
 # or
-$ swift pacakge generate-xcodeproj
+$ swift package generate-xcodeproj
 $ open rocket-api.xcodeproj # Xcodeで実行
 ```
 
