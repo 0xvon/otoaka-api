@@ -183,4 +183,19 @@ public class UserRepository: Domain.UserRepository {
                 }
             }
     }
+    
+    public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.User>
+    > {
+        let lives = User.query(on: db)
+            .group(.or) {
+                $0.filter(\.$name =~ query)
+                    .filter(\.$biography =~ query)
+            }
+        return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.User.translate(fromPersistance: $0, on: db)
+            }
+        }
+    }
 }

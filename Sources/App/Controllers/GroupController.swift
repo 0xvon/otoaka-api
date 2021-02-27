@@ -103,6 +103,12 @@ struct GroupController: RouteCollection {
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
             })
         try routes.on(
+            endpoint: Endpoint.GetGroupsUserFeeds.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.getGroupUserFeeds(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
             endpoint: Endpoint.SearchGroup.self,
             use: injectProvider { req, uri, repository in
                 repository.search(query: uri.term, page: uri.page, per: uri.per)

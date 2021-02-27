@@ -87,6 +87,11 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: Endpoint.SearchUser.self,
+            use: injectProvider { req, uri, repository in
+                repository.search(query: uri.term, page: uri.page, per: uri.per)
+            })
     }
 
     func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws

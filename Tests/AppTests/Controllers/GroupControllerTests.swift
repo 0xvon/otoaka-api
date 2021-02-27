@@ -294,4 +294,20 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 1)
         }
     }
+    
+    func testGetGroupsUserFeeds() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: userA)
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.createUserFeed(with: userB, groupId: groupX.id)
+
+        try app.test(.GET, "groups/\(groupX.id)/user_feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
+            
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
+    }
 }

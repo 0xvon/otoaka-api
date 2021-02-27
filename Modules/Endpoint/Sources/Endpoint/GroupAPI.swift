@@ -211,7 +211,7 @@ public struct GetGroupFeed: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
-public struct GetGroupsUserFeed: EndpointProtocol {
+public struct GetGroupsUserFeeds: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<UserFeedSummary>
 
