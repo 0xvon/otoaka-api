@@ -113,9 +113,11 @@ class UserControllerTests: XCTestCase {
     func testCreateUserFeed() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
 
         let body = try! Stub.make(Endpoint.CreateUserFeed.Request.self) {
             $0.set(\.feedType, value: .youtube(try! Stub.make()))
+            $0.set(\.groupId, value: groupX.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
@@ -129,7 +131,8 @@ class UserControllerTests: XCTestCase {
     func testDeleteUserFeeds() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
-        let feed = try appClient.createUserFeed(with: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
         let body = try! Stub.make(DeleteUserFeed.Request.self) {
             $0.set(\.id, value: feed.id)
         }
@@ -154,7 +157,8 @@ class UserControllerTests: XCTestCase {
     func testGetUserFeeds() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
-        let feed = try appClient.createUserFeed(with: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
 
         try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
@@ -168,7 +172,8 @@ class UserControllerTests: XCTestCase {
     func testPostCommentOnUserFeed() throws {
         let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userY = try appClient.createUser(role: .fan(.init()))
-        let feed = try appClient.createUserFeed(with: userX)
+        let groupX = try appClient.createGroup(with: userX)
+        let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
 
         let body = try! Stub.make(Endpoint.PostUserFeedComment.Request.self) {
             $0.set(\.feedId, value: feed.id)

@@ -222,9 +222,10 @@ class UserSocialControllerTests: XCTestCase {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
         let userC = try appClient.createUser()
-        _ = try appClient.createUserFeed(with: userA)
-        _ = try appClient.createUserFeed(with: userB)
-        _ = try appClient.createUserFeed(with: userC)
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.createUserFeed(with: userB, groupId: groupX.id)
+        _ = try appClient.createUserFeed(with: userC, groupId: groupX.id)
         try appClient.followUser(target: userA, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)
@@ -255,6 +256,31 @@ class UserSocialControllerTests: XCTestCase {
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertFalse(item.isLiked)
+        }
+    }
+    
+    func testLikeUserFeed() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        let feed = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+
+        try appClient.likeUserFeed(feed: feed, with: userB)
+        try appClient.likeUserFeed(feed: feed, with: userC)
+
+        let headerA = appClient.makeHeaders(for: userA)
+        let headerB = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/all_user_feeds?page=1&per=10", headers: headerB) { res in
+            let responseBody = try res.content.decode(GetAllUserFeeds.Response.self)
+            let item = try XCTUnwrap(responseBody.items.filter { $0.id == feed.id }.first)
+            XCTAssertTrue(item.isLiked)
+            XCTAssertEqual(item.likeCount, 2)
+        }
+        try app.test(.GET, "user_social/all_user_feeds?page=1&per=10", headers: headerA) { res in
+            let responseBody = try res.content.decode(GetAllUserFeeds.Response.self)
+            let item = try XCTUnwrap(responseBody.items.filter { $0.id == feed.id }.first)
             XCTAssertFalse(item.isLiked)
         }
     }

@@ -163,18 +163,52 @@ public struct GetFollowingGroupFeeds: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct LikeUserFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public var feedId: UserFeed.ID
+        public init(feedId: UserFeed.ID) {
+            self.feedId = feedId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "like_user_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct UnlikeUserFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public var feedId: UserFeed.ID
+        public init(feedId: UserFeed.ID) {
+            self.feedId = feedId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "unlike_user_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 @dynamicMemberLookup
 public struct UserFeedSummary: Codable, Equatable {
     public var feed: UserFeed
     public var commentCount: Int
+    public var likeCount: Int
+    public var isLiked: Bool
 
     public subscript<T>(dynamicMember keyPath: KeyPath<UserFeed, T>) -> T {
         feed[keyPath: keyPath]
     }
 
-    public init(feed: UserFeed, commentCount: Int) {
+    public init(feed: UserFeed, commentCount: Int, likeCount: Int, isLiked: Bool) {
         self.feed = feed
         self.commentCount = commentCount
+        self.likeCount = likeCount
+        self.isLiked = isLiked
     }
 }
 

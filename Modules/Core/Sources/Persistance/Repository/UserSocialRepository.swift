@@ -12,6 +12,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case notFollowing
         case targetGroupNotFound
         case notHavingLiveLike
+        case notHavingUserFeedLike
     }
 
     public func follow(
@@ -249,6 +250,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 $0.filter(UserFollowing.self, \UserFollowing.$user.$id == userId.rawValue).filter(UserFeed.self, \UserFeed.$author.$id == userId.rawValue)
             }
             .with(\.$comments)
+            .with(\.$likes)
             .sort(\.$createdAt, .descending)
             .fields(for: UserFeed.self)
             .unique()
@@ -257,17 +259,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                     feed -> EventLoopFuture<UserFeedSummary> in
                     return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
-                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
                     }
                 }
             }
     }
     
-    public func allUserFeeds(page: Int, per: Int) -> EventLoopFuture<
+    public func allUserFeeds(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.UserFeedSummary>
     > {
         return UserFeed.query(on: db)
             .with(\.$comments)
+            .with(\.$likes)
             .sort(\.$createdAt, .descending)
             .fields(for: UserFeed.self)
             .unique()
@@ -276,7 +279,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                     feed -> EventLoopFuture<UserFeedSummary> in
                     return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
-                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(selfUser.rawValue))
                     }
                 }
             }
@@ -297,6 +300,27 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         return like.flatMapThrowing { like -> LiveLike in
             guard let like = like else {
                 throw Error.notHavingLiveLike
+            }
+            return like
+        }
+        .flatMap { [db] in $0.delete(on: db) }
+    }
+    
+    public func likeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
+        let like = UserFeedLike()
+        like.$user.id = userId.rawValue
+        like.$feed.id = feedId.rawValue
+        return like.create(on: db)
+    }
+
+    public func unlikeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void>
+    {
+        let like = UserFeedLike.query(on: db).filter(\.$user.$id == userId.rawValue)
+            .filter(\.$feed.$id == feedId.rawValue)
+            .first()
+        return like.flatMapThrowing { like -> UserFeedLike in
+            guard let like = like else {
+                throw Error.notHavingUserFeedLike
             }
             return like
         }

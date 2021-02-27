@@ -192,10 +192,12 @@ class AppClient {
     
     func createUserFeed(
         feedType: FeedType = .youtube(try! Stub.make()),
-        with user: AppUser
+        with user: AppUser,
+        groupId: Group.ID
     ) throws -> UserFeed {
         let body = try! Stub.make(Endpoint.CreateUserFeed.Request.self) {
             $0.set(\.feedType, value: feedType)
+            $0.set(\.groupId, value: groupId)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
@@ -205,5 +207,25 @@ class AppClient {
             created = try res.content.decode(Endpoint.CreateUserFeed.Response.self)
         }
         return created
+    }
+    
+    func likeUserFeed(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.LikeUserFeed.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/like_user_feed", headers: makeHeaders(for: user), body: bodyData)
+    }
+
+    func unlike(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnlikeUserFeed.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
 }

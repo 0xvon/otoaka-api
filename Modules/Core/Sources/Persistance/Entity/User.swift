@@ -158,6 +158,12 @@ final class UserFeed: Model {
     
     @OptionalField(key: "ogp_url")
     var ogpUrl: String?
+    
+    @Parent(key: "group_id")
+    var group: Group
+    
+    @Field(key: "title")
+    var title: String
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -167,26 +173,43 @@ final class UserFeed: Model {
 
     @Children(for: \.$feed)
     var comments: [UserFeedComment]
+    
+    @Children(for: \.$feed)
+    var likes: [UserFeedLike]
+}
+
+final class UserFeedLike: Model {
+    static let schema = "user_feed_likes"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Parent(key: "user_id")
+    var user: User
+
+    @Parent(key: "user_feed_id")
+    var feed: UserFeed
 }
 
 extension Endpoint.UserFeed {
     static func translate(fromPersistance entity: UserFeed, on db: Database) -> EventLoopFuture<
         Endpoint.UserFeed
     > {
-        let author = entity.$author.get(on: db)
+        let eventLoop = db.eventLoop
+        let id = eventLoop.submit { try entity.requireID()}
+        let author = entity.$author.get(on: db).flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+        let group = entity.$group.get(on: db).flatMap { Endpoint.Group.translate(fromPersistance: $0, on: db) }
+        
         let feedType: Endpoint.FeedType
         switch entity.feedType {
         case .youtube:
             feedType = .youtube(URL(string: entity.youtubeURL!)!)
         }
-        return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
-            .flatMapThrowing { author in
-                try Endpoint.UserFeed(
-                    id: .init(entity.requireID()),
-                    text: entity.text, feedType: feedType,
-                    author: author, ogpUrl: entity.ogpUrl, createdAt: entity.createdAt!
-                )
-            }
+        return id.and(author).and(group)
+            .map { ($0.0, $0.1, $1) }
+            .map {
+            Endpoint.UserFeed(id: ID($0), text: entity.text, feedType: feedType, author: $1, ogpUrl: entity.ogpUrl, group: $2, title: entity.title, createdAt: entity.createdAt!)
+        }
     }
 }
 

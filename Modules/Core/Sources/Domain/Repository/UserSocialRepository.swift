@@ -23,9 +23,11 @@ public protocol UserSocialRepository {
     func followingUserFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<UserFeedSummary>
     >
-    func allUserFeeds(page: Int, per: Int) -> EventLoopFuture<
+    func allUserFeeds(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<UserFeedSummary>
     >
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
+    func likeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
+    func unlikeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
 }

@@ -81,9 +81,14 @@ public struct CreateUserFeed: EndpointProtocol {
     public struct Request: Codable {
         public var text: String
         public var feedType: FeedType
-        public init(text: String, feedType: FeedType) {
+        public var groupId: Group.ID
+        public var title: String
+        
+        public init(text: String, feedType: FeedType, groupId: Group.ID, title: String) {
             self.text = text
             self.feedType = feedType
+            self.groupId = groupId
+            self.title = title
         }
     }
 
@@ -119,6 +124,19 @@ public struct GetUserFeeds: EndpointProtocol {
         @StaticPath("users") public var prefix: Void
         @DynamicPath public var userId: User.ID
         @StaticPath("feeds") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct SearchUser: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users", "search") public var prefix: Void
+        @Query public var term: String
         @Query public var page: Int
         @Query public var per: Int
         public init() {}

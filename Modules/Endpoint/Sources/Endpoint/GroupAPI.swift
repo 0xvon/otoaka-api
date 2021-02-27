@@ -211,6 +211,21 @@ public struct GetGroupFeed: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetGroupsUserFeed: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("groups") public var prefix: Void
+        @DynamicPath public var groupId: Group.ID
+        @StaticPath("user_feeds") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct SearchGroup: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<Group>

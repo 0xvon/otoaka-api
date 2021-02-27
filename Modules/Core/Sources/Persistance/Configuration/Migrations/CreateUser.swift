@@ -142,6 +142,9 @@ struct CreateUserFeed: Migration {
                 .field("author_id", .uuid)
                 .foreignKey("author_id", references: User.schema, "id")
                 .field("ogp_url", .string)
+                .field("group_id", .uuid, .required)
+                .foreignKey("group_id", references: Group.schema, "id")
+                .field("title", .string, .required)
                 .field("created_at", .datetime, .required)
                 .field("deleted_at", .datetime)
                 .create()
@@ -168,5 +171,21 @@ struct CreateUserFeedComment: Migration {
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(ArtistFeedComment.schema).delete()
+    }
+}
+
+struct CreateUserFeedLike: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeedLike.schema)
+            .id()
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .field("user_feed_id", .uuid, .required)
+            .foreignKey("user_feed_id", references: UserFeed.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeedLike.schema).delete()
     }
 }

@@ -111,6 +111,8 @@ public class UserRepository: Domain.UserRepository {
         let feed = UserFeed()
         feed.text = input.text
         feed.$author.id = authorId.rawValue
+        feed.$group.id = input.groupId.rawValue
+        feed.title = input.title
         switch input.feedType {
         case .youtube(let url):
             feed.feedType = .youtube
@@ -137,12 +139,13 @@ public class UserRepository: Domain.UserRepository {
         UserFeed.query(on: db)
             .filter(\UserFeed.$author.$id == userId.rawValue)
             .with(\.$comments)
+            .with(\.$likes)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                     feed -> EventLoopFuture<UserFeedSummary> in
                     return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
-                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
                     }
                 }
             }
