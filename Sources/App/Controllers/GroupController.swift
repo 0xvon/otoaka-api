@@ -56,7 +56,7 @@ struct GroupController: RouteCollection {
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreateArtistFeed.Request.self)
                 let notificationService = makePushNotificationService(request: req)
-                let useCase = CreateGroupFeedUseCase(
+                let useCase = CreateArtistFeedUseCase(
                     groupRepository: repository,
                     notificationService: notificationService,
                     eventLoop: req.eventLoop)

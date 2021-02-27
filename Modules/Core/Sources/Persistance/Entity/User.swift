@@ -138,3 +138,91 @@ final class LiveLike: Model {
     @Parent(key: "live_id")
     var live: Live
 }
+
+final class UserFeed: Model {
+    static let schema: String = "user_feeds"
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "text")
+    var text: String
+
+    @Enum(key: "feed_type")
+    var feedType: FeedType
+
+    @OptionalField(key: "youtube_url")
+    var youtubeURL: String?
+
+    @Parent(key: "author_id")
+    var author: User
+    
+    @OptionalField(key: "ogp_url")
+    var ogpUrl: String?
+
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+
+    @Timestamp(key: "deleted_at", on: .delete)
+    var deletedAt: Date?
+
+    @Children(for: \.$feed)
+    var comments: [UserFeedComment]
+}
+
+extension Endpoint.UserFeed {
+    static func translate(fromPersistance entity: UserFeed, on db: Database) -> EventLoopFuture<
+        Endpoint.UserFeed
+    > {
+        let author = entity.$author.get(on: db)
+        let feedType: Endpoint.FeedType
+        switch entity.feedType {
+        case .youtube:
+            feedType = .youtube(URL(string: entity.youtubeURL!)!)
+        }
+        return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { author in
+                try Endpoint.UserFeed(
+                    id: .init(entity.requireID()),
+                    text: entity.text, feedType: feedType,
+                    author: author, ogpUrl: entity.ogpUrl, createdAt: entity.createdAt!
+                )
+            }
+    }
+}
+
+final class UserFeedComment: Model {
+    static let schema: String = "user_feed_comments"
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "text")
+    var text: String
+
+    @Parent(key: "user_feed_id")
+    var feed: UserFeed
+
+    @Parent(key: "author_id")
+    var author: User
+
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+}
+
+extension Endpoint.UserFeedComment {
+    static func translate(fromPersistance entity: UserFeedComment, on db: Database)
+        -> EventLoopFuture<
+            Endpoint.UserFeedComment
+        >
+    {
+        let author = entity.$author.get(on: db)
+        return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+            .flatMapThrowing { author in
+                try Endpoint.UserFeedComment(
+                    id: .init(entity.requireID()),
+                    text: entity.text, author: author,
+                    userFeedId: .init(entity.$feed.id),
+                    createdAt: entity.createdAt!
+                )
+            }
+    }
+}

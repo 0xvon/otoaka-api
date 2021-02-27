@@ -173,7 +173,7 @@ class AppClient {
             .POST, "user_social/unlike_live", headers: makeHeaders(for: user), body: bodyData)
     }
 
-    func createGroupFeed(
+    func createArtistFeed(
         feedType: FeedType = .youtube(try! Stub.make()),
         with user: AppUser
     ) throws -> ArtistFeed {
@@ -186,6 +186,23 @@ class AppClient {
         try app.test(.POST, "groups/create_feed", headers: makeHeaders(for: user), body: bodyData) {
             res in
             created = try res.content.decode(Endpoint.CreateArtistFeed.Response.self)
+        }
+        return created
+    }
+    
+    func createUserFeed(
+        feedType: FeedType = .youtube(try! Stub.make()),
+        with user: AppUser
+    ) throws -> UserFeed {
+        let body = try! Stub.make(Endpoint.CreateUserFeed.Request.self) {
+            $0.set(\.feedType, value: feedType)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        var created: Endpoint.UserFeed!
+        try app.test(.POST, "users/create_feed", headers: makeHeaders(for: user), body: bodyData) {
+            res in
+            created = try res.content.decode(Endpoint.CreateUserFeed.Response.self)
         }
         return created
     }

@@ -76,3 +76,52 @@ public struct RegisterDeviceToken: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
+
+public struct CreateUserFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public var text: String
+        public var feedType: FeedType
+        public init(text: String, feedType: FeedType) {
+            self.text = text
+            self.feedType = feedType
+        }
+    }
+
+    public typealias Response = UserFeed
+    public struct URI: CodableURL {
+        @StaticPath("users", "create_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct DeleteUserFeed: EndpointProtocol {
+    public struct Request: Codable {
+        public let id: UserFeed.ID
+
+        public init(id: UserFeed.ID) {
+            self.id = id
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "delete_feed") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .delete
+}
+
+public struct GetUserFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @StaticPath("feeds") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}

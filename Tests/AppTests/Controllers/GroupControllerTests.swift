@@ -212,7 +212,7 @@ class GroupControllerTests: XCTestCase {
         }
     }
 
-    func testCreateGroupFeed() throws {
+    func testCreateArtistFeed() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         _ = try appClient.createGroup(with: user)
@@ -233,7 +233,7 @@ class GroupControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let groupX = try appClient.createGroup(with: user)
-        let feed = try appClient.createGroupFeed(with: user)
+        let feed = try appClient.createArtistFeed(with: user)
         let body = try! Stub.make(DeleteArtistFeed.Request.self) {
             $0.set(\.id, value: feed.id)
         }
@@ -259,7 +259,7 @@ class GroupControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let groupX = try appClient.createGroup(with: user)
-        let feed = try appClient.createGroupFeed(with: user)
+        let feed = try appClient.createArtistFeed(with: user)
 
         try app.test(.GET, "groups/\(groupX.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
@@ -273,7 +273,7 @@ class GroupControllerTests: XCTestCase {
     func testPostCommentOnFeed() throws {
         let artistX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userY = try appClient.createUser(role: .fan(.init()))
-        let feed = try appClient.createGroupFeed(with: artistX)
+        let feed = try appClient.createArtistFeed(with: artistX)
 
         let body = try! Stub.make(Endpoint.PostFeedComment.Request.self) {
             $0.set(\.feedId, value: feed.id)

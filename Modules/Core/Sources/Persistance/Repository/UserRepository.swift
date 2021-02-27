@@ -8,6 +8,8 @@ public class UserRepository: Domain.UserRepository {
         case userNotFound
         case deviceAlreadyRegistered
         case cantChangeRole
+        case feedNotFound
+        case feedDeleted
     }
 
     public init(db: Database) {
@@ -101,5 +103,81 @@ public class UserRepository: Domain.UserRepository {
         return precondition.flatMap { [db] in
             device.save(on: db)
         }
+    }
+    
+    public func createFeed(for input: Endpoint.CreateUserFeed.Request, authorId: Domain.User.ID)
+        -> EventLoopFuture<Domain.UserFeed>
+    {
+        let feed = UserFeed()
+        feed.text = input.text
+        feed.$author.id = authorId.rawValue
+        switch input.feedType {
+        case .youtube(let url):
+            feed.feedType = .youtube
+            feed.youtubeURL = url.absoluteString
+        }
+        return feed.create(on: db).flatMap { [db] in
+            Domain.UserFeed.translate(fromPersistance: feed, on: db)
+        }
+    }
+
+    public func deleteFeed(id: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
+        return UserFeed.find(id.rawValue, on: db)
+            .unwrap(orError: Error.feedNotFound)
+            .flatMapThrowing { feed -> UserFeed in
+                guard feed.$id.exists else { throw Error.feedDeleted }
+                return feed
+            }
+            .flatMap { [db] in $0.delete(on: db) }
+    }
+
+    public func feeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.UserFeedSummary>
+    > {
+        UserFeed.query(on: db)
+            .filter(\UserFeed.$author.$id == userId.rawValue)
+            .with(\.$comments)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                    }
+                }
+            }
+    }
+
+    public func getUserFeed(feedId: Domain.UserFeed.ID) -> EventLoopFuture<Domain.UserFeed> {
+        UserFeed.find(feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+            .flatMap { [db] in Domain.UserFeed.translate(fromPersistance: $0, on: db) }
+    }
+
+    public func addUserFeedComment(userId: Domain.User.ID, input: PostUserFeedComment.Request)
+        -> EventLoopFuture<
+            Domain.UserFeedComment
+        >
+    {
+        let comment = UserFeedComment()
+        comment.$author.id = userId.rawValue
+        comment.$feed.id = input.feedId.rawValue
+        comment.text = input.text
+        return comment.save(on: db).flatMap { [db] in
+            Domain.UserFeedComment.translate(fromPersistance: comment, on: db)
+        }
+    }
+
+    public func getUserFeedComments(feedId: Domain.UserFeed.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.UserFeedComment>>
+    {
+        UserFeedComment.query(on: db)
+            .filter(\.$feed.$id == feedId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.UserFeedComment.translate(fromPersistance: $0, on: db)
+                }
+            }
     }
 }

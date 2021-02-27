@@ -38,6 +38,7 @@ public func setupMigration(
         CreateLiveLike(), CreateGroupFeed(), CreateArtistFeedComment(),
         AddDeletedAtFieldToGroup(), AddDeletedAtFieldToArtistFeed(),
         CognitoSubToUsername(migrator: cognitoUserMigrator), CreateUserFollowing(),
+        CreateUserFeed(), CreateUserFeedComment(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

@@ -239,6 +239,48 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 }
             }
     }
+    
+    public func followingUserFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.UserFeedSummary>
+    > {
+        return UserFeed.query(on: db)
+            .join(UserFollowing.self, on: \UserFollowing.$target.$id == \UserFeed.$author.$id, method: .left)
+            .group(.or) { // フォローしたユーザーのフィードには自分のフィードも含まれる
+                $0.filter(UserFollowing.self, \UserFollowing.$user.$id == userId.rawValue).filter(UserFeed.self, \UserFeed.$author.$id == userId.rawValue)
+            }
+            .with(\.$comments)
+            .sort(\.$createdAt, .descending)
+            .fields(for: UserFeed.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                    }
+                }
+            }
+    }
+    
+    public func allUserFeeds(page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.UserFeedSummary>
+    > {
+        return UserFeed.query(on: db)
+            .with(\.$comments)
+            .sort(\.$createdAt, .descending)
+            .fields(for: UserFeed.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count)
+                    }
+                }
+            }
+    }
 
     public func likeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
         let like = LiveLike()
