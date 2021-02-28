@@ -92,6 +92,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     public func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
         Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue).count()
     }
+    
+    public func followingGroupsCount(userId: Domain.User.ID) -> EventLoopFuture<Int> {
+        Following.query(on: db).filter(\.$user.$id == userId.rawValue).count()
+    }
 
     public func isFollowing(
         selfUser: Domain.User.ID,
@@ -179,6 +183,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
 
     public func userFollowersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
         UserFollowing.query(on: db).filter(\.$target.$id == selfUser.rawValue).count()
+    }
+    
+    public func followingUsersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFollowing.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
+    
+    public func usersFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFeed.query(on: db).filter(\.$author.$id == selfUser.rawValue).count()
+    }
+    
+    public func userLikeFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFeedLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
     }
 
     public func isUserFollowing(

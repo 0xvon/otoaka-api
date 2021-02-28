@@ -87,6 +87,23 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
+    
+    func testGetUserDetail() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let header = appClient.makeHeaders(for: userB)
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.followUser(target: userA, with: userB)
+
+        try app.test(.GET, "users/\(userA.user.id)", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertTrue(response.isFollowing)
+            XCTAssertFalse(response.isFollowed)
+            XCTAssertEqual(response.feedCount, 1)
+        }
+    }
 
     func testRegisterUserDeviceToken() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))

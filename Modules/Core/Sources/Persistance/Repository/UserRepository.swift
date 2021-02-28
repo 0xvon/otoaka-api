@@ -70,6 +70,12 @@ public class UserRepository: Domain.UserRepository {
             Endpoint.User.translate(fromPersistance: user, on: db)
         }
     }
+    
+    public func find(by userId: Domain.User.ID) -> EventLoopFuture<Domain.User?> {
+        User.find(userId.rawValue, on: db).optionalFlatMap { [db] in
+            Endpoint.User.translate(fromPersistance: $0, on: db)
+        }
+    }
 
     public func findByUsername(username: CognitoUsername) -> EventLoopFuture<Domain.User?> {
         let maybeUser = User.query(on: db).filter(\.$cognitoUsername == username).first()

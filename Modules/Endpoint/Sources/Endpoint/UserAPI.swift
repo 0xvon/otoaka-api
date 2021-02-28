@@ -62,6 +62,44 @@ public struct GetUserInfo: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetUserDetail: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = UserDetail
+    public struct URI: CodableURL {
+        @StaticPath("users") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+@dynamicMemberLookup
+public struct UserDetail: Codable, Equatable {
+    public var user: User
+    public var followersCount: Int
+    public var followingUsersCount: Int
+    public var feedCount: Int
+    public var likeFeedCount: Int
+    public var followingGroupsCount: Int
+    public var isFollowed: Bool
+    public var isFollowing: Bool
+
+    public subscript<T>(dynamicMember keyPath: KeyPath<User, T>) -> T {
+        user[keyPath: keyPath]
+    }
+
+    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool) {
+        self.user = user
+        self.followersCount = followersCount
+        self.followingUsersCount = followingUsersCount
+        self.feedCount = feedCount
+        self.likeFeedCount = likeFeedCount
+        self.followingGroupsCount = followingGroupsCount
+        self.isFollowed = isFollowed
+        self.isFollowing = isFollowing
+    }
+}
+
 public struct RegisterDeviceToken: EndpointProtocol {
     public struct Request: Codable {
         public var deviceToken: String

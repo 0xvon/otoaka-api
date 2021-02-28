@@ -34,7 +34,9 @@ struct UserController: RouteCollection {
         try loggedIn.on(
             endpoint: Endpoint.RegisterDeviceToken.self,
             use: injectProvider(registerDeviceToken))
-        
+        try loggedIn.on(
+            endpoint: Endpoint.GetUserDetail.self,
+            use: injectProvider(getUserDetail))
         try loggedIn.on(
             endpoint: Endpoint.CreateUserFeed.self,
             use: injectProvider { req, uri, repository in
@@ -75,7 +77,6 @@ struct UserController: RouteCollection {
                     userRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((id: input.id, user: user.id)).map { Empty() }
             })
-
         try routes.on(
             endpoint: GetUserFeedComments.self,
             use: injectProvider { req, uri, repository in
@@ -140,11 +141,47 @@ struct UserController: RouteCollection {
             }
             .map { Empty() }
     }
+    
+    func getUserDetail(req: Request, uri: GetUserDetail.URI, repository: Domain.UserRepository) throws
+        -> EventLoopFuture<
+            Endpoint.GetUserDetail.Response
+        >
+    {
+        let selfUser = try req.auth.require(User.self)
+        let user = repository.find(by: uri.userId).unwrap(or: Abort(.notFound))
+        
+        let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
+        
+        let followersCount = userSocialRepository.userFollowersCount(selfUser: uri.userId)
+        let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
+        let feedCount = userSocialRepository.usersFeedCount(selfUser: uri.userId)
+        let likeFeedCount = userSocialRepository.userLikeFeedCount(selfUser: uri.userId)
+        let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
+        let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
+        let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
+        
+        return user.and(followersCount).and(followingUsersCount).and(feedCount).and(likeFeedCount).and(followingGroupsCount).and(isFollowed).and(isFollowing).map {
+            ($0.0.0.0.0.0.0, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
+        }.map {
+            GetUserDetail.Response(
+                user: $0,
+                followersCount: $1,
+                followingUsersCount: $2,
+                feedCount: $3,
+                likeFeedCount: $4,
+                followingGroupsCount: $5,
+                isFollowed: $6,
+                isFollowing: $7
+            )
+        }
+    }
 }
 
 extension Endpoint.User: Content {}
 
 extension Endpoint.SignupStatus.Response: Content {}
+
+extension Endpoint.UserDetail: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
