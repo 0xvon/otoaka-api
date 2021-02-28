@@ -81,12 +81,14 @@ public struct CreateUserFeed: EndpointProtocol {
     public struct Request: Codable {
         public var text: String
         public var feedType: FeedType
+        public var ogpUrl: String?
         public var groupId: Group.ID
         public var title: String
         
-        public init(text: String, feedType: FeedType, groupId: Group.ID, title: String) {
+        public init(text: String, feedType: FeedType, ogpUrl: String?, groupId: Group.ID, title: String) {
             self.text = text
             self.feedType = feedType
+            self.ogpUrl = ogpUrl
             self.groupId = groupId
             self.title = title
         }

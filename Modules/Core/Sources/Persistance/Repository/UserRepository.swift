@@ -112,6 +112,7 @@ public class UserRepository: Domain.UserRepository {
         feed.text = input.text
         feed.$author.id = authorId.rawValue
         feed.$group.id = input.groupId.rawValue
+        feed.ogpUrl = input.ogpUrl
         feed.title = input.title
         switch input.feedType {
         case .youtube(let url):
