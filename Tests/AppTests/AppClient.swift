@@ -43,7 +43,7 @@ class AppClient {
         headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
         return headers
     }
-
+    
     func createUser(
         name: String = UUID().uuidString,
         role: RoleProperties = .artist(Artist(part: "vocal"))
@@ -70,6 +70,17 @@ class AppClient {
         var createdGroup: Endpoint.Group!
         try app.test(.POST, "groups", headers: makeHeaders(for: user), body: bodyData) { res in
             createdGroup = try res.content.decode(CreateGroup.Response.self)
+        }
+        return createdGroup
+    }
+    
+    func createGroupAsMaster(body: CreateGroup.Request = try! Stub.make(), with user: AppUser) throws
+        -> Endpoint.Group
+    {
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        var createdGroup: Endpoint.Group!
+        try app.test(.POST, "groups/master", headers: makeHeaders(for: user), body: bodyData) { res in
+            createdGroup = try res.content.decode(CreateGroupAsMaster.Response.self)
         }
         return createdGroup
     }

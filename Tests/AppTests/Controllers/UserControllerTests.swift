@@ -103,6 +103,14 @@ class UserControllerTests: XCTestCase {
             XCTAssertFalse(response.isFollowed)
             XCTAssertEqual(response.feedCount, 1)
         }
+        
+        try app.test(.GET, "users/\(userB.user.id)", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertFalse(response.isFollowing)
+            XCTAssertFalse(response.isFollowed)
+            XCTAssertEqual(response.feedCount, 0)
+        }
     }
 
     func testRegisterUserDeviceToken() throws {
