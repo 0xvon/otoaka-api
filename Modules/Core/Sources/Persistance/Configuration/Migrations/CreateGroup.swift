@@ -73,7 +73,7 @@ struct CreateGroupFeed: Migration {
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(GroupInvitation.schema).delete()
+        database.schema(ArtistFeed.schema).delete()
     }
 }
 

@@ -11,7 +11,7 @@ $ cp .env.development{.sample,}
 
 $ swift run
 # or
-$ swift pacakge generate-xcodeproj
+$ swift package generate-xcodeproj
 $ open rocket-api.xcodeproj # Xcodeで実行
 ```
 
@@ -20,7 +20,7 @@ $ open rocket-api.xcodeproj # Xcodeで実行
 
 ```bash
 # テスト環境向けのシークレットを設定
-$ cp ./Tests/.env.development{.sample,}
+$ cp ./Tests/.env.testing{.sample,}
 $ docker-compose up db
 $ swift test
 # or Xcodeでテスト実行

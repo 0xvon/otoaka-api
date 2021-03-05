@@ -94,6 +94,19 @@ public class SimpleNotificationService: PushNotificationService {
                 on: self.eventLoop)
         }
     }
+    
+    public func publish(toUserFollowers user: User.ID, notification: PushNotification)
+        -> EventLoopFuture<Void>
+    {
+        let followers = self.userSocialRepository.userFollowers(selfUser: user)
+
+        return followers.flatMap { followers in
+            EventLoopFuture.andAllSucceed(
+                followers.map { self.publish(to: $0, notification: notification) },
+                on: self.eventLoop
+            )
+        }
+    }
 
     public func publish(toGroupFollowers group: Group.ID, notification: PushNotification)
         -> EventLoopFuture<Void>

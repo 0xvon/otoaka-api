@@ -43,7 +43,7 @@ class AppClient {
         headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
         return headers
     }
-
+    
     func createUser(
         name: String = UUID().uuidString,
         role: RoleProperties = .artist(Artist(part: "vocal"))
@@ -70,6 +70,17 @@ class AppClient {
         var createdGroup: Endpoint.Group!
         try app.test(.POST, "groups", headers: makeHeaders(for: user), body: bodyData) { res in
             createdGroup = try res.content.decode(CreateGroup.Response.self)
+        }
+        return createdGroup
+    }
+    
+    func createGroupAsMaster(body: CreateGroup.Request = try! Stub.make(), with user: AppUser) throws
+        -> Endpoint.Group
+    {
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        var createdGroup: Endpoint.Group!
+        try app.test(.POST, "groups/master", headers: makeHeaders(for: user), body: bodyData) { res in
+            createdGroup = try res.content.decode(CreateGroupAsMaster.Response.self)
         }
         return createdGroup
     }
@@ -142,6 +153,16 @@ class AppClient {
         try app.test(
             .POST, "user_social/follow_group", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func followUser(target: AppUser, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.FollowUser.Request.self) {
+            $0.set(\.id, value: target.user.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(
+            .POST, "user_social/follow_user", headers: makeHeaders(for: user), body: bodyData)
+    }
 
     func like(live: Live, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikeLive.Request.self) {
@@ -163,7 +184,7 @@ class AppClient {
             .POST, "user_social/unlike_live", headers: makeHeaders(for: user), body: bodyData)
     }
 
-    func createGroupFeed(
+    func createArtistFeed(
         feedType: FeedType = .youtube(try! Stub.make()),
         with user: AppUser
     ) throws -> ArtistFeed {
@@ -178,5 +199,44 @@ class AppClient {
             created = try res.content.decode(Endpoint.CreateArtistFeed.Response.self)
         }
         return created
+    }
+    
+    func createUserFeed(
+        feedType: FeedType = .youtube(try! Stub.make()),
+        with user: AppUser,
+        groupId: Group.ID
+    ) throws -> UserFeed {
+        let body = try! Stub.make(Endpoint.CreateUserFeed.Request.self) {
+            $0.set(\.feedType, value: feedType)
+            $0.set(\.groupId, value: groupId)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        var created: Endpoint.UserFeed!
+        try app.test(.POST, "users/create_feed", headers: makeHeaders(for: user), body: bodyData) {
+            res in
+            created = try res.content.decode(Endpoint.CreateUserFeed.Response.self)
+        }
+        return created
+    }
+    
+    func likeUserFeed(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.LikeUserFeed.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/like_user_feed", headers: makeHeaders(for: user), body: bodyData)
+    }
+
+    func unlike(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnlikeUserFeed.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
 }

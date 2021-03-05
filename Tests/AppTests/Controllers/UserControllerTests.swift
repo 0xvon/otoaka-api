@@ -87,6 +87,31 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
+    
+    func testGetUserDetail() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let header = appClient.makeHeaders(for: userB)
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.followUser(target: userA, with: userB)
+
+        try app.test(.GET, "users/\(userA.user.id)", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertTrue(response.isFollowing)
+            XCTAssertFalse(response.isFollowed)
+            XCTAssertEqual(response.feedCount, 1)
+        }
+        
+        try app.test(.GET, "users/\(userB.user.id)", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertFalse(response.isFollowing)
+            XCTAssertFalse(response.isFollowed)
+            XCTAssertEqual(response.feedCount, 0)
+        }
+    }
 
     func testRegisterUserDeviceToken() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
@@ -107,6 +132,91 @@ class UserControllerTests: XCTestCase {
         try app.test(.POST, "users/register_device_token", headers: headers, body: bodyData) {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+    
+    func testCreateUserFeed() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+
+        let body = try! Stub.make(Endpoint.CreateUserFeed.Request.self) {
+            $0.set(\.feedType, value: .youtube(try! Stub.make()))
+            $0.set(\.groupId, value: groupX.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.POST, "users/create_feed", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.CreateUserFeed.Response.self)
+            XCTAssertEqual(responseBody.author.id, user.user.id)
+        }
+    }
+
+    func testDeleteUserFeeds() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
+        let body = try! Stub.make(DeleteUserFeed.Request.self) {
+            $0.set(\.id, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+
+        // try to delete twice
+        try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
+            XCTAssertNotEqual(res.status, .ok, res.body.string)
+        }
+
+        try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items, [])
+        }
+    }
+
+    func testGetUserFeeds() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let headers = appClient.makeHeaders(for: user)
+        let groupX = try appClient.createGroup(with: user)
+        let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
+
+        try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
+            let firstItem = try XCTUnwrap(responseBody.items.first)
+            XCTAssertEqual(firstItem.id, feed.id)
+            XCTAssertEqual(firstItem.commentCount, 0)
+        }
+    }
+
+    func testPostCommentOnUserFeed() throws {
+        let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userY = try appClient.createUser(role: .fan(.init()))
+        let groupX = try appClient.createGroup(with: userX)
+        let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
+
+        let body = try! Stub.make(Endpoint.PostUserFeedComment.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        let headers = appClient.makeHeaders(for: userY)
+        try app.test(.POST, "user_social/user_feed_comment", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.PostUserFeedComment.Response.self)
+            XCTAssertEqual(responseBody.author.id, userY.user.id)
+        }
+
+        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=10", headers: headers) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
         }
     }
 }

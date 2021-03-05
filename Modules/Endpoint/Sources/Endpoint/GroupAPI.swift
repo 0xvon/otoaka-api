@@ -35,6 +35,16 @@ public struct CreateGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct CreateGroupAsMaster: EndpointProtocol {
+    public typealias Request = CreateGroup.Request
+    public typealias Response = Group
+    public struct URI: CodableURL {
+        @StaticPath("groups", "master") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct EditGroup: EndpointProtocol {
     public typealias Request = CreateGroup.Request
     public typealias Response = Group
@@ -204,6 +214,21 @@ public struct GetGroupFeed: EndpointProtocol {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID
         @StaticPath("feeds") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct GetGroupsUserFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("groups") public var prefix: Void
+        @DynamicPath public var groupId: Group.ID
+        @StaticPath("user_feeds") public var suffix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}

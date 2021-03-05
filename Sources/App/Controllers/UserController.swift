@@ -34,6 +34,65 @@ struct UserController: RouteCollection {
         try loggedIn.on(
             endpoint: Endpoint.RegisterDeviceToken.self,
             use: injectProvider(registerDeviceToken))
+        try loggedIn.on(
+            endpoint: Endpoint.GetUserDetail.self,
+            use: injectProvider(getUserDetail))
+        try loggedIn.on(
+            endpoint: Endpoint.CreateUserFeed.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(CreateUserFeed.Request.self)
+                let notificationService = makePushNotificationService(request: req)
+                let useCase = CreateUserFeedUseCase(
+                    userRepository: repository,
+                    notificationService: notificationService,
+                    eventLoop: req.eventLoop)
+                return try useCase((user: user, input: input))
+            })
+        try loggedIn.on(
+            endpoint: PostUserFeedComment.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(PostUserFeedComment.Request.self)
+                let notificationService = makePushNotificationService(request: req)
+                // FIXME: Move to use case
+                return repository.addUserFeedComment(userId: user.id, input: input)
+                    .and(repository.getUserFeed(feedId: input.feedId))
+                    .flatMap { (comment, feed) in
+                        let notification = PushNotification(
+                            message: "\(user.name) さんがあなたの投稿にコメントしました")
+                        return notificationService.publish(
+                            to: feed.author.id, notification: notification
+                        )
+                        .map { comment }
+                    }
+            })
+
+        try routes.on(
+            endpoint: DeleteUserFeed.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(DeleteUserFeed.Request.self)
+                let useCase = DeleteUserFeedUseCase(
+                    userRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((id: input.id, user: user.id)).map { Empty() }
+            })
+        try routes.on(
+            endpoint: GetUserFeedComments.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getUserFeedComments(
+                    feedId: uri.feedId, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.GetUserFeeds.self,
+            use: injectProvider { req, uri, repository in
+                return repository.feeds(userId: uri.userId, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.SearchUser.self,
+            use: injectProvider { req, uri, repository in
+                repository.search(query: uri.term, page: uri.page, per: uri.per)
+            })
     }
 
     func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws
@@ -82,11 +141,47 @@ struct UserController: RouteCollection {
             }
             .map { Empty() }
     }
+    
+    func getUserDetail(req: Request, uri: GetUserDetail.URI, repository: Domain.UserRepository) throws
+        -> EventLoopFuture<
+            Endpoint.GetUserDetail.Response
+        >
+    {
+        let selfUser = try req.auth.require(User.self)
+        let user = repository.find(by: uri.userId).unwrap(or: Abort(.notFound))
+        
+        let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
+        
+        let followersCount = userSocialRepository.userFollowersCount(selfUser: uri.userId)
+        let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
+        let feedCount = userSocialRepository.usersFeedCount(selfUser: uri.userId)
+        let likeFeedCount = userSocialRepository.userLikeFeedCount(selfUser: uri.userId)
+        let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
+        let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
+        let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
+        
+        return user.and(followersCount).and(followingUsersCount).and(feedCount).and(likeFeedCount).and(followingGroupsCount).and(isFollowed).and(isFollowing).map {
+            ($0.0.0.0.0.0.0, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
+        }.map {
+            GetUserDetail.Response(
+                user: $0,
+                followersCount: $1,
+                followingUsersCount: $2,
+                feedCount: $3,
+                likeFeedCount: $4,
+                followingGroupsCount: $5,
+                isFollowed: $6,
+                isFollowing: $7
+            )
+        }
+    }
 }
 
 extension Endpoint.User: Content {}
 
 extension Endpoint.SignupStatus.Response: Content {}
+
+extension Endpoint.UserDetail: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
@@ -96,6 +191,12 @@ extension Persistance.UserRepository.Error: AbortError {
         case .userNotFound: return .forbidden
         case .deviceAlreadyRegistered: return .ok
         case .cantChangeRole: return .badRequest
+        case .feedNotFound: return .forbidden
+        case .feedDeleted: return .badRequest
         }
     }
 }
+
+extension Endpoint.UserFeed: Content {}
+
+extension Endpoint.UserFeedComment: Content {}

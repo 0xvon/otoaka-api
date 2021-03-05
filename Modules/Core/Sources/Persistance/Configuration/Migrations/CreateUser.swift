@@ -111,3 +111,81 @@ struct CognitoSubToUsername: Migration {
             .update()
     }
 }
+
+struct CreateUserFollowing: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema)
+            .id()
+            .field("self_user_id", .uuid, .required)
+            .foreignKey("self_user_id", references: User.schema, .id)
+            .field("target_user_id", .uuid, .required)
+            .foreignKey("target_user_id", references: User.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema).delete()
+    }
+}
+
+struct CreateUserFeed: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("user_feed_type")
+            .case("youtube")
+            .create()
+        return typeEnum.flatMap { typeEnum in
+            database.schema(UserFeed.schema)
+                .id()
+                .field("text", .string, .required)
+                .field("feed_type", typeEnum, .required)
+                .field("youtube_url", .string)
+                .field("author_id", .uuid)
+                .foreignKey("author_id", references: User.schema, "id")
+                .field("ogp_url", .string)
+                .field("group_id", .uuid, .required)
+                .foreignKey("group_id", references: Group.schema, "id")
+                .field("title", .string, .required)
+                .field("created_at", .datetime, .required)
+                .field("deleted_at", .datetime)
+                .create()
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeed.schema).delete()
+    }
+}
+
+struct CreateUserFeedComment: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeedComment.schema)
+            .id()
+            .field("text", .string)
+            .field("user_feed_id", .uuid, .required)
+            .foreignKey("user_feed_id", references: UserFeed.schema, "id")
+            .field("author_id", .uuid, .required)
+            .foreignKey("author_id", references: User.schema, "id")
+            .field("created_at", .datetime, .required)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeedComment.schema).delete()
+    }
+}
+
+struct CreateUserFeedLike: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeedLike.schema)
+            .id()
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .field("user_feed_id", .uuid, .required)
+            .foreignKey("user_feed_id", references: UserFeed.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeedLike.schema).delete()
+    }
+}

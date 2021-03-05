@@ -97,6 +97,81 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(body.items.count, 2)
         }
     }
+    
+    func testFollowUser() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let body = try! Stub.make(Endpoint.FollowUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/follow_user", headers: appClient.makeHeaders(for: userB),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+
+    func testUnfollowUser() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+
+        try appClient.followUser(target: userA, with: userB)
+
+        let body = try! Stub.make(Endpoint.UnfollowUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unfollow_user", headers: appClient.makeHeaders(for: userB),
+            body: bodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+    
+    func testGetFollowingUsers() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser(role: .artist(Artist(part: "bass")))
+
+        try appClient.followUser(target: userB, with: userA)
+        try appClient.followUser(target: userC, with: userA)
+
+        try app.test(
+            .GET, "user_social/following_users/\(userA.user.id)?page=1&per=10",
+            headers: appClient.makeHeaders(for: userA)
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(FollowingUsers.Response.self)
+            XCTAssertEqual(body.items.count, 2)
+        }
+    }
+
+    func testGetUserFollowers() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser(role: .artist(Artist(part: "bass")))
+
+        try appClient.followUser(target: userA, with: userB)
+        try appClient.followUser(target: userA, with: userC)
+
+        try app.test(
+            .GET, "user_social/user_followers/\(userA.user.id)?page=1&per=10",
+            headers: appClient.makeHeaders(for: userA)
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(UserFollowers.Response.self)
+            XCTAssertEqual(body.items.count, 2)
+        }
+    }
 
     func testGetUpcomingLives() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
@@ -116,7 +191,7 @@ class UserSocialControllerTests: XCTestCase {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
         let groupX = try appClient.createGroup(with: userA)
-        _ = try appClient.createGroupFeed(with: userA)
+        _ = try appClient.createArtistFeed(with: userA)
         try appClient.follow(group: groupX, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)
@@ -130,7 +205,7 @@ class UserSocialControllerTests: XCTestCase {
         let artistA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let groupX = try appClient.createGroup(with: artistA)
         let groupY = try appClient.createGroup(with: artistA)
-        _ = try appClient.createGroupFeed(with: artistA)
+        _ = try appClient.createArtistFeed(with: artistA)
 
         let userB = try appClient.createUser()
         try appClient.follow(group: groupX, with: userB)
@@ -140,6 +215,23 @@ class UserSocialControllerTests: XCTestCase {
         try app.test(.GET, "user_social/group_feeds?page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetFollowingGroupFeeds.Response.self)
             XCTAssertEqual(responseBody.items.count, 1, String(describing: responseBody.items))
+        }
+    }
+    
+    func testGetFollowingUserFeeds() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.createUserFeed(with: userB, groupId: groupX.id)
+        _ = try appClient.createUserFeed(with: userC, groupId: groupX.id)
+        try appClient.followUser(target: userA, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/following_user_feeds?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetFollowingUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
         }
     }
 
@@ -164,6 +256,31 @@ class UserSocialControllerTests: XCTestCase {
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertFalse(item.isLiked)
+        }
+    }
+    
+    func testLikeUserFeed() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let groupX = try appClient.createGroup(with: userA)
+        let feed = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+
+        try appClient.likeUserFeed(feed: feed, with: userB)
+        try appClient.likeUserFeed(feed: feed, with: userC)
+
+        let headerA = appClient.makeHeaders(for: userA)
+        let headerB = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/all_user_feeds?page=1&per=10", headers: headerB) { res in
+            let responseBody = try res.content.decode(GetAllUserFeeds.Response.self)
+            let item = try XCTUnwrap(responseBody.items.filter { $0.id == feed.id }.first)
+            XCTAssertTrue(item.isLiked)
+            XCTAssertEqual(item.likeCount, 2)
+        }
+        try app.test(.GET, "user_social/all_user_feeds?page=1&per=10", headers: headerA) { res in
+            let responseBody = try res.content.decode(GetAllUserFeeds.Response.self)
+            let item = try XCTUnwrap(responseBody.items.filter { $0.id == feed.id }.first)
             XCTAssertFalse(item.isLiked)
         }
     }

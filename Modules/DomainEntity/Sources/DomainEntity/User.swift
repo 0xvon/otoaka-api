@@ -1,3 +1,5 @@
+import Foundation
+
 public struct Artist: Codable, Equatable {
     public var part: String
     public init(part: String) {
@@ -61,5 +63,50 @@ public struct User: Codable, Identifiable, Equatable {
         self.biography = biography
         self.thumbnailURL = thumbnailURL
         self.role = role
+    }
+}
+
+public struct UserFeed: Codable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var text: String
+    public var feedType: FeedType
+    public var author: User
+    public var ogpUrl: String?
+    public var group: Group
+    public var title: String
+    public var createdAt: Date
+    
+    public init(
+        id: UserFeed.ID, text: String, feedType: FeedType, author: User, ogpUrl: String?, group: Group, title: String, createdAt: Date
+    ) {
+        self.id = id
+        self.text = text
+        self.feedType = feedType
+        self.author = author
+        self.ogpUrl = ogpUrl
+        self.group = group
+        self.title = title
+        self.createdAt = createdAt
+    }
+}
+
+public struct UserFeedComment: Codable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var text: String
+    public var author: User
+    public var userFeedId: UserFeed.ID
+    public var createdAt: Date
+    
+    public init(
+        id: UserFeedComment.ID, text: String, author: User, userFeedId: UserFeed.ID,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.text = text
+        self.author = author
+        self.userFeedId = userFeedId
+        self.createdAt = createdAt
     }
 }

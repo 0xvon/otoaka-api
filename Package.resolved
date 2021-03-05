@@ -42,8 +42,8 @@
         "repositoryURL": "https://github.com/vapor/fluent.git",
         "state": {
           "branch": null,
-          "revision": "855cd81cd129675dcb9adadeca2286281dbc0190",
-          "version": "4.1.0"
+          "revision": "e681c93df3201a2d8ceef15e8a9a0634578df233",
+          "version": "4.0.0"
         }
       },
       {
@@ -51,8 +51,8 @@
         "repositoryURL": "https://github.com/vapor/fluent-kit.git",
         "state": {
           "branch": null,
-          "revision": "86ebecdb98981b7a242746209b4335770bf0bd11",
-          "version": "1.10.2"
+          "revision": "7f1a5fe1effeee258ef0012def798e4bad43303d",
+          "version": "1.10.3"
         }
       },
       {
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/vapor/mysql-nio.git",
         "state": {
           "branch": null,
-          "revision": "2a17a53911fc1ffda88da584d25c0e89e38dc81d",
-          "version": "1.3.1"
+          "revision": "4cbef4c0903c9792ff1f8dc4b55532276fa70c99",
+          "version": "1.3.2"
         }
       },
       {

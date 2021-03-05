@@ -12,6 +12,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case notFollowing
         case targetGroupNotFound
         case notHavingLiveLike
+        case notHavingUserFeedLike
     }
 
     public func follow(
@@ -91,6 +92,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     public func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
         Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue).count()
     }
+    
+    public func followingGroupsCount(userId: Domain.User.ID) -> EventLoopFuture<Int> {
+        Following.query(on: db).filter(\.$user.$id == userId.rawValue).count()
+    }
 
     public func isFollowing(
         selfUser: Domain.User.ID,
@@ -99,6 +104,106 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         Following.query(on: db)
             .filter(\.$user.$id == selfUser.rawValue)
             .filter(\.$target.$id == targetGroup.rawValue)
+            .first().map { $0 != nil }
+    }
+    
+    public func followUser(
+        selfUser: Domain.User.ID,
+        targetUser: Domain.User.ID
+    ) -> EventLoopFuture<Void> {
+        let alreadyFollowing = UserFollowing.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == targetUser.rawValue)
+            .count().map { $0 > 0 }
+        let isTargetExisting = User.find(targetUser.rawValue, on: db)
+            .map { $0 != nil }
+        let precondition = alreadyFollowing.and(isTargetExisting)
+            .flatMapThrowing { alreadyFollowing, isTargetExisting in
+                guard !alreadyFollowing else { throw Error.alreadyFollowing }
+                guard isTargetExisting else { throw Error.targetGroupNotFound }
+                return
+            }
+        return precondition.flatMap { [db] _ in
+            let following = UserFollowing()
+            following.$user.id = selfUser.rawValue
+            following.$target.id = targetUser.rawValue
+            return following.save(on: db)
+        }
+    }
+
+    public func unfollowUser(selfUser: Domain.User.ID, targetUser: Domain.User.ID) -> EventLoopFuture<
+        Void
+    > {
+        let following = UserFollowing.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == targetUser.rawValue)
+            .first()
+        let precondition = following.flatMapThrowing { following -> UserFollowing in
+            guard let following = following else {
+                throw Error.notFollowing
+            }
+            return following
+        }
+        return precondition.flatMap { [db] following in
+            following.delete(force: true, on: db)
+        }
+    }
+
+    public func followingUsers(selfUser: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.User>>
+    {
+        let followings = UserFollowing.query(on: db).filter(\.$user.$id == selfUser.rawValue)
+            .with(\.$target)
+        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.User.translate(fromPersistance: $0.target, on: db)
+            }
+        }
+    }
+
+    public func userFollowers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.User>
+    > {
+        let followings = UserFollowing.query(on: db).filter(\.$target.$id == selfUser.rawValue)
+            .with(\.$user)
+        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.User.translate(fromPersistance: $0.user, on: db)
+            }
+        }
+    }
+
+    public func userFollowers(selfUser: Domain.User.ID) -> EventLoopFuture<[Domain.User.ID]> {
+        UserFollowing.query(on: db)
+            .filter(\.$target.$id == selfUser.rawValue).all()
+            .mapEach {
+                Domain.User.ID($0.$user.id)
+            }
+    }
+
+    public func userFollowersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFollowing.query(on: db).filter(\.$target.$id == selfUser.rawValue).count()
+    }
+    
+    public func followingUsersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFollowing.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
+    
+    public func usersFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFeed.query(on: db).filter(\.$author.$id == selfUser.rawValue).count()
+    }
+    
+    public func userLikeFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        UserFeedLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
+
+    public func isUserFollowing(
+        selfUser: Domain.User.ID,
+        targetUser: Domain.User.ID
+    ) -> EventLoopFuture<Bool> {
+        UserFollowing.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == targetUser.rawValue)
             .first().map { $0 != nil }
     }
 
@@ -151,6 +256,50 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 }
             }
     }
+    
+    public func followingUserFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.UserFeedSummary>
+    > {
+        return UserFeed.query(on: db)
+            .join(UserFollowing.self, on: \UserFollowing.$target.$id == \UserFeed.$author.$id, method: .left)
+            .group(.or) { // フォローしたユーザーのフィードには自分のフィードも含まれる
+                $0.filter(UserFollowing.self, \UserFollowing.$user.$id == userId.rawValue).filter(UserFeed.self, \UserFeed.$author.$id == userId.rawValue)
+            }
+            .with(\.$comments)
+            .with(\.$likes)
+            .sort(\.$createdAt, .descending)
+            .fields(for: UserFeed.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
+    
+    public func allUserFeeds(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.UserFeedSummary>
+    > {
+        return UserFeed.query(on: db)
+            .with(\.$comments)
+            .with(\.$likes)
+            .sort(\.$createdAt, .descending)
+            .fields(for: UserFeed.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(selfUser.rawValue))
+                    }
+                }
+            }
+    }
 
     public func likeLive(userId: Domain.User.ID, liveId: Domain.Live.ID) -> EventLoopFuture<Void> {
         let like = LiveLike()
@@ -167,6 +316,27 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         return like.flatMapThrowing { like -> LiveLike in
             guard let like = like else {
                 throw Error.notHavingLiveLike
+            }
+            return like
+        }
+        .flatMap { [db] in $0.delete(on: db) }
+    }
+    
+    public func likeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
+        let like = UserFeedLike()
+        like.$user.id = userId.rawValue
+        like.$feed.id = feedId.rawValue
+        return like.create(on: db)
+    }
+
+    public func unlikeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void>
+    {
+        let like = UserFeedLike.query(on: db).filter(\.$user.$id == userId.rawValue)
+            .filter(\.$feed.$id == feedId.rawValue)
+            .first()
+        return like.flatMapThrowing { like -> UserFeedLike in
+            guard let like = like else {
+                throw Error.notHavingUserFeedLike
             }
             return like
         }

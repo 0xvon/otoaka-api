@@ -228,6 +228,21 @@ public class GroupRepository: Domain.GroupRepository {
         ArtistFeed.find(feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
             .flatMap { [db] in Domain.ArtistFeed.translate(fromPersistance: $0, on: db) }
     }
+    
+    public func getGroupUserFeeds(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.UserFeedSummary>> {
+        UserFeed.query(on: db)
+            .filter(\.$group.$id == groupId.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
 
     public func addArtistFeedComment(userId: Domain.User.ID, input: PostFeedComment.Request)
         -> EventLoopFuture<

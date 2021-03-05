@@ -26,6 +26,12 @@ struct GroupController: RouteCollection {
                     groupRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((input: input, user: user.id))
             })
+        try routes.on(
+            endpoint: Endpoint.CreateGroupAsMaster.self,
+            use: injectProvider { req, uri, repository in
+                let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
+                return repository.create(input: input)
+            })
         try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
         try routes.on(
             endpoint: Endpoint.DeleteGroup.self,
@@ -56,7 +62,7 @@ struct GroupController: RouteCollection {
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreateArtistFeed.Request.self)
                 let notificationService = makePushNotificationService(request: req)
-                let useCase = CreateGroupFeedUseCase(
+                let useCase = CreateArtistFeedUseCase(
                     groupRepository: repository,
                     notificationService: notificationService,
                     eventLoop: req.eventLoop)
@@ -101,6 +107,12 @@ struct GroupController: RouteCollection {
             endpoint: Endpoint.GetGroupFeed.self,
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.GetGroupsUserFeeds.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.getGroupUserFeeds(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.SearchGroup.self,
