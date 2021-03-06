@@ -224,6 +224,19 @@ public struct GetFollowingUserFeeds: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetLikedUserFeeds: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserFeedSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "liked_user_feeds") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct GetAllUserFeeds: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<UserFeedSummary>

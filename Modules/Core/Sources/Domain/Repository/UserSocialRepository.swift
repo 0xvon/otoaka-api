@@ -28,6 +28,7 @@ public protocol UserSocialRepository {
     func allUserFeeds(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<UserFeedSummary>
     >
+    func likedUserFeeds(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedSummary>>
     func usersFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func userLikeFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>

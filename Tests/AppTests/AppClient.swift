@@ -229,6 +229,16 @@ class AppClient {
         try app.test(
             .POST, "user_social/like_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func commentUserFeed(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.PostUserFeedComment.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/user_feed_comment", headers: makeHeaders(for: user), body: bodyData)
+    }
 
     func unlike(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.UnlikeUserFeed.Request.self) {

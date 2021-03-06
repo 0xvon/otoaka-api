@@ -131,6 +131,18 @@ public class UserRepository: Domain.UserRepository {
     }
 
     public func deleteFeed(id: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
+        _ = UserFeedLike.query(on: db)
+            .filter(\.$feed.$id == id.rawValue)
+            .all()
+            .flatMap { [db] in
+                $0.delete(force: true, on: db)
+            }
+        _ = UserFeedComment.query(on: db)
+            .filter(\.$feed.$id == id.rawValue)
+            .all()
+            .flatMap { [db] in
+                $0.delete(force: true, on: db)
+            }
         return UserFeed.find(id.rawValue, on: db)
             .unwrap(orError: Error.feedNotFound)
             .flatMapThrowing { feed -> UserFeed in
