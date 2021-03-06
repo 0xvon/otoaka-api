@@ -159,6 +159,7 @@ public class UserRepository: Domain.UserRepository {
             .filter(\UserFeed.$author.$id == userId.rawValue)
             .with(\.$comments)
             .with(\.$likes)
+            .sort(\.$createdAt, .descending)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
