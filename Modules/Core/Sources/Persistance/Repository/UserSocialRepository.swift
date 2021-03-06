@@ -283,7 +283,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     
     public func likedUserFeeds(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<UserFeedSummary>> {
         return UserFeed.query(on: db)
-            .join(UserFeedLike.self, on: \UserFeedLike.$user.$id == \UserFeed.$author.$id, method: .left)
+            .join(UserFeedLike.self, on: \UserFeedLike.$feed.$id == \UserFeed.$id, method: .left)
             .filter(UserFeedLike.self, \UserFeedLike.$user.$id == selfUser.rawValue)
             .with(\.$comments)
             .with(\.$likes)

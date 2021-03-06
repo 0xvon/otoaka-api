@@ -158,6 +158,7 @@ class UserControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         let groupX = try appClient.createGroup(with: user)
         let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
+        let _ = try appClient.createUserFeed(with: user, groupId: groupX.id)
         let _ = try appClient.likeUserFeed(feed: feed, with: user)
         let _ = try appClient.commentUserFeed(feed: feed, with: user)
         let body = try! Stub.make(DeleteUserFeed.Request.self) {
@@ -175,6 +176,12 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
         }
 
         try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
@@ -201,7 +208,7 @@ class UserControllerTests: XCTestCase {
         try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
-            XCTAssertEqual(responseBody.items, [])
+            XCTAssertEqual(responseBody.items.count, 1)
         }
     }
 
