@@ -158,10 +158,31 @@ class UserControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         let groupX = try appClient.createGroup(with: user)
         let feed = try appClient.createUserFeed(with: user, groupId: groupX.id)
+        let _ = try appClient.createUserFeed(with: user, groupId: groupX.id)
+        let _ = try appClient.likeUserFeed(feed: feed, with: user)
+        let _ = try appClient.commentUserFeed(feed: feed, with: user)
         let body = try! Stub.make(DeleteUserFeed.Request.self) {
             $0.set(\.id, value: feed.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(.GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetLikedUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=200", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
 
         try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
@@ -171,11 +192,23 @@ class UserControllerTests: XCTestCase {
         try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
             XCTAssertNotEqual(res.status, .ok, res.body.string)
         }
+        
+        try app.test(.GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetLikedUserFeeds.Response.self)
+            XCTAssertEqual(responseBody.items.count, 0)
+        }
+        
+        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=200", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
+            XCTAssertEqual(responseBody.items.count, 0)
+        }
 
         try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
-            XCTAssertEqual(responseBody.items, [])
+            XCTAssertEqual(responseBody.items.count, 1)
         }
     }
 

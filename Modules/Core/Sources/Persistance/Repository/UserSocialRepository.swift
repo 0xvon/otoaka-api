@@ -281,6 +281,26 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             }
     }
     
+    public func likedUserFeeds(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<UserFeedSummary>> {
+        return UserFeed.query(on: db)
+            .join(UserFeedLike.self, on: \UserFeedLike.$feed.$id == \UserFeed.$id, method: .left)
+            .filter(UserFeedLike.self, \UserFeedLike.$user.$id == selfUser.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .sort(\.$createdAt, .descending)
+            .fields(for: UserFeed.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
+                    return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(selfUser.rawValue))
+                    }
+                }
+            }
+    }
+    
     public func allUserFeeds(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.UserFeedSummary>
     > {
