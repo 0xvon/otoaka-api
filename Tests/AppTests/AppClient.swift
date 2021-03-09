@@ -63,7 +63,7 @@ class AppClient {
         return appUser
     }
 
-    func createGroup(body: CreateGroup.Request = try! Stub.make(), with user: AppUser) throws
+    func createGroup(body: CreateGroup.Request = try! Stub.make() { $0.set(\.name, value: "Wall of Death") }, with user: AppUser) throws
         -> Endpoint.Group
     {
         let bodyData = try ByteBuffer(data: encoder.encode(body))

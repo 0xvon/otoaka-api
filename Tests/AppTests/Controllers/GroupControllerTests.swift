@@ -127,6 +127,12 @@ class GroupControllerTests: XCTestCase {
             let response = try res.content.decode(GetAllGroups.Response.self)
             XCTAssertGreaterThanOrEqual(response.items.count, 3)
         }
+        
+        try app.test(.GET, "groups/search?term=wall+of+death&page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(SearchGroup.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 3)
+        }
     }
 
     func testGetMemberships() throws {
