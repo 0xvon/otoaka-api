@@ -209,8 +209,8 @@ public class UserRepository: Domain.UserRepository {
     > {
         let lives = User.query(on: db)
             .group(.or) {
-                $0.filter(\.$name =~ query)
-                    .filter(\.$biography =~ query)
+                $0.filter(\.$name, .custom("LIKE"), "%\(query)%")
+                    .filter(\.$biography, .custom("LIKE"), "%\(query)%")
             }
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
