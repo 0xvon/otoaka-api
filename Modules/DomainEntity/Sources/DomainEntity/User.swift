@@ -73,18 +73,20 @@ public struct UserFeed: Codable, Equatable {
     public var feedType: FeedType
     public var author: User
     public var ogpUrl: String?
+    public var thumbnailUrl: String?
     public var group: Group
     public var title: String
     public var createdAt: Date
     
     public init(
-        id: UserFeed.ID, text: String, feedType: FeedType, author: User, ogpUrl: String?, group: Group, title: String, createdAt: Date
+        id: UserFeed.ID, text: String, feedType: FeedType, author: User, ogpUrl: String?, thumbnailUrl: String?, group: Group, title: String, createdAt: Date
     ) {
         self.id = id
         self.text = text
         self.feedType = feedType
         self.author = author
         self.ogpUrl = ogpUrl
+        self.thumbnailUrl = thumbnailUrl
         self.group = group
         self.title = title
         self.createdAt = createdAt

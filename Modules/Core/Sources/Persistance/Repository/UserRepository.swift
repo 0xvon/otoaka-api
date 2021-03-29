@@ -119,11 +119,15 @@ public class UserRepository: Domain.UserRepository {
         feed.$author.id = authorId.rawValue
         feed.$group.id = input.groupId.rawValue
         feed.ogpUrl = input.ogpUrl
+        feed.thumbnailUrl = input.thumbnailUrl
         feed.title = input.title
         switch input.feedType {
         case .youtube(let url):
             feed.feedType = .youtube
             feed.youtubeURL = url.absoluteString
+        case .appleMusic(let songId):
+            feed.feedType = .apple_music
+            feed.appleMusicSongId = songId
         }
         return feed.create(on: db).flatMap { [db] in
             Domain.UserFeed.translate(fromPersistance: feed, on: db)

@@ -40,6 +40,7 @@ public func setupMigration(
         CognitoSubToUsername(migrator: cognitoUserMigrator), CreateUserFollowing(),
         CreateUserFeed(), CreateUserFeedComment(),
         CreateUserFeedLike(),
+        ThumbnailUrlAndAppleMusicToArtistFeed(), ThumbnailUrlAndAppleMusicToUserFeed(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

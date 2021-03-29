@@ -190,6 +190,9 @@ public class GroupRepository: Domain.GroupRepository {
         case .youtube(let url):
             feed.feedType = .youtube
             feed.youtubeURL = url.absoluteString
+        case .appleMusic(let id):
+            feed.feedType = .apple_music
+            feed.appleMusicSongId = id
         }
         return feed.create(on: db).flatMap { [db] in
             Domain.ArtistFeed.translate(fromPersistance: feed, on: db)

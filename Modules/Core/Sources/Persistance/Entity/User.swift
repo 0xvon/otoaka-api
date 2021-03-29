@@ -152,9 +152,15 @@ final class UserFeed: Model {
 
     @OptionalField(key: "youtube_url")
     var youtubeURL: String?
+    
+    @OptionalField(key: "apple_music_song_id")
+    var appleMusicSongId: String?
 
     @Parent(key: "author_id")
     var author: User
+    
+    @OptionalField(key: "thumbnail_url")
+    var thumbnailUrl: String?
     
     @OptionalField(key: "ogp_url")
     var ogpUrl: String?
@@ -204,11 +210,13 @@ extension Endpoint.UserFeed {
         switch entity.feedType {
         case .youtube:
             feedType = .youtube(URL(string: entity.youtubeURL!)!)
+        case .apple_music:
+            feedType = .appleMusic(entity.appleMusicSongId!)
         }
         return id.and(author).and(group)
             .map { ($0.0, $0.1, $1) }
             .map {
-            Endpoint.UserFeed(id: ID($0), text: entity.text, feedType: feedType, author: $1, ogpUrl: entity.ogpUrl, group: $2, title: entity.title, createdAt: entity.createdAt!)
+                Endpoint.UserFeed(id: ID($0), text: entity.text, feedType: feedType, author: $1, ogpUrl: entity.ogpUrl, thumbnailUrl: entity.thumbnailUrl, group: $2, title: entity.title, createdAt: entity.createdAt!)
         }
     }
 }
