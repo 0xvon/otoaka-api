@@ -123,3 +123,25 @@ struct AddDeletedAtFieldToArtistFeed: Migration {
             .update()
     }
 }
+
+struct ThumbnailUrlAndAppleMusicToArtistFeed: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("group_feed_type")
+            .case("apple_music")
+            .update()
+        return typeEnum.flatMap { typeEnum in
+            database.schema(ArtistFeed.schema)
+                .field("thumbnail_url", .string)
+                .field("apple_music_song_id", .string)
+                .updateField("feed_type", typeEnum)
+                .update()
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(ArtistFeed.schema)
+            .deleteField("thumbnail_url")
+            .deleteField("apple_music_song_id")
+            .update()
+    }
+}

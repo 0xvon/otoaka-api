@@ -64,13 +64,14 @@ public struct GroupInvitation {
 
 public enum FeedType: Codable, Equatable {
     case youtube(URL)
+    case appleMusic(String)
 
     enum CodingKeys: CodingKey {
         case kind, value
     }
 
     enum Kind: String, Codable {
-        case youtube
+        case youtube, appleMusic
     }
 
     public init(from decoder: Decoder) throws {
@@ -79,6 +80,8 @@ public enum FeedType: Codable, Equatable {
         switch kind {
         case .youtube:
             self = try .youtube(container.decode(URL.self, forKey: .value))
+        case .appleMusic:
+            self = try .appleMusic(container.decode(String.self, forKey: .value))
         }
     }
 
@@ -88,6 +91,9 @@ public enum FeedType: Codable, Equatable {
         case let .youtube(url):
             try container.encode(Kind.youtube, forKey: .kind)
             try container.encode(url, forKey: .value)
+        case let .appleMusic(songId):
+            try container.encode(Kind.appleMusic, forKey: .kind)
+            try container.encode(songId, forKey: .value)
         }
     }
 }
@@ -95,14 +101,16 @@ public struct ArtistFeed: Codable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var text: String
+    public var thumbnailUrl: String?
     public var feedType: FeedType
     public var author: User
     public var createdAt: Date
 
-    public init(id: ArtistFeed.ID, text: String, feedType: FeedType, author: User, createdAt: Date)
+    public init(id: ArtistFeed.ID, text: String, thumbnailUrl: String?, feedType: FeedType, author: User, createdAt: Date)
     {
         self.id = id
         self.text = text
+        self.thumbnailUrl = thumbnailUrl
         self.feedType = feedType
         self.author = author
         self.createdAt = createdAt

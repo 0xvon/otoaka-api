@@ -189,3 +189,26 @@ struct CreateUserFeedLike: Migration {
         database.schema(UserFeedLike.schema).delete()
     }
 }
+
+struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("user_feed_type")
+            .case("apple_music")
+            .update()
+        
+        return typeEnum.flatMap { typeEnum in
+            database.schema(UserFeed.schema)
+                .field("thumbnail_url", .string)
+                .field("apple_music_song_id", .string)
+                .updateField("feed_type", typeEnum)
+                .update()
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFeed.schema)
+            .deleteField("thumbnail_url")
+            .deleteField("apple_music_song_id")
+            .update()
+    }
+}

@@ -120,13 +120,17 @@ public struct CreateUserFeed: EndpointProtocol {
         public var text: String
         public var feedType: FeedType
         public var ogpUrl: String?
+        public var thumbnailUrl: String?
         public var groupId: Group.ID
         public var title: String
         
-        public init(text: String, feedType: FeedType, ogpUrl: String?, groupId: Group.ID, title: String) {
+        public init(
+            text: String, feedType: FeedType, ogpUrl: String?, thumbnailUrl: String?, groupId: Group.ID, title: String
+        ) {
             self.text = text
             self.feedType = feedType
             self.ogpUrl = ogpUrl
+            self.thumbnailUrl = thumbnailUrl
             self.groupId = groupId
             self.title = title
         }

@@ -144,6 +144,7 @@ extension Endpoint.GroupInvitation {
 
 enum FeedType: String, Codable {
     case youtube
+    case apple_music
 }
 
 final class ArtistFeed: Model {
@@ -159,9 +160,15 @@ final class ArtistFeed: Model {
 
     @OptionalField(key: "youtube_url")
     var youtubeURL: String?
+    
+    @OptionalField(key: "apple_music_song_id")
+    var appleMusicSongId: String?
 
     @Parent(key: "author_id")
     var author: User
+    
+    @OptionalField(key: "thumbnail_url")
+    var thumbnailUrl: String?
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -182,12 +189,14 @@ extension Endpoint.ArtistFeed {
         switch entity.feedType {
         case .youtube:
             feedType = .youtube(URL(string: entity.youtubeURL!)!)
+        case .apple_music:
+            feedType = .appleMusic(entity.appleMusicSongId!)
         }
         return author.flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
             .flatMapThrowing { author in
                 try Endpoint.ArtistFeed(
                     id: .init(entity.requireID()),
-                    text: entity.text, feedType: feedType,
+                    text: entity.text, thumbnailUrl: entity.thumbnailUrl, feedType: feedType,
                     author: author, createdAt: entity.createdAt!
                 )
             }
