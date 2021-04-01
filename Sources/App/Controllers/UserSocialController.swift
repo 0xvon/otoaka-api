@@ -47,7 +47,12 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(FollowUser.Request.self)
+                let notificationService = makePushNotificationService(request: req)
                 return repository.followUser(selfUser: user.id, targetUser: input.id)
+                    .flatMap {
+                        let notification = PushNotification(message: "\(user.name)さんにフォローされました")
+                        return notificationService.publish(to: input.id, notification: notification)
+                    }
                     .map { Empty() }
             })
         try routes.on(
@@ -116,7 +121,16 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(LikeUserFeed.Request.self)
-                return repository.likeUserFeed(userId: user.id, feedId: input.feedId).map { Empty() }
+                let notificationService = makePushNotificationService(request: req)
+                let userRepository = Persistance.UserRepository(db: req.db)
+                return repository.likeUserFeed(userId: user.id, feedId: input.feedId)
+                    .and(userRepository.getUserFeed(feedId: input.feedId))
+                    .flatMap { _, feed in
+                        let notification = PushNotification(
+                            message: "\(user.name) さんがあなたの投稿にいいねしました")
+                        return notificationService.publish(to: feed.author.id, notification: notification)
+                    }
+                    .map { Empty() }
             })
         try routes.on(
             endpoint: UnlikeUserFeed.self,
