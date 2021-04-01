@@ -17,8 +17,8 @@ struct EnvironmentSecrets: DatabaseSecrets, SimpleNotificationServiceSecrets {
             }
             return value
         }
-        self.awsAccessKeyId = require("AWS_ACCESS_KEY_ID")
-        self.awsSecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
+        self.awsAccessKeyId = require("AWS_ACCESS_KEY_ID_TMP")
+        self.awsSecretAccessKey = require("AWS_SECRET_ACCESS_KEY_TMP")
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
         self.databaseURL = require("DATABASE_URL")
