@@ -25,7 +25,7 @@ public class UserRepository: Domain.UserRepository {
                 let storedUser = User(
                     cognitoId: cognitoId, cognitoUsername: cognitoUsername, email: email,
                     name: input.name, biography: input.biography,
-                    thumbnailURL: input.thumbnailURL, role: input.role
+                    thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: input.twitterUrl, instagramUrl: input.instagramUrl
                 )
                 return storedUser.create(on: db).flatMap { [db] in
                     Endpoint.User.translate(fromPersistance: storedUser, on: db)

@@ -36,12 +36,18 @@ final class User: Model {
     /// Only for artist.
     @OptionalField(key: "part")
     var part: String?
+    
+    @OptionalField(key: "twitter_url")
+    var twitterUrl: String?
+    
+    @OptionalField(key: "instagram_url")
+    var instagramUrl: String?
 
     init() {}
     init(
         cognitoId: Domain.CognitoID, cognitoUsername: CognitoUsername,
         email: String, name: String,
-        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
+        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.cognitoId = cognitoId
         self.cognitoUsername = cognitoUsername
@@ -56,6 +62,8 @@ final class User: Model {
         case .fan:
             self.role = .fan
         }
+        self.twitterUrl = twitterUrl?.absoluteString
+        self.instagramUrl = instagramUrl?.absoluteString
     }
 }
 
@@ -71,7 +79,7 @@ extension Endpoint.User {
         return db.eventLoop.submit {
             try Self.init(
                 id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
-                thumbnailURL: entity.thumbnailURL, role: roleProperties)
+                thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
         }
     }
 }

@@ -1,21 +1,26 @@
 import CodableURL
+import Foundation
 
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public init(
             name: String, biography: String? = nil, thumbnailURL: String? = nil,
-            role: RoleProperties
+            role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
         ) {
             self.name = name
             self.biography = biography
             self.thumbnailURL = thumbnailURL
             self.role = role
+            self.twitterUrl = twitterUrl
+            self.instagramUrl = instagramUrl
         }
 
         public var name: String
         public var biography: String?
         public var thumbnailURL: String?
         public var role: RoleProperties
+        public var twitterUrl: URL?
+        public var instagramUrl: URL?
     }
 
     public typealias Response = User

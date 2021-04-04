@@ -50,7 +50,7 @@ class AppClient {
     ) throws -> AppUser {
         let user = try! cognito.createToken(userName: name).wait()
         let headers = makeHeaders(for: user.token)
-        let body = Endpoint.Signup.Request(name: name, role: role)
+        let body = Endpoint.Signup.Request(name: name, role: role, twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make())
         let bodyData = try ByteBuffer(data: encoder.encode(body))
         var appUser: AppUser!
         try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in

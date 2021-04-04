@@ -212,3 +212,19 @@ struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
             .update()
     }
 }
+
+struct InstagramAndTwitterUrlToUser: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .field("instagram_url", .string)
+            .field("twitter_url", .string)
+            .update()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("instagram_url")
+            .deleteField("twitter_url")
+            .update()
+    }
+}
