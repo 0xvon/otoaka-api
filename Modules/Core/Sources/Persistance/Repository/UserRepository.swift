@@ -41,6 +41,8 @@ public class UserRepository: Domain.UserRepository {
             user.name = input.name
             user.biography = input.biography
             user.thumbnailURL = input.thumbnailURL
+            user.twitterUrl = input.twitterUrl?.absoluteString
+            user.instagramUrl = input.instagramUrl?.absoluteString
             switch (user.role, input.role) {
             case (.artist, .artist(let artist)):
                 user.part = artist.part
