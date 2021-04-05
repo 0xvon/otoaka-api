@@ -13,6 +13,7 @@ jobs:
           MYSQL_PASSWORD: vapor_password
           MYSQL_DATABASE: vapor_database
           MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -23,8 +24,8 @@ jobs:
             ${{ runner.os }}-spm-
       - name: reset db
         run: |
-          mysql -h 127.0.0.1 --port 3306 -u vapor_username -pvapor_password vapor_database -e "drop database vapor_database;"
-          mysql -h 127.0.0.1 --port 3306 -u vapor_username -pvapor_password vapor_database -e "create database vapor_database;"
+          mysql -h localhost --port 3306 -u vapor_username -pvapor_password vapor_database -e "drop database vapor_database;"
+          mysql -h localhost --port 3306 -u vapor_username -pvapor_password vapor_database -e "create database vapor_database;"
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
