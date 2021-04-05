@@ -24,7 +24,8 @@ jobs:
             ${{ runner.os }}-spm-
       - name: reset db
         run: |
-          sudo /etc/init.d/mysql start
+          sudo systemctl enable mysql.service
+          sudo systemctl start mysql.service
           mysql -h localhost --port 3306 -u vapor_username -pvapor_password vapor_database -e "drop database vapor_database;"
           mysql -h localhost --port 3306 -u vapor_username -pvapor_password vapor_database -e "create database vapor_database;"
       - name: Install swiftenv
