@@ -23,8 +23,8 @@ jobs:
             ${{ runner.os }}-spm-
       - name: reset db
         run: |
-          mysql -h localhost -u vapor_username -pvapor_password vapor_database -e "drop database vapor_database;"
-          mysql -h localhost -u vapor_username -pvapor_password vapor_database -e "create database vapor_database;"
+          mysql -h 0.0.0.0 -u vapor_username -pvapor_password vapor_database -e "drop database vapor_database;"
+          mysql -h 0.0.0.0 -u vapor_username -pvapor_password vapor_database -e "create database vapor_database;"
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
