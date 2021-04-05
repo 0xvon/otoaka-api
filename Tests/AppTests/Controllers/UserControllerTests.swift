@@ -198,12 +198,6 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetLikedUserFeeds.Response.self)
             XCTAssertEqual(responseBody.items.count, 0)
         }
-        
-        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=200", headers: headers) { res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
-            XCTAssertEqual(responseBody.items.count, 0)
-        }
 
         try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
@@ -250,6 +244,45 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
+    
+    func testGetNotifications() throws {
+        let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userY = try appClient.createUser(role: .fan(.init()))
+        let groupX = try appClient.createGroup(with: userX)
+        let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
+        let _ = try appClient.followUser(target: userX, with: userY)
+        let headers = appClient.makeHeaders(for: userX)
+        
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            XCTAssertFalse(responseBody.items.first!.isRead)
+            
+            let readNotiBody = Endpoint.ReadNotification.Request(notificationId: responseBody.items.first!.id)
+            let readNotiBodyData = try ByteBuffer(data: appClient.encoder.encode(readNotiBody))
+            
+            try app.test(.POST, "users/read_notification", headers: headers, body: readNotiBodyData) { res in
+                XCTAssertEqual(res.status, .ok, res.body.string)
+            }
+        }
+        
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            XCTAssertTrue(responseBody.items.first!.isRead)
+        }
+        
+        let _ = try appClient.likeUserFeed(feed: feed, with: userY)
+        let _ = try appClient.commentUserFeed(feed: feed, with: userY)
+
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 3)
         }
     }
 }

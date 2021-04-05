@@ -6,6 +6,8 @@ public class UserRepository: Domain.UserRepository {
     public enum Error: Swift.Error {
         case alreadyCreated
         case userNotFound
+        case userNotificationNotFound
+        case userNotificationAlreadyRead
         case deviceAlreadyRegistered
         case cantChangeRole
         case feedNotFound
@@ -194,6 +196,19 @@ public class UserRepository: Domain.UserRepository {
         return comment.save(on: db).flatMap { [db] in
             Domain.UserFeedComment.translate(fromPersistance: comment, on: db)
         }
+        .flatMap { [db] comment in
+            let feed = UserFeed.find(input.feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+            return feed.flatMapThrowing { feed -> UserNotification in
+                let notification = UserNotification()
+                notification.$feedComment.id = comment.id.rawValue
+                notification.$user.id = feed.$author.id
+                notification.isRead = false
+                notification.notificationType = .comment
+                return notification
+            }
+            .flatMap { [db] in $0.save(on: db) }
+            .map { comment }
+        }
     }
 
     public func getUserFeedComments(feedId: Domain.UserFeed.ID, page: Int, per: Int)
@@ -223,5 +238,30 @@ public class UserRepository: Domain.UserRepository {
                 Domain.User.translate(fromPersistance: $0, on: db)
             }
         }
+    }
+    
+    public func getNotifications(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.UserNotification>> {
+        UserNotification.query(on: db)
+            .filter(\.$user.$id == userId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.UserNotification.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+    
+    public func readNotification(notificationId: Domain.UserNotification.ID) -> EventLoopFuture<Void> {
+        let notification = UserNotification.find(notificationId.rawValue, on: db).unwrap(orError: Error.userNotificationNotFound)
+        return notification.flatMapThrowing { notification -> UserNotification in
+            if notification.isRead {
+                throw Error.userNotificationAlreadyRead
+            } else {
+                notification.isRead = true
+            }
+            return notification
+        }
+        .flatMap { [db] in $0.update(on: db) }
     }
 }

@@ -192,3 +192,31 @@ public struct SearchUser: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+public struct GetNotifications: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserNotification>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users", "notifications") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct ReadNotification: EndpointProtocol {
+    public struct Request: Codable {
+        public var notificationId: UserNotification.ID
+        public init(notificationId: UserNotification.ID) {
+            self.notificationId = notificationId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "read_notification") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}

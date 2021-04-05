@@ -42,6 +42,7 @@ public func setupMigration(
         CreateUserFeedLike(),
         ThumbnailUrlAndAppleMusicToArtistFeed(), ThumbnailUrlAndAppleMusicToUserFeed(),
         InstagramAndTwitterUrlToUser(),
+        CreateUserNotification(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

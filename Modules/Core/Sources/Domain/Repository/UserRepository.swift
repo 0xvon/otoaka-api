@@ -26,4 +26,6 @@ public protocol UserRepository {
         -> EventLoopFuture<Page<UserFeedComment>>
     func feeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedSummary>>
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<User>>
+    func getNotifications(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>>
+    func readNotification(notificationId: UserNotification.ID) -> EventLoopFuture<Void>
 }

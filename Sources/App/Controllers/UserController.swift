@@ -93,6 +93,14 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.search(query: uri.term, page: uri.page, per: uri.per)
             })
+        try routes.on(endpoint: Endpoint.GetNotifications.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return repository.getNotifications(userId: user.id, page: uri.page, per: uri.per)
+        })
+        try routes.on(endpoint: Endpoint.ReadNotification.self, use: injectProvider { req, uri, repository in
+            let input = try req.content.decode(ReadNotification.Request.self)
+            return repository.readNotification(notificationId: input.notificationId).map { Empty() }
+        })
     }
 
     func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws
@@ -189,6 +197,8 @@ extension Persistance.UserRepository.Error: AbortError {
         switch self {
         case .alreadyCreated: return .badRequest
         case .userNotFound: return .forbidden
+        case .userNotificationNotFound: return .forbidden
+        case .userNotificationAlreadyRead: return .badRequest
         case .deviceAlreadyRegistered: return .ok
         case .cantChangeRole: return .badRequest
         case .feedNotFound: return .forbidden

@@ -49,6 +49,14 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func getNotifications(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>> {
+            fatalError("unimplemented")
+        }
+        
+        func readNotification(notificationId: UserNotification.ID) -> EventLoopFuture<Void> {
+            fatalError("unimplemented")
+        }
+        
         func find(by userId: User.ID) -> EventLoopFuture<User?> {
             fatalError("unimplemented")
         }

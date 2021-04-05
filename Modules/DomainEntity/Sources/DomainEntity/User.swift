@@ -97,7 +97,7 @@ public struct UserFeed: Codable, Equatable {
     }
 }
 
-public struct UserFeedComment: Codable {
+public struct UserFeedComment: Codable, Identifiable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var text: String
@@ -114,5 +114,92 @@ public struct UserFeedComment: Codable {
         self.author = author
         self.userFeedId = userFeedId
         self.createdAt = createdAt
+    }
+}
+
+public struct UserNotification: Codable, Identifiable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var user: User
+    public var isRead: Bool
+    public var notificationType: UserNotificationType
+    public var createdAt: Date
+    
+    public init(
+        id: ID, user: User, isRead: Bool, notificationType: UserNotificationType, createdAt: Date
+    ) {
+        self.id = id
+        self.user = user
+        self.isRead = isRead
+        self.notificationType = notificationType
+        self.createdAt = createdAt
+    }
+}
+
+public enum UserNotificationType: Codable, Equatable {
+    case follow(User)
+    case like(UserFeedLike)
+    case comment(UserFeedComment)
+    case officialAnnounce(OfficialAnnounce)
+    
+    enum CodingKeys: CodingKey {
+        case kind, value
+    }
+    
+    enum Kind: String, Codable {
+        case follow, like, comment, officialAnnounce
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let kind = try container.decode(Kind.self, forKey: .kind)
+        switch kind {
+        case .follow:
+            self = try .follow(container.decode(User.self, forKey: .value))
+        case .like:
+            self = try .like(container.decode(UserFeedLike.self, forKey: .value))
+        case .comment:
+            self = try .comment(container.decode(UserFeedComment.self, forKey: .value))
+        case .officialAnnounce:
+            self = try .officialAnnounce(container.decode(OfficialAnnounce.self, forKey: .value))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .follow(followedBy):
+            try container.encode(Kind.follow, forKey: .kind)
+            try container.encode(followedBy, forKey: .value)
+        case let .like(likeUserFeed):
+            try container.encode(Kind.like, forKey: .kind)
+            try container.encode(likeUserFeed, forKey: .value)
+        case let .comment(comment):
+            try container.encode(Kind.comment, forKey: .kind)
+            try container.encode(comment, forKey: .value)
+        case let .officialAnnounce(officialAnnounce):
+            try container.encode(Kind.officialAnnounce, forKey: .kind)
+            try container.encode(officialAnnounce, forKey: .value)
+        }
+    }
+}
+
+public struct OfficialAnnounce: Codable, Equatable {
+    public var title: String
+    public var url: String?
+    
+    public init(title: String, url: String?) {
+        self.title = title
+        self.url = url
+    }
+}
+
+public struct UserFeedLike: Codable, Equatable {
+    public var feed: UserFeed
+    public var likedBy: User
+    
+    public init(feed: UserFeed, likedBy: User) {
+        self.feed = feed
+        self.likedBy = likedBy
     }
 }
