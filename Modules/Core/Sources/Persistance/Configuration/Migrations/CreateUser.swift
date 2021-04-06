@@ -212,3 +212,52 @@ struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
             .update()
     }
 }
+
+struct InstagramAndTwitterUrlToUser: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .field("instagram_url", .string)
+            .field("twitter_url", .string)
+            .update()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("instagram_url")
+            .deleteField("twitter_url")
+            .update()
+    }
+}
+
+struct CreateUserNotification: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserNotification.schema)
+            .id()
+            .field("is_read", .bool, .required)
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .field(
+                "notification_type",
+                .enum(
+                    DatabaseSchema.DataType.Enum(name: "notification_type", cases: ["follow", "like", "comment", "official_announce"])
+                )
+            )
+            .field("followed_by_id", .uuid)
+            .foreignKey("followed_by_id", references: User.schema, .id)
+            .field("liked_user_id", .uuid)
+            .foreignKey("liked_user_id", references: User.schema, .id)
+            .field("liked_feed_id", .uuid)
+            .foreignKey("liked_feed_id", references: UserFeed.schema, .id)
+            .field("feed_comment_id", .uuid)
+            .foreignKey("feed_comment_id", references: UserFeedComment.schema, .id)
+            .field("title", .string)
+            .field("url", .string)
+            .field("created_at", .datetime, .required)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserNotification.schema)
+            .delete()
+    }
+}

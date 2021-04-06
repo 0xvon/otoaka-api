@@ -11,6 +11,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case alreadyFollowing
         case notFollowing
         case targetGroupNotFound
+        case feedNotFound
         case notHavingLiveLike
         case notHavingUserFeedLike
     }
@@ -123,12 +124,21 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 guard isTargetExisting else { throw Error.targetGroupNotFound }
                 return
             }
-        return precondition.flatMap { [db] _ in
-            let following = UserFollowing()
-            following.$user.id = selfUser.rawValue
-            following.$target.id = targetUser.rawValue
-            return following.save(on: db)
-        }
+        return precondition
+            .flatMap { [db] _ in
+                let following = UserFollowing()
+                following.$user.id = selfUser.rawValue
+                following.$target.id = targetUser.rawValue
+                return following.save(on: db)
+            }
+            .flatMap { [db] in
+                let notification = UserNotification()
+                notification.$user.id = targetUser.rawValue
+                notification.isRead = false
+                notification.notificationType = .follow
+                notification.$followedBy.id = selfUser.rawValue
+                return notification.save(on: db)
+            }
     }
 
     public func unfollowUser(selfUser: Domain.User.ID, targetUser: Domain.User.ID) -> EventLoopFuture<
@@ -138,6 +148,11 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .filter(\.$user.$id == selfUser.rawValue)
             .filter(\.$target.$id == targetUser.rawValue)
             .first()
+        _ = UserNotification.query(on: db)
+            .filter(\.$followedBy.$id == selfUser.rawValue)
+            .filter(\.$user.$id == targetUser.rawValue)
+            .all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
         let precondition = following.flatMapThrowing { following -> UserFollowing in
             guard let following = following else {
                 throw Error.notFollowing
@@ -347,6 +362,19 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         like.$user.id = userId.rawValue
         like.$feed.id = feedId.rawValue
         return like.create(on: db)
+            .flatMap { [db] in
+                let feed = UserFeed.find(feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+                return feed.flatMapThrowing { feed -> UserNotification in
+                    let notification = UserNotification()
+                    notification.$likedFeed.id = feedId.rawValue
+                    notification.$likedBy.id = userId.rawValue
+                    notification.$user.id = feed.$author.id
+                    notification.isRead = false
+                    notification.notificationType = .like
+                    return notification
+                }
+                .flatMap { [db] in $0.save(on: db) }
+            }
     }
 
     public func unlikeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void>
@@ -354,6 +382,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         let like = UserFeedLike.query(on: db).filter(\.$user.$id == userId.rawValue)
             .filter(\.$feed.$id == feedId.rawValue)
             .first()
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedBy.$id == userId.rawValue)
+            .filter(\.$likedFeed.$id == feedId.rawValue)
+            .delete()
         return like.flatMapThrowing { like -> UserFeedLike in
             guard let like = like else {
                 throw Error.notHavingUserFeedLike

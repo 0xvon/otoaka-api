@@ -36,12 +36,18 @@ final class User: Model {
     /// Only for artist.
     @OptionalField(key: "part")
     var part: String?
+    
+    @OptionalField(key: "twitter_url")
+    var twitterUrl: String?
+    
+    @OptionalField(key: "instagram_url")
+    var instagramUrl: String?
 
     init() {}
     init(
         cognitoId: Domain.CognitoID, cognitoUsername: CognitoUsername,
         email: String, name: String,
-        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties
+        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.cognitoId = cognitoId
         self.cognitoUsername = cognitoUsername
@@ -56,6 +62,8 @@ final class User: Model {
         case .fan:
             self.role = .fan
         }
+        self.twitterUrl = twitterUrl?.absoluteString
+        self.instagramUrl = instagramUrl?.absoluteString
     }
 }
 
@@ -71,7 +79,7 @@ extension Endpoint.User {
         return db.eventLoop.submit {
             try Self.init(
                 id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
-                thumbnailURL: entity.thumbnailURL, role: roleProperties)
+                thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
         }
     }
 }
@@ -255,5 +263,108 @@ extension Endpoint.UserFeedComment {
                     createdAt: entity.createdAt!
                 )
             }
+    }
+}
+
+public enum UserNotificationType: String, Codable {
+    case follow
+    case like
+    case comment
+    case official_announce
+}
+
+final class UserNotification: Model {
+    static let schema: String = "user_notifications"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "is_read")
+    var isRead: Bool
+    
+    @Parent(key: "user_id")
+    var user: User
+    
+    @Enum(key: "notification_type")
+    var notificationType: UserNotificationType
+    
+    @OptionalParent(key: "followed_by_id")
+    var followedBy: User?
+    
+    @OptionalParent(key: "liked_user_id")
+    var likedBy: User?
+    
+    @OptionalParent(key: "liked_feed_id")
+    var likedFeed: UserFeed?
+    
+    @OptionalParent(key: "feed_comment_id")
+    var feedComment: UserFeedComment?
+    
+    @OptionalField(key: "title")
+    var title: String?
+    
+    @OptionalField(key: "url")
+    var url: String?
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
+    init() {}
+    init(
+        isRead: Bool, user: User.IDValue, userNotificationType: Endpoint.UserNotificationType
+    ) {
+        self.isRead = isRead
+        self.$user.id = user
+        switch userNotificationType {
+        case let .follow(followedBy):
+            self.notificationType = .follow
+            self.$followedBy.id = followedBy.id.rawValue
+        case let .like(likeUserFeed):
+            self.notificationType = .like
+            self.$likedBy.id = likeUserFeed.likedBy.id.rawValue
+            self.$likedFeed.id = likeUserFeed.feed.id.rawValue
+        case let .comment(comment):
+            self.notificationType = .comment
+            self.$feedComment.id = comment.id.rawValue
+        case let .officialAnnounce(announce):
+            self.notificationType = .official_announce
+            self.title = announce.title
+            self.url = announce.url
+        }
+    }
+}
+
+extension Endpoint.UserNotification {
+    static func translate(fromPersistance entity: UserNotification, on db: Database) -> EventLoopFuture<Self> {
+        let user = entity.$user.get(on: db)
+            .flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+        switch entity.notificationType {
+        case .follow:
+            let followedBy = entity.$followedBy.get(on: db)
+                .flatMap { Endpoint.User.translate(fromPersistance: $0!, on: db)}
+            return user.and(followedBy).map { ($0, $1) }
+                .flatMapThrowing { user, followedBy in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .follow(followedBy), createdAt: entity.createdAt!)
+                }
+        case .like:
+            let likedBy = entity.$likedBy.get(on: db)
+                .flatMap { Endpoint.User.translate(fromPersistance: $0!, on: db) }
+            let likedFeed = entity.$likedFeed.get(on: db)
+                .flatMap { Endpoint.UserFeed.translate(fromPersistance: $0!, on: db) }
+            return user.and(likedBy).and(likedFeed).map { ( $0.0, $0.1, $1 )}
+                .flatMapThrowing { user, likedBy, likedFeed in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .like(Endpoint.UserFeedLike(feed: likedFeed, likedBy: likedBy)), createdAt: entity.createdAt!)
+                }
+        case .comment:
+            let comment = entity.$feedComment.get(on: db)
+                .flatMap { Endpoint.UserFeedComment.translate(fromPersistance: $0!, on: db) }
+            return user.and(comment).map { ($0, $1) }
+                .flatMapThrowing { user, comment in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .comment(comment), createdAt: entity.createdAt!)
+                }
+        case .official_announce:
+            return user.flatMapThrowing { user in
+                return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .officialAnnounce(Endpoint.OfficialAnnounce(title: entity.title!, url: entity.url)), createdAt: entity.createdAt!)
+            }
+        }
     }
 }

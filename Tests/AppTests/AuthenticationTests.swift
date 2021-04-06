@@ -49,6 +49,18 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<UserFeedSummary?> {
+            fatalError("unimplemented")
+        }
+        
+        func getNotifications(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>> {
+            fatalError("unimplemented")
+        }
+        
+        func readNotification(notificationId: UserNotification.ID) -> EventLoopFuture<Void> {
+            fatalError("unimplemented")
+        }
+        
         func find(by userId: User.ID) -> EventLoopFuture<User?> {
             fatalError("unimplemented")
         }
@@ -105,7 +117,7 @@ class AuthenticationTests: XCTestCase {
         > {
             let newUser = Endpoint.User(
                 id: .init(UUID()), name: input.name, biography: input.biography,
-                thumbnailURL: input.thumbnailURL, role: input.role
+                thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make()
             )
             users[cognitoUsername.lowercased()] = newUser
             return eventLoop.makeSucceededFuture(newUser)

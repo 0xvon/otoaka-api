@@ -6,6 +6,8 @@ public class UserRepository: Domain.UserRepository {
     public enum Error: Swift.Error {
         case alreadyCreated
         case userNotFound
+        case userNotificationNotFound
+        case userNotificationAlreadyRead
         case deviceAlreadyRegistered
         case cantChangeRole
         case feedNotFound
@@ -25,7 +27,7 @@ public class UserRepository: Domain.UserRepository {
                 let storedUser = User(
                     cognitoId: cognitoId, cognitoUsername: cognitoUsername, email: email,
                     name: input.name, biography: input.biography,
-                    thumbnailURL: input.thumbnailURL, role: input.role
+                    thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: input.twitterUrl, instagramUrl: input.instagramUrl
                 )
                 return storedUser.create(on: db).flatMap { [db] in
                     Endpoint.User.translate(fromPersistance: storedUser, on: db)
@@ -41,6 +43,8 @@ public class UserRepository: Domain.UserRepository {
             user.name = input.name
             user.biography = input.biography
             user.thumbnailURL = input.thumbnailURL
+            user.twitterUrl = input.twitterUrl?.absoluteString
+            user.instagramUrl = input.instagramUrl?.absoluteString
             switch (user.role, input.role) {
             case (.artist, .artist(let artist)):
                 user.part = artist.part
@@ -141,12 +145,20 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in
                 $0.delete(force: true, on: db)
             }
-        _ = UserFeedComment.query(on: db)
+        let comments = UserFeedComment.query(on: db)
             .filter(\.$feed.$id == id.rawValue)
             .all()
-            .flatMap { [db] in
-                $0.delete(force: true, on: db)
-            }
+        _ = comments.flatMapEach(on: db.eventLoop) { [db] in
+            UserNotification.query(on: db)
+                .filter(\.$feedComment.$id == $0.id)
+                .all()
+                .flatMap { [db] in $0.delete(force: true, on: db) }
+        }
+        _ = comments.flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedFeed.$id == id.rawValue)
+            .all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
         return UserFeed.find(id.rawValue, on: db)
             .unwrap(orError: Error.feedNotFound)
             .flatMapThrowing { feed -> UserFeed in
@@ -192,6 +204,19 @@ public class UserRepository: Domain.UserRepository {
         return comment.save(on: db).flatMap { [db] in
             Domain.UserFeedComment.translate(fromPersistance: comment, on: db)
         }
+        .flatMap { [db] comment in
+            let feed = UserFeed.find(input.feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+            return feed.flatMapThrowing { feed -> UserNotification in
+                let notification = UserNotification()
+                notification.$feedComment.id = comment.id.rawValue
+                notification.$user.id = feed.$author.id
+                notification.isRead = false
+                notification.notificationType = .comment
+                return notification
+            }
+            .flatMap { [db] in $0.save(on: db) }
+            .map { comment }
+        }
     }
 
     public func getUserFeedComments(feedId: Domain.UserFeed.ID, page: Int, per: Int)
@@ -204,6 +229,19 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                     Domain.UserFeedComment.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+    
+    public func findUserFeedSummary(userFeedId: Domain.UserFeed.ID, userId: Domain.User.ID) -> EventLoopFuture<Domain.UserFeedSummary?> {
+        UserFeed.query(on: db)
+            .filter(\.$id == userFeedId.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .first()
+            .optionalFlatMap { [db] feed in
+                return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                    return UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
                 }
             }
     }
@@ -221,5 +259,30 @@ public class UserRepository: Domain.UserRepository {
                 Domain.User.translate(fromPersistance: $0, on: db)
             }
         }
+    }
+    
+    public func getNotifications(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.UserNotification>> {
+        UserNotification.query(on: db)
+            .filter(\.$user.$id == userId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.UserNotification.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+    
+    public func readNotification(notificationId: Domain.UserNotification.ID) -> EventLoopFuture<Void> {
+        let notification = UserNotification.find(notificationId.rawValue, on: db).unwrap(orError: Error.userNotificationNotFound)
+        return notification.flatMapThrowing { notification -> UserNotification in
+            if notification.isRead {
+                throw Error.userNotificationAlreadyRead
+            } else {
+                notification.isRead = true
+            }
+            return notification
+        }
+        .flatMap { [db] in $0.update(on: db) }
     }
 }

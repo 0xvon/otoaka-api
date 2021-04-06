@@ -1,21 +1,26 @@
 import CodableURL
+import Foundation
 
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public init(
             name: String, biography: String? = nil, thumbnailURL: String? = nil,
-            role: RoleProperties
+            role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
         ) {
             self.name = name
             self.biography = biography
             self.thumbnailURL = thumbnailURL
             self.role = role
+            self.twitterUrl = twitterUrl
+            self.instagramUrl = instagramUrl
         }
 
         public var name: String
         public var biography: String?
         public var thumbnailURL: String?
         public var role: RoleProperties
+        public var twitterUrl: URL?
+        public var instagramUrl: URL?
     }
 
     public typealias Response = User
@@ -175,6 +180,17 @@ public struct GetUserFeeds: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetUserFeed: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = UserFeedSummary
+    public struct URI: CodableURL {
+        @StaticPath("users", "feeds") public var prefix: Void
+        @DynamicPath public var feedId: UserFeed.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct SearchUser: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>
@@ -186,4 +202,32 @@ public struct SearchUser: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct GetNotifications: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<UserNotification>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users", "notifications") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct ReadNotification: EndpointProtocol {
+    public struct Request: Codable {
+        public var notificationId: UserNotification.ID
+        public init(notificationId: UserNotification.ID) {
+            self.notificationId = notificationId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "read_notification") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
 }
