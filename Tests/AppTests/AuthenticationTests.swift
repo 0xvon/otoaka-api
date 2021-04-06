@@ -49,6 +49,10 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<UserFeedSummary?> {
+            fatalError("unimplemented")
+        }
+        
         func getNotifications(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>> {
             fatalError("unimplemented")
         }

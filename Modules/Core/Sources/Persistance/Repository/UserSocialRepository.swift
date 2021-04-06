@@ -148,6 +148,11 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .filter(\.$user.$id == selfUser.rawValue)
             .filter(\.$target.$id == targetUser.rawValue)
             .first()
+        _ = UserNotification.query(on: db)
+            .filter(\.$followedBy.$id == selfUser.rawValue)
+            .filter(\.$user.$id == targetUser.rawValue)
+            .all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
         let precondition = following.flatMapThrowing { following -> UserFollowing in
             guard let following = following else {
                 throw Error.notFollowing
@@ -377,6 +382,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         let like = UserFeedLike.query(on: db).filter(\.$user.$id == userId.rawValue)
             .filter(\.$feed.$id == feedId.rawValue)
             .first()
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedBy.$id == userId.rawValue)
+            .filter(\.$likedFeed.$id == feedId.rawValue)
+            .delete()
         return like.flatMapThrowing { like -> UserFeedLike in
             guard let like = like else {
                 throw Error.notHavingUserFeedLike

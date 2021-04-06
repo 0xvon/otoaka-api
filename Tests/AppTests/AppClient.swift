@@ -163,6 +163,16 @@ class AppClient {
         try app.test(
             .POST, "user_social/follow_user", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func unfollowUser(target: AppUser, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnfollowUser.Request.self) {
+            $0.set(\.id, value: target.user.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(
+            .POST, "user_social/unfollow_user", headers: makeHeaders(for: user), body: bodyData)
+    }
 
     func like(live: Live, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikeLive.Request.self) {
@@ -220,6 +230,14 @@ class AppClient {
         return created
     }
     
+    func deleteUserFeed(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(DeleteUserFeed.Request.self) {
+            $0.set(\.id, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        try app.test(.DELETE, "users/delete_feed", headers: makeHeaders(for: user), body: bodyData)
+    }
+    
     func likeUserFeed(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikeUserFeed.Request.self) {
             $0.set(\.feedId, value: feed.id)
@@ -228,6 +246,16 @@ class AppClient {
 
         try app.test(
             .POST, "user_social/like_user_feed", headers: makeHeaders(for: user), body: bodyData)
+    }
+    
+    func unlikeUserFeed(feed: UserFeed, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnlikeUserFeed.Request.self) {
+            $0.set(\.feedId, value: feed.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
     
     func commentUserFeed(feed: UserFeed, with user: AppUser) throws {

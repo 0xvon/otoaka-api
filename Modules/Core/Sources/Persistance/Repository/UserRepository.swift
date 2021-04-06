@@ -145,12 +145,20 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in
                 $0.delete(force: true, on: db)
             }
-        _ = UserFeedComment.query(on: db)
+        let comments = UserFeedComment.query(on: db)
             .filter(\.$feed.$id == id.rawValue)
             .all()
-            .flatMap { [db] in
-                $0.delete(force: true, on: db)
-            }
+        _ = comments.flatMapEach(on: db.eventLoop) { [db] in
+            UserNotification.query(on: db)
+                .filter(\.$feedComment.$id == $0.id)
+                .all()
+                .flatMap { [db] in $0.delete(force: true, on: db) }
+        }
+        _ = comments.flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedFeed.$id == id.rawValue)
+            .all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
         return UserFeed.find(id.rawValue, on: db)
             .unwrap(orError: Error.feedNotFound)
             .flatMapThrowing { feed -> UserFeed in
@@ -221,6 +229,19 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                     Domain.UserFeedComment.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+    
+    public func findUserFeedSummary(userFeedId: Domain.UserFeed.ID, userId: Domain.User.ID) -> EventLoopFuture<Domain.UserFeedSummary?> {
+        UserFeed.query(on: db)
+            .filter(\.$id == userFeedId.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .first()
+            .optionalFlatMap { [db] feed in
+                return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
+                    return UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
                 }
             }
     }

@@ -219,6 +219,12 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(firstItem.id, feed.id)
             XCTAssertEqual(firstItem.commentCount, 0)
         }
+        
+        try app.test(.GET, "users/feeds/\(feed.id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetUserFeed.Response.self)
+            XCTAssertEqual(responseBody.id, feed.id)
+        }
     }
 
     func testPostCommentOnUserFeed() throws {
@@ -283,6 +289,30 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 3)
+        }
+        
+        // unfollow user → delete notification
+        let _ = try appClient.unfollowUser(target: userX, with: userY)
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
+        
+        // unlike user feed → delete notification
+        let _ = try appClient.unlikeUserFeed(feed: feed, with: userY)
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        // delete user feed -> delete all notification about this feed
+        let _ = try appClient.deleteUserFeed(feed: feed, with: userX)
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 0)
         }
     }
 }

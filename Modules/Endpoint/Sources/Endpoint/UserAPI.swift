@@ -180,6 +180,17 @@ public struct GetUserFeeds: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetUserFeed: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = UserFeedSummary
+    public struct URI: CodableURL {
+        @StaticPath("users", "feeds") public var prefix: Void
+        @DynamicPath public var feedId: UserFeed.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct SearchUser: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>

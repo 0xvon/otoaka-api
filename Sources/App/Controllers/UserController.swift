@@ -67,7 +67,12 @@ struct UserController: RouteCollection {
                         .map { comment }
                     }
             })
-
+        try routes.on(
+            endpoint: GetUserFeed.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.findUserFeedSummary(userFeedId: uri.feedId, userId: user.id).unwrap(or: Abort(.notFound))
+            })
         try routes.on(
             endpoint: DeleteUserFeed.self,
             use: injectProvider { req, uri, repository in
@@ -190,6 +195,8 @@ extension Endpoint.User: Content {}
 extension Endpoint.SignupStatus.Response: Content {}
 
 extension Endpoint.UserDetail: Content {}
+
+extension Endpoint.UserFeedSummary: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
