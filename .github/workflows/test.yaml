@@ -43,7 +43,7 @@ jobs:
           CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
           CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
           SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
-          DATABASE_URL: mysql://vapor_usernmae:vapor_password@0.0.0.0/vapor_database
+          DATABASE_URL: mysql://vapor_username:vapor_password@0.0.0.0/vapor_database
       
       - name: Debug
         if: ${{ always() }}
@@ -55,4 +55,4 @@ jobs:
           CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
           CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
           SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
-          DATABASE_URL: mysql://vapor_usernmae:vapor_password@0.0.0.0/vapor_database
+          DATABASE_URL: mysql://vapor_username:vapor_password@0.0.0.0/vapor_database
