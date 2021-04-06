@@ -23,22 +23,6 @@ jobs:
         run: |
           sleep 15
           mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show databases;"
-      # - name: Shutdown Ubuntu MySQL
-      #   run: sudo service mysql stop
-      
-      # - uses: mirromutth/mysql-action@v1.1
-      #   with:
-      #     mysql version: 8.0
-      #     mysql database: vapor_database
-      #     mysql root password: vapor_password
-      # - name: reset db
-      #   run: |
-      #     sleep 15
-      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show databases;"
-      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
-      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "drop database if exists vapor_database;"
-      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "create database if not exists vapor_database;"
-      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
@@ -48,7 +32,6 @@ jobs:
         run: swiftenv install
       - name: Build and test
         run: |
-          swift env exec swift run
           swiftenv exec swift test --enable-test-discovery
         env:
           AWS_REGION: ap-northeast-1
