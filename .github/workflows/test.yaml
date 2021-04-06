@@ -32,7 +32,6 @@ jobs:
           collation server: 'utf8mb4_general_ci'
           mysql version: '5.7'
           mysql database: 'vapor_database'
-          mysql root password: 'vapor_password'
           mysql user: 'vapor_username'
           mysql password: 'vapor_password'
       # - name: reset db
