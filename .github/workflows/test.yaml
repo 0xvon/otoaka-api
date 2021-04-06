@@ -41,3 +41,7 @@ jobs:
           CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
           SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
           DATABASE_URL: mysql://root:vapor_password@0.0.0.0/vapor_database
+      
+      - name: Debug
+        if: ${{ always() }}
+        uses: mxschmitt/action-tmate@v3
