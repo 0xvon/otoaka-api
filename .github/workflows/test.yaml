@@ -38,6 +38,7 @@ jobs:
         run: |
           sleep 15
           mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password -e "show databases;"
+          mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password -e "use vapor_database;"
           mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password -e "show tables;"
           mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password -e "drop database if exists vapor_database;"
           mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password -e "create database if not exists vapor_database;"
