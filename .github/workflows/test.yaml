@@ -3,16 +3,14 @@ on: [push]
 jobs:
   test-project:
     runs-on: ubuntu-18.04
-    # services:
-    #   mysql:
-    #     image: mysql:8.0
-    #     ports:
-    #       - '3306:3306'
-    #     env:
-    #       MYSQL_USER: vapor_username
-    #       MYSQL_PASSWORD: vapor_password
-    #       MYSQL_DATABASE: vapor_database
-    #       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - '3306:3306'
+        env:
+          MYSQL_ROOT_PASSWORD: vapor_password
+          MYSQL_DATABASE: vapor_database
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -21,26 +19,26 @@ jobs:
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
-      - name: Shutdown Ubuntu MySQL
-        run: sudo service mysql stop
-      
-      - uses: mirromutth/mysql-action@v1.1
-        with:
-          host port: 3306
-          container port: 3306
-          character set server: 'utf8mb4'
-          collation server: 'utf8mb4_general_ci'
-          mysql version: '5.7'
-          mysql database: 'vapor_database'
-          mysql root password: 'vapor_password'
-      - name: reset db
+      - name: test db connection
         run: |
           sleep 15
           mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show databases;"
-          mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
-          mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "drop database if exists vapor_database;"
-          mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "create database if not exists vapor_database;"
-          mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
+      # - name: Shutdown Ubuntu MySQL
+      #   run: sudo service mysql stop
+      
+      # - uses: mirromutth/mysql-action@v1.1
+      #   with:
+      #     mysql version: 8.0
+      #     mysql database: vapor_database
+      #     mysql root password: vapor_password
+      # - name: reset db
+      #   run: |
+      #     sleep 15
+      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show databases;"
+      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
+      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "drop database if exists vapor_database;"
+      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "create database if not exists vapor_database;"
+      #     mysql -h 0.0.0.0 --port 3306 -u root -pvapor_password vapor_database -e "show tables;"
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
