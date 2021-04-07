@@ -3,16 +3,16 @@ on: [push]
 jobs:
   test-project:
     runs-on: ubuntu-18.04
-    # services:
-    #   mysql:
-    #     image: mysql:8.0
-    #     ports:
-    #       - '3306:3306'
-    #     env:
-    #       MYSQL_USER: vapor_username
-    #       MYSQL_PASSWORD: vapor_password
-    #       MYSQL_DATABASE: vapor_database
-    #       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - '3306:3306'
+        env:
+          MYSQL_USER: vapor_username
+          MYSQL_PASSWORD: vapor_password
+          MYSQL_DATABASE: vapor_database
+          MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -21,10 +21,6 @@ jobs:
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
-      # - name: test db connection
-      #   run: |
-      #     sleep 15
-      #     mysql -h 0.0.0.0 --port 3306 -u vapor_username -pvapor_password vapor_database -e "show databases;"
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
@@ -33,9 +29,7 @@ jobs:
       - name: Install Swift
         run: swiftenv install
       - name: Build and test
-        run: |
-          docker-compose up -d db
-          swiftenv exec swift test --enable-test-discovery
+        run: swiftenv exec swift test --enable-test-discovery
         env:
           AWS_REGION: ap-northeast-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -45,14 +39,14 @@ jobs:
           SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
           DATABASE_URL: mysql://vapor_username:vapor_password@0.0.0.0/vapor_database
       
-      - name: Debug
-        if: ${{ always() }}
-        uses: mxschmitt/action-tmate@v3
-        env:
-          AWS_REGION: ap-northeast-1
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
-          CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
-          SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
-          DATABASE_URL: mysql://vapor_username:vapor_password@0.0.0.0/vapor_database
+      # - name: Debug
+      #   if: ${{ always() }}
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     AWS_REGION: ap-northeast-1
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     CONGNITO_IDP_USER_POOL_ID: ${{ secrets.CONGNITO_IDP_USER_POOL_ID }}
+      #     CONGNITO_IDP_CLIENT_ID: ${{ secrets.CONGNITO_IDP_CLIENT_ID }}
+      #     SNS_PLATFORM_APPLICATION_ARN: ${{ secrets.SNS_PLATFORM_APPLICATION_ARN }}
+      #     DATABASE_URL: mysql://vapor_username:vapor_password@0.0.0.0/vapor_database

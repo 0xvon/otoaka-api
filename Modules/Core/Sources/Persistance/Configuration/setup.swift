@@ -37,11 +37,11 @@ public func setupMigration(
         CreateTicket(), CreateFollowing(), CreateUserDevice(),
         CreateLiveLike(), CreateGroupFeed(), CreateArtistFeedComment(),
         AddDeletedAtFieldToGroup(), AddDeletedAtFieldToArtistFeed(),
-        CognitoSubToUsername(migrator: cognitoUserMigrator), CreateUserFollowing(),
+        CognitoSubToUsername(), CreateUserFollowing(),
         CreateUserFeed(), CreateUserFeedComment(),
         CreateUserFeedLike(),
         ThumbnailUrlAndAppleMusicToArtistFeed(), ThumbnailUrlAndAppleMusicToUserFeed(),
-        InstagramAndTwitterUrlToUser(),
+        InstagramAndTwitterUrlToUser(migrator: cognitoUserMigrator),
         CreateUserNotification(),
     ])
 

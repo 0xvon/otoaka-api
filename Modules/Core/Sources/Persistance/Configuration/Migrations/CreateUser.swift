@@ -83,26 +83,11 @@ public protocol PersistanceUser: AnyObject {
 extension User: PersistanceUser {}
 
 struct CognitoSubToUsername: Migration {
-    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
-
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        let addColumn = database.schema(User.schema)
+        database.schema(User.schema)
             .field("cognito_username", .string)
             .unique(on: "cognito_username")
             .update()
-
-        return addColumn.flatMap {
-            User.query(on: database)
-                .filter(\.$cognitoUsername == nil)
-                .all()
-                .flatMap { users in
-                    migrator(users).map { users }
-                }
-                .flatMapEach(on: database.eventLoop) {
-                    $0.save(on: database)
-                }
-                .transform(to: ())
-        }
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
@@ -214,11 +199,25 @@ struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
 }
 
 struct InstagramAndTwitterUrlToUser: Migration {
+    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(User.schema)
+        let addColumn = database.schema(User.schema)
             .field("instagram_url", .string)
             .field("twitter_url", .string)
             .update()
+        
+        return addColumn.flatMap {
+            User.query(on: database)
+                .filter(\.$cognitoUsername == nil)
+                .all()
+                .flatMap { users in
+                    migrator(users).map { users }
+                }
+                .flatMapEach(on: database.eventLoop) {
+                    $0.save(on: database)
+                }
+                .transform(to: ())
+        }
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
