@@ -164,6 +164,30 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(body.items.count, 2)
         }
     }
+    
+    func testGetRecommendedUsers() throws {
+        let userA = try appClient.createUser()
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let userD = try appClient.createUser()
+        _ = try appClient.createUser()
+        _ = try appClient.createUser()
+        
+        _ = try appClient.followUser(target: userB, with: userA)
+        _ = try appClient.followUser(target: userC, with: userA)
+        _ = try appClient.followUser(target: userD, with: userA)
+        
+        try app.test(
+            .GET,
+            "user_social/recommended_users/\(userA.user.id)?page=1&per=10",
+            headers: appClient.makeHeaders(for: userA)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(RecommendedUsers.Response.self)
+            XCTAssertGreaterThanOrEqual(body.items.count, 5)
+            XCTAssertFalse(body.items.contains(userA.user))
+        }
+    }
 
     func testGetUserFollowers() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))

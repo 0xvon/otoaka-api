@@ -175,6 +175,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             }
         }
     }
+    
+    public func recommendedUsers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {
+        // TODO: CHANGE LOGIC
+        let users = User.query(on: db)
+            .filter(\.$id != selfUser.rawValue)
+            .unique()
+        return users.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.User.translate(fromPersistance: $0, on: db)
+            }
+        }
+    }
 
     public func userFollowers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
