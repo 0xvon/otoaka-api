@@ -112,6 +112,19 @@ public struct FollowingUsers: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct RecommendedUsers: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "recommended_users") public var prefix: Void
+        @DynamicPath public var id: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct LiveFeed: Codable {
     public var live: Live
     public var isLiked: Bool

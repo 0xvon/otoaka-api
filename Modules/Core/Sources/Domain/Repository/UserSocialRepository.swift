@@ -13,6 +13,7 @@ public protocol UserSocialRepository {
     func followUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
     func unfollowUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
     func followingUsers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
+    func recommendedUsers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func userFollowers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func userFollowers(selfUser: User.ID) -> EventLoopFuture<[User.ID]>
     func isUserFollowing(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Bool>
