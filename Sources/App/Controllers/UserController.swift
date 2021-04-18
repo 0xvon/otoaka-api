@@ -93,6 +93,25 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try loggedIn.on(endpoint: Endpoint.CreatePost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(CreatePost.Request.self)
+                return repository.createPost(for: input, authorId: user.id)
+            })
+        try routes.on(
+            endpoint: Endpoint.DeletePost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(DeletePost.Request.self)
+                let useCase = DeletePostUseCase(userRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((postId: input.postId, userId: user.id)).map { Empty() }
+            })
+        try routes.on(
+            endpoint: Endpoint.GetPosts.self,
+            use: injectProvider { req, uri, repository in
+                return repository.posts(userId: uri.userId, page: uri.page, per: uri.per)
+            })
         try routes.on(
             endpoint: Endpoint.SearchUser.self,
             use: injectProvider { req, uri, repository in
@@ -191,12 +210,8 @@ struct UserController: RouteCollection {
 }
 
 extension Endpoint.User: Content {}
-
 extension Endpoint.SignupStatus.Response: Content {}
-
 extension Endpoint.UserDetail: Content {}
-
-extension Endpoint.UserFeedSummary: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
@@ -210,10 +225,16 @@ extension Persistance.UserRepository.Error: AbortError {
         case .cantChangeRole: return .badRequest
         case .feedNotFound: return .forbidden
         case .feedDeleted: return .badRequest
+        case .postNotFound: return .forbidden
+        case .postDeleted: return .badRequest
         }
     }
 }
 
 extension Endpoint.UserFeed: Content {}
-
+extension Endpoint.UserFeedSummary: Content {}
 extension Endpoint.UserFeedComment: Content {}
+
+extension Endpoint.Post: Content {}
+extension Endpoint.PostSummary: Content {}
+extension Endpoint.PostComment: Content {}

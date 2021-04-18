@@ -136,6 +136,69 @@ public struct UserNotification: Codable, Identifiable, Equatable {
     }
 }
 
+public struct Post: Codable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var author: User
+    public var text: String
+    public var tracks: [PostTrack]
+    public var groups: [Group]
+    public var imageUrls: [String]
+    public var createdAt: Date
+    
+    public init(
+        id: Post.ID, author: User, text: String, tracks: [PostTrack], groups: [Group], imageUrls: [String], createdAt: Date
+    ) {
+        self.id = id
+        self.author = author
+        self.text = text
+        self.tracks = tracks
+        self.groups = groups
+        self.imageUrls = imageUrls
+        self.createdAt = createdAt
+    }
+}
+
+public struct PostTrack: Codable, Equatable, Identifiable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var trackName: String
+    public var type: FeedType
+    public var group: Group
+    public var post: Post
+    public var thumbnailUrl: String?
+    
+    public init(
+        id: PostTrack.ID, trackName: String, type: FeedType, group: Group, post: Post, thumbnailUrl: String?
+    ) {
+        self.id = id
+        self.trackName = trackName
+        self.type = type
+        self.group = group
+        self.post = post
+        self.thumbnailUrl = thumbnailUrl
+    }
+}
+
+public struct PostComment: Codable, Identifiable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var text: String
+    public var author: User
+    public var post: Post
+    public var createdAt: Date
+    
+    public init(
+        id: PostComment.ID, text: String, author: User, post: Post, createdAt: Date
+    ) {
+        self.id = id
+        self.text = text
+        self.author = author
+        self.post = post
+        self.createdAt = createdAt
+    }
+}
+
 public enum UserNotificationType: Codable, Equatable {
     case follow(User)
     case like(UserFeedLike)

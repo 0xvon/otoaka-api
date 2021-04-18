@@ -12,6 +12,8 @@ public class UserRepository: Domain.UserRepository {
         case cantChangeRole
         case feedNotFound
         case feedDeleted
+        case postNotFound
+        case postDeleted
     }
 
     public init(db: Database) {
@@ -242,6 +244,112 @@ public class UserRepository: Domain.UserRepository {
             .optionalFlatMap { [db] feed in
                 return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
                     return UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                }
+            }
+    }
+    
+    public func createPost(for input: Domain.CreatePost.Request, authorId: Domain.User.ID) -> EventLoopFuture<Domain.Post> {
+        let post = Post()
+        post.$author.id = input.author.id.rawValue
+        post.text = input.text
+        
+        let created = post.create(on: db)
+        input.tracks.forEach { [db] in
+            let track = PostTrack()
+            track.$group.id = $0.group.id.rawValue
+            track.$post.id = post.id!
+            track.trackName = $0.name
+            track.thumbnailUrl = $0.artwork
+            switch $0.trackType {
+            case .youtube(let url):
+                track.type = .youtube
+                track.youtubeURL = url.absoluteString
+            case .appleMusic(let songId):
+                track.type = .apple_music
+                track.appleMusicSongId = songId
+            }
+            _ = track.create(on: db)
+        }
+        input.groups.forEach { [db] in
+            let group = PostGroup()
+            group.$group.id = $0.id.rawValue
+            group.$post.id = post.id!
+            _ = group.create(on: db)
+        }
+        for (index, imageUrl) in input.imageUrls.enumerated() {
+            let postImageUrl = PostImageUrl()
+            postImageUrl.$post.id = post.id!
+            postImageUrl.imageUrl = imageUrl
+            postImageUrl.order = index
+            _ = postImageUrl.create(on: db)
+        }
+        
+        return created.flatMap { [db] in
+            Domain.Post.translate(fromPersistance: post, on: db)
+        }
+    }
+    
+    public func deletePost(postId: Domain.Post.ID) -> EventLoopFuture<Void> {
+        _ = PostLike.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = PostComment.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = PostTrack.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = PostGroup.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = PostImageUrl.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        
+        return Post.find(postId.rawValue, on: db)
+            .unwrap(orError: Error.postNotFound)
+            .flatMapThrowing { post -> Post in
+                guard post.$id.exists else { throw Error.postDeleted }
+                return post
+            }
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+    }
+    
+    public func getPost(postId: Domain.Post.ID) -> EventLoopFuture<Domain.Post> {
+        Post.find(postId.rawValue, on: db).unwrap(orError: Error.postNotFound)
+            .flatMap { [db] in Domain.Post.translate(fromPersistance: $0, on: db) }
+    }
+    
+    public func findPostSummary(postId: Domain.Post.ID, userId: Domain.User.ID) -> EventLoopFuture<Domain.PostSummary?> {
+        Post.query(on: db)
+            .filter(\.$id == postId.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .first()
+            .optionalFlatMap { [db] post in
+                return Domain.Post.translate(fromPersistance: post, on: db)
+                    .map {
+                        return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                }
+            }
+    }
+    
+    public func posts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .filter(\.$author.$id == userId.rawValue)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
                 }
             }
     }

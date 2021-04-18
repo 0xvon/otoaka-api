@@ -225,6 +225,27 @@ public struct UserFeedSummary: Codable, Equatable {
     }
 }
 
+@dynamicMemberLookup
+public struct PostSummary: Codable, Equatable {
+    public var post: Post
+    public var commentCount: Int
+    public var likeCount: Int
+    public var isLiked: Bool
+    
+    public subscript<T>(dynamicMember keyPath: KeyPath<Post, T>) -> T {
+        post[keyPath: keyPath]
+    }
+    
+    public init(
+        post: Post, commentCount: Int, likeCount: Int, isLiked: Bool
+    ) {
+        self.post = post
+        self.commentCount = commentCount
+        self.likeCount = likeCount
+        self.isLiked = isLiked
+    }
+}
+
 public struct GetFollowingUserFeeds: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<UserFeedSummary>

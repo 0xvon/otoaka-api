@@ -191,6 +191,81 @@ public struct GetUserFeed: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct Track: Codable {
+    public var name: String
+    public var group: Group
+    public var artwork: String
+    public var trackType: FeedType
+    
+    public init(
+        name: String, group: Group, artwork: String, trackType: FeedType
+    ) {
+        self.name = name
+        self.group = group
+        self.artwork = artwork
+        self.trackType = trackType
+    }
+}
+
+public struct CreatePost: EndpointProtocol {
+    public struct Request: Codable {
+        public var author: User
+        public var text: String
+        public var tracks: [Track]
+        public var groups: [Group]
+        public var imageUrls: [String]
+        
+        public init(
+            author: User, text: String, tracks: [Track], groups: [Group], imageUrls: [String]
+        ) {
+            self.author = author
+            self.text = text
+            self.tracks = tracks
+            self.groups = groups
+            self.imageUrls = imageUrls
+        }
+    }
+    
+    public typealias Response = Post
+    public struct URI: CodableURL {
+        @StaticPath("users", "create_post") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct DeletePost: EndpointProtocol {
+    public struct Request: Codable {
+        public let postId: Post.ID
+        
+        public init(postId: Post.ID) {
+            self.postId = postId
+        }
+    }
+    
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "delete_post") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .delete
+}
+
+public struct GetPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @StaticPath("posts") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct SearchUser: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>

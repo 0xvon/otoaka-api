@@ -49,6 +49,26 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func createPost(for input: CreatePost.Request, authorId: User.ID) -> EventLoopFuture<Post> {
+            fatalError("unimplemented")
+        }
+        
+        func deletePost(postId: Post.ID) -> EventLoopFuture<Void> {
+            fatalError("unimplemented")
+        }
+        
+        func getPost(postId: Post.ID) -> EventLoopFuture<Post> {
+            fatalError("unimplemented")
+        }
+        
+        func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary?> {
+            fatalError("unimplemented")
+        }
+        
+        func posts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>> {
+            fatalError("unimplemented")
+        }
+        
         func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<UserFeedSummary?> {
             fatalError("unimplemented")
         }

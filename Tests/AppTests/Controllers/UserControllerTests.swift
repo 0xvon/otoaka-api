@@ -226,6 +226,32 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.id, feed.id)
         }
     }
+    
+    func testCreatePost() throws {
+        let user = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: user)
+
+        // create 2 posts
+        let post = try appClient.createPost(with: user)
+        _ = try appClient.createPost(with: user)
+
+        try app.test(.GET, "users/\(user.user.id)/posts?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetPosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+            XCTAssertEqual(responseBody.items.first!.groups.count, 2)
+            XCTAssertEqual(responseBody.items.first!.imageUrls.count, 2)
+        }
+
+        // delete 1 post
+        _ = try appClient.deletePost(postId: post.id, with: user)
+
+        try app.test(.GET, "users/\(user.user.id)/posts?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetPosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
 
     func testPostCommentOnUserFeed() throws {
         let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
