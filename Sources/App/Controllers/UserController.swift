@@ -112,6 +112,29 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.posts(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try loggedIn.on(
+            endpoint: AddPostComment.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(AddPostComment.Request.self)
+                let notificationService = makePushNotificationService(request: req)
+                // FIXME: Move to use case
+                return repository.addPostComment(userId: user.id, input: input)
+                    .and(repository.getPost(postId: input.postId))
+                    .flatMap { (comment, post) in
+                        let notification = PushNotification(
+                            message: "\(user.name) さんがあなたの投稿にコメントしました")
+                        return notificationService.publish(
+                            to: post.author.id, notification: notification
+                        )
+                        .map { comment }
+                    }
+            })
+        try routes.on(
+            endpoint: GetPostComments.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getPostComments(postId: uri.postId, page: uri.page, per: uri.per)
+            })
         try routes.on(
             endpoint: Endpoint.SearchUser.self,
             use: injectProvider { req, uri, repository in

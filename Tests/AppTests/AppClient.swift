@@ -303,4 +303,24 @@ class AppClient {
 
         try app.test(.DELETE, "users/delete_post", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func likePost(post: Post, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.LikePost.Request.self) {
+            $0.set(\.postId, value: post.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/like_post", headers: makeHeaders(for: user), body: bodyData)
+    }
+    
+    func unlikePost(post: Post, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnlikePost.Request.self) {
+            $0.set(\.postId, value: post.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/unlike_post", headers: makeHeaders(for: user), body: bodyData)
+    }
 }

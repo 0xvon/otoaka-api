@@ -31,6 +31,11 @@ public protocol UserRepository {
     func getPost(postId: Domain.Post.ID) -> EventLoopFuture<Domain.Post>
     func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary?>
     func posts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>
+    func addPostComment(userId: User.ID, input: AddPostComment.Request) -> EventLoopFuture<
+        PostComment
+    >
+    func getPostComments(postId: Post.ID, page: Int, per: Int)
+        -> EventLoopFuture<Page<PostComment>>
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func getNotifications(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>>
     func readNotification(notificationId: UserNotification.ID) -> EventLoopFuture<Void>

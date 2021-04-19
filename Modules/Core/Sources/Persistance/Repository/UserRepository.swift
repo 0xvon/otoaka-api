@@ -354,6 +354,28 @@ public class UserRepository: Domain.UserRepository {
             }
     }
     
+    public func addPostComment(userId: Domain.User.ID, input: Domain.AddPostComment.Request) -> EventLoopFuture<Domain.PostComment> {
+        let comment = PostComment()
+        comment.$author.id = userId.rawValue
+        comment.$post.id = input.postId.rawValue
+        comment.text = input.text
+        return comment.save(on: db).flatMap { [db] in
+            Domain.PostComment.translate(fromPersistance: comment, on: db)
+        }
+    }
+    
+    public func getPostComments(postId: Domain.Post.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostComment>> {
+        PostComment.query(on: db)
+            .filter(\.$post.$id == postId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.PostComment.translate(fromPersistance: $0, on: db)
+                }
+            }
+    }
+    
     public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
     > {

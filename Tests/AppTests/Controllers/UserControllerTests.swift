@@ -341,4 +341,31 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 0)
         }
     }
+    
+    func testPostCommentOnPost() throws {
+        let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userY = try appClient.createUser(role: .fan(.init()))
+        let post = try appClient.createPost(with: userX)
+
+        let body = try! Stub.make(Endpoint.AddPostComment.Request.self) {
+            $0.set(\.postId, value: post.id)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+
+        let headers = appClient.makeHeaders(for: userY)
+        try app.test(.POST, "user_social/add_post_comment", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.AddPostComment.Response.self)
+            XCTAssertEqual(responseBody.author.id, userY.user.id)
+        }
+
+        try app.test(.GET, "user_social/post_comments/\(post.id)?page=1&per=10", headers: headers) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetPostComments.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        
+    }
 }

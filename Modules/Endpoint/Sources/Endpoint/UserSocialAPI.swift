@@ -372,3 +372,100 @@ public struct GetUserFeedComments: EndpointProtocol {
     }
     public static let method: HTTPMethod = .get
 }
+
+public struct GetFollowingPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "following_posts") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetLikedPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "liked_posts") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetAllPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "all_posts") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct AddPostComment: EndpointProtocol {
+    public struct Request: Codable {
+        public var postId: Post.ID
+        public var text: String
+        public init(postId: Post.ID, text: String) {
+            self.postId = postId
+            self.text = text
+        }
+    }
+    public typealias Response = PostComment
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "add_post_comment") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}
+
+public struct GetPostComments: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostComment>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "post_comments") public var prefix: Void
+        @DynamicPath public var postId: Post.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct LikePost: EndpointProtocol {
+    public struct Request: Codable {
+        public var postId: Post.ID
+        public init(postId: Post.ID) {
+            self.postId = postId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "like_post") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct UnlikePost: EndpointProtocol {
+    public struct Request: Codable {
+        public var postId: Post.ID
+        public init(postId: Post.ID) {
+            self.postId = postId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "unlike_post") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}

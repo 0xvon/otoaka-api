@@ -406,4 +406,89 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
         .flatMap { [db] in $0.delete(on: db) }
     }
+    
+    public func followingPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .join(UserFollowing.self, on: \UserFollowing.$target.$id == \Post.$author.$id, method: .left)
+            .group(.or) { // フォローしたユーザーのフィードには自分のフィードも含まれる
+                $0.filter(UserFollowing.self, \UserFollowing.$user.$id == userId.rawValue).filter(Post.self, \Post.$author.$id == userId.rawValue)
+            }
+            .sort(\.$createdAt, .descending)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .fields(for: Post.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
+    
+    public func allPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .sort(\.$createdAt, .descending)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .fields(for: Post.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
+    
+    public func likedPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        return Post.query(on: db)
+            .join(PostLike.self, on: \PostLike.$post.$id == \Post.$id, method: .left)
+            .filter(PostLike.self, \.$user.$id == userId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .fields(for: Post.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
+    
+    public func likePost(userId: Domain.User.ID, postId: Domain.Post.ID) -> EventLoopFuture<Void> {
+            let like = PostLike()
+            like.$post.id = postId.rawValue
+            like.$user.id = userId.rawValue
+            return like.create(on: db)
+    }
+    
+    public func unlikePost(userId: Domain.User.ID, postId: Domain.Post.ID) -> EventLoopFuture<Void> {
+        let like = PostLike.query(on: db)
+            .filter(\.$user.$id == userId.rawValue)
+            .filter(\.$post.$id == postId.rawValue)
+            .first()
+        
+        return like.flatMapThrowing { like -> PostLike in
+            guard let like = like else { throw Error.notHavingUserFeedLike }
+            return like
+        }.flatMap { [db] in $0.delete(force: true, on: db) }
+    }
 }

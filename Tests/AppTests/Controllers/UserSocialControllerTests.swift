@@ -319,4 +319,32 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertFalse(item.isLiked)
         }
     }
+    
+    func testGetFollowingPosts() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let post = try appClient.createPost(with: userA)
+        _ = try appClient.createPost(with: userB)
+        _ = try appClient.createPost(with: userC)
+        try appClient.followUser(target: userA, with: userB)
+
+        let headers = appClient.makeHeaders(for: userB)
+        try app.test(.GET, "user_social/following_posts?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetFollowingPosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
+        
+        try app.test(.GET, "user_social/all_posts?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetAllPosts.Response.self)
+            XCTAssertGreaterThanOrEqual(responseBody.items.count, 3)
+        }
+        
+        _ = try appClient.likePost(post: post, with: userB)
+        
+        try app.test(.GET, "user_social/liked_posts/\(userB.user.id)?page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetLikedPosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
 }
