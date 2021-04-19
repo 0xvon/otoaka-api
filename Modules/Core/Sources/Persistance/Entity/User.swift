@@ -458,6 +458,8 @@ public enum UserNotificationType: String, Codable {
     case follow
     case like
     case comment
+    case like_post
+    case comment_post
     case official_announce
 }
 
@@ -484,8 +486,14 @@ final class UserNotification: Model {
     @OptionalParent(key: "liked_feed_id")
     var likedFeed: UserFeed?
     
+    @OptionalParent(key: "liked_post_id")
+    var likedPost: Post?
+    
     @OptionalParent(key: "feed_comment_id")
     var feedComment: UserFeedComment?
+    
+    @OptionalParent(key: "post_comment_id")
+    var postComment: PostComment?
     
     @OptionalField(key: "title")
     var title: String?
@@ -510,9 +518,16 @@ final class UserNotification: Model {
             self.notificationType = .like
             self.$likedBy.id = likeUserFeed.likedBy.id.rawValue
             self.$likedFeed.id = likeUserFeed.feed.id.rawValue
+        case let .likePost(likePost):
+            self.notificationType = .like
+            self.$likedBy.id = likePost.likedBy.id.rawValue
+            self.$likedPost.id = likePost.post.id.rawValue
         case let .comment(comment):
             self.notificationType = .comment
             self.$feedComment.id = comment.id.rawValue
+        case let .postComment(comment):
+            self.notificationType = .comment
+            self.$postComment.id = comment.id.rawValue
         case let .officialAnnounce(announce):
             self.notificationType = .official_announce
             self.title = announce.title
@@ -542,12 +557,28 @@ extension Endpoint.UserNotification {
                 .flatMapThrowing { user, likedBy, likedFeed in
                     return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .like(Endpoint.UserFeedLike(feed: likedFeed, likedBy: likedBy)), createdAt: entity.createdAt!)
                 }
+        case .like_post:
+            let likedBy = entity.$likedBy.get(on: db)
+                .flatMap { Endpoint.User.translate(fromPersistance: $0!, on: db) }
+            let likedPost = entity.$likedPost.get(on: db)
+                .flatMap { Endpoint.Post.translate(fromPersistance: $0!, on: db) }
+            return user.and(likedBy).and(likedPost).map { ( $0.0, $0.1, $1 )}
+                .flatMapThrowing { user, likedBy, likedPost in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .likePost(Endpoint.PostLike(post: likedPost, likedBy: likedBy)), createdAt: entity.createdAt!)
+                }
         case .comment:
             let comment = entity.$feedComment.get(on: db)
                 .flatMap { Endpoint.UserFeedComment.translate(fromPersistance: $0!, on: db) }
             return user.and(comment).map { ($0, $1) }
                 .flatMapThrowing { user, comment in
                     return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .comment(comment), createdAt: entity.createdAt!)
+                }
+        case .comment_post:
+            let comment = entity.$postComment.get(on: db)
+                .flatMap { Endpoint.PostComment.translate(fromPersistance: $0!, on: db) }
+            return user.and(comment).map { ($0, $1) }
+                .flatMapThrowing { user, comment in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .postComment(comment), createdAt: entity.createdAt!)
                 }
         case .official_announce:
             return user.flatMapThrowing { user in

@@ -293,9 +293,15 @@ public class UserRepository: Domain.UserRepository {
         _ = PostLike.query(on: db)
             .filter(\.$post.$id == postId.rawValue).all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = PostComment.query(on: db)
+        let comments = PostComment.query(on: db)
             .filter(\.$post.$id == postId.rawValue).all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = comments.flatMapEach(on: db.eventLoop) { [db] in
+            UserNotification.query(on: db)
+                .filter(\.$postComment.$id == $0.id)
+                .all()
+                .flatMap { [db] in $0.delete(force: true, on: db) }
+        }
+        _ = comments.flatMap { [db] in $0.delete(force: true, on: db) }
         _ = PostTrack.query(on: db)
             .filter(\.$post.$id == postId.rawValue).all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
@@ -304,6 +310,10 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in $0.delete(force: true, on: db) }
         _ = PostImageUrl.query(on: db)
             .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedPost.$id == postId.rawValue)
+            .all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
         
         return Post.find(postId.rawValue, on: db)
@@ -361,6 +371,19 @@ public class UserRepository: Domain.UserRepository {
         comment.text = input.text
         return comment.save(on: db).flatMap { [db] in
             Domain.PostComment.translate(fromPersistance: comment, on: db)
+        }
+        .flatMap { [db] comment in
+            let post = Post.find(input.postId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+            return post.flatMapThrowing { post -> UserNotification in
+                let notification = UserNotification()
+                notification.$postComment.id = comment.id.rawValue
+                notification.$user.id = post.$author.id
+                notification.isRead = false
+                notification.notificationType = .comment_post
+                return notification
+            }
+            .flatMap { [db] in $0.save(on: db) }
+            .map { comment }
         }
     }
     

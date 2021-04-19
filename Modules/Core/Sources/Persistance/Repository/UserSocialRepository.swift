@@ -478,6 +478,19 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             like.$post.id = postId.rawValue
             like.$user.id = userId.rawValue
             return like.create(on: db)
+                .flatMap { [db] in
+                    let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
+                    return post.flatMapThrowing { post -> UserNotification in
+                        let notification = UserNotification()
+                        notification.$likedPost.id = postId.rawValue
+                        notification.$likedBy.id = userId.rawValue
+                        notification.$user.id = post.$author.id
+                        notification.isRead = false
+                        notification.notificationType = .like_post
+                        return notification
+                    }
+                    .flatMap { [db] in $0.save(on: db) }
+                }
     }
     
     public func unlikePost(userId: Domain.User.ID, postId: Domain.Post.ID) -> EventLoopFuture<Void> {
@@ -485,6 +498,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .filter(\.$user.$id == userId.rawValue)
             .filter(\.$post.$id == postId.rawValue)
             .first()
+        _ = UserNotification.query(on: db)
+            .filter(\.$likedBy.$id == userId.rawValue)
+            .filter(\.$likedPost.$id == postId.rawValue)
+            .delete()
         
         return like.flatMapThrowing { like -> PostLike in
             guard let like = like else { throw Error.notHavingUserFeedLike }

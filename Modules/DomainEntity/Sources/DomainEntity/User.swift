@@ -203,6 +203,8 @@ public enum UserNotificationType: Codable, Equatable {
     case follow(User)
     case like(UserFeedLike)
     case comment(UserFeedComment)
+    case likePost(PostLike)
+    case postComment(PostComment)
     case officialAnnounce(OfficialAnnounce)
     
     enum CodingKeys: CodingKey {
@@ -210,7 +212,7 @@ public enum UserNotificationType: Codable, Equatable {
     }
     
     enum Kind: String, Codable {
-        case follow, like, comment, officialAnnounce
+        case follow, like, likePost, comment, postComment, officialAnnounce
     }
     
     public init(from decoder: Decoder) throws {
@@ -221,8 +223,12 @@ public enum UserNotificationType: Codable, Equatable {
             self = try .follow(container.decode(User.self, forKey: .value))
         case .like:
             self = try .like(container.decode(UserFeedLike.self, forKey: .value))
+        case .likePost:
+            self = try .likePost(container.decode(PostLike.self, forKey: .value))
         case .comment:
             self = try .comment(container.decode(UserFeedComment.self, forKey: .value))
+        case .postComment:
+            self = try .postComment(container.decode(PostComment.self, forKey: .value))
         case .officialAnnounce:
             self = try .officialAnnounce(container.decode(OfficialAnnounce.self, forKey: .value))
         }
@@ -237,8 +243,14 @@ public enum UserNotificationType: Codable, Equatable {
         case let .like(likeUserFeed):
             try container.encode(Kind.like, forKey: .kind)
             try container.encode(likeUserFeed, forKey: .value)
+        case let .likePost(postLike):
+            try container.encode(Kind.likePost, forKey: .kind)
+            try container.encode(postLike, forKey: .value)
         case let .comment(comment):
             try container.encode(Kind.comment, forKey: .kind)
+            try container.encode(comment, forKey: .value)
+        case let .postComment(comment):
+            try container.encode(Kind.postComment, forKey: .kind)
             try container.encode(comment, forKey: .value)
         case let .officialAnnounce(officialAnnounce):
             try container.encode(Kind.officialAnnounce, forKey: .kind)
@@ -263,6 +275,16 @@ public struct UserFeedLike: Codable, Equatable {
     
     public init(feed: UserFeed, likedBy: User) {
         self.feed = feed
+        self.likedBy = likedBy
+    }
+}
+
+public struct PostLike: Codable, Equatable {
+    public var post: Post
+    public var likedBy: User
+    
+    public init(post: Post, likedBy: User) {
+        self.post = post
         self.likedBy = likedBy
     }
 }

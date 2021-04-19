@@ -284,6 +284,7 @@ class UserControllerTests: XCTestCase {
         let userY = try appClient.createUser(role: .fan(.init()))
         let groupX = try appClient.createGroup(with: userX)
         let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
+        let post = try appClient.createPost(with: userX)
         let _ = try appClient.followUser(target: userX, with: userY)
         let headers = appClient.makeHeaders(for: userX)
         
@@ -295,7 +296,7 @@ class UserControllerTests: XCTestCase {
             
             let readNotiBody = Endpoint.ReadNotification.Request(notificationId: responseBody.items.first!.id)
             let readNotiBodyData = try ByteBuffer(data: appClient.encoder.encode(readNotiBody))
-            
+
             try app.test(.POST, "users/read_notification", headers: headers, body: readNotiBodyData) { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
             }
@@ -335,6 +336,32 @@ class UserControllerTests: XCTestCase {
         
         // delete user feed -> delete all notification about this feed
         let _ = try appClient.deleteUserFeed(feed: feed, with: userX)
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 0)
+        }
+        
+        let _ = try appClient.likePost(post: post, with: userY)
+        let _ = try appClient.commentPost(post: post, with: userY)
+
+        // like and comment to post → add 2 notifications
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
+        
+        // unlike post → delete notification
+        let _ = try appClient.unlikePost(post: post, with: userY)
+        try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
+        
+        // delete post -> delete all notification about this post
+        let _ = try appClient.deletePost(postId: post.id, with: userX)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)

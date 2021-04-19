@@ -323,4 +323,14 @@ class AppClient {
         try app.test(
             .POST, "user_social/unlike_post", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func commentPost(post: Post, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.AddPostComment.Request.self) {
+            $0.set(\.postId, value: post.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        try app.test(
+            .POST, "user_social/add_post_comment", headers: makeHeaders(for: user), body: bodyData)
+    }
 }

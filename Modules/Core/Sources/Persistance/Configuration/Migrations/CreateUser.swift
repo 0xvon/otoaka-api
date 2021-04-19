@@ -369,3 +369,34 @@ struct CreatePostComment: Migration {
         database.schema(PostComment.schema).delete()
     }
 }
+
+struct AddPostOnUserNotification: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("notification_type")
+            .case("follow")
+            .case("like")
+            .case("like_post")
+            .case("comment")
+            .case("comment_post")
+            .case("official_announce")
+            .update()
+        
+        return typeEnum.flatMap { typeEnum in
+            database.schema(UserNotification.schema)
+                .field("liked_post_id", .uuid)
+                .foreignKey("liked_post_id", references: Post.schema, .id)
+                .field("post_comment_id", .uuid)
+                .foreignKey("post_comment_id", references: PostComment.schema, .id)
+                .updateField("notification_type", typeEnum)
+                .update()
+        }
+        
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserNotification.schema)
+            .deleteField("liked_post_id")
+            .deleteField("post_comment_id")
+            .delete()
+    }
+}

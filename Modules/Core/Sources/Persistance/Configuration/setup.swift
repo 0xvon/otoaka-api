@@ -46,6 +46,7 @@ public func setupMigration(
         CreatePost(), CreatePostTrack(),
         CreatePostImageUrl(), CreatePostLike(),
         CreatePostComment(), CreatePostGroup(),
+        AddPostOnUserNotification(),
     ])
 
     try migrator.setupIfNeeded().flatMap {
