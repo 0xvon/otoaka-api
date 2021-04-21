@@ -285,6 +285,7 @@ class AppClient {
             $0.set(\.author, value: user.user)
             $0.set(\.groups, value: [groupX, groupY])
             $0.set(\.imageUrls, value: ["something", "something2"])
+            $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 

@@ -163,19 +163,17 @@ public struct PostTrack: Codable, Equatable, Identifiable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var trackName: String
+    public var groupName: String
     public var type: FeedType
-    public var group: Group
-    public var post: Post
     public var thumbnailUrl: String?
     
     public init(
-        id: PostTrack.ID, trackName: String, type: FeedType, group: Group, post: Post, thumbnailUrl: String?
+        id: PostTrack.ID, trackName: String, groupName: String, type: FeedType, thumbnailUrl: String?
     ) {
         self.id = id
         self.trackName = trackName
+        self.groupName = groupName
         self.type = type
-        self.group = group
-        self.post = post
         self.thumbnailUrl = thumbnailUrl
     }
 }

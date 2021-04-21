@@ -289,11 +289,10 @@ struct CreatePostTrack: Migration {
                 .field("post_id", .uuid, .required)
                 .foreignKey("post_id", references: Post.schema, .id)
                 .field("track_name", .string, .required)
+                .field("group_name", .string, .required)
                 .field("type", typeEnum, .required)
                 .field("youtube_url", .string)
                 .field("apple_music_song_id", .string)
-                .field("group_id", .uuid, .required)
-                .foreignKey("group_id", references: Group.schema, .id)
                 .field("thumbnail_url", .string)
                 .create()
         }

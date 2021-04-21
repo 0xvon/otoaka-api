@@ -256,9 +256,9 @@ public class UserRepository: Domain.UserRepository {
         let created = post.create(on: db)
         input.tracks.forEach { [db] in
             let track = PostTrack()
-            track.$group.id = $0.group.id.rawValue
             track.$post.id = post.id!
             track.trackName = $0.name
+            track.groupName = $0.artistName
             track.thumbnailUrl = $0.artwork
             switch $0.trackType {
             case .youtube(let url):

@@ -193,15 +193,15 @@ public struct GetUserFeed: EndpointProtocol {
 
 public struct Track: Codable {
     public var name: String
-    public var group: Group
+    public var artistName: String
     public var artwork: String
     public var trackType: FeedType
     
     public init(
-        name: String, group: Group, artwork: String, trackType: FeedType
+        name: String, artistName: String, artwork: String, trackType: FeedType
     ) {
         self.name = name
-        self.group = group
+        self.artistName = artistName
         self.artwork = artwork
         self.trackType = trackType
     }

@@ -310,6 +310,9 @@ final class PostTrack: Model {
     @Field(key: "track_name")
     var trackName: String
     
+    @Field(key: "group_name")
+    var groupName: String
+    
     @Enum(key: "type")
     var type: FeedType
     
@@ -318,9 +321,6 @@ final class PostTrack: Model {
     
     @OptionalField(key: "apple_music_song_id")
     var appleMusicSongId: String?
-    
-    @Parent(key: "group_id")
-    var group: Group
     
     @OptionalField(key: "thumbnail_url")
     var thumbnailUrl: String?
@@ -423,8 +423,6 @@ extension Endpoint.PostTrack {
     static func translate(fromPersistance entity: PostTrack, on db: Database) -> EventLoopFuture<Endpoint.PostTrack> {
         let eventLoop = db.eventLoop
         let id = eventLoop.submit { try entity.requireID() }
-        let post = entity.$post.get(on: db).flatMap { Endpoint.Post.translate(fromPersistance: $0, on: db) }
-        let group = entity.$group.get(on: db).flatMap { Endpoint.Group.translate(fromPersistance: $0, on: db) }
         
         let type: Endpoint.FeedType
         switch entity.type {
@@ -434,9 +432,9 @@ extension Endpoint.PostTrack {
             type = .appleMusic(entity.appleMusicSongId!)
         }
         
-        return id.and(post).and(group).map {($0.0, $0.1, $1)}
+        return id.map { $0 }
             .map {
-                Endpoint.PostTrack(id: ID($0), trackName: entity.trackName, type: type, group: $2, post: $1, thumbnailUrl: entity.thumbnailUrl)
+                Endpoint.PostTrack(id: ID($0), trackName: entity.trackName, groupName: entity.groupName, type: type, thumbnailUrl: entity.thumbnailUrl)
             }
     }
 }
