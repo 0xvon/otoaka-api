@@ -313,6 +313,9 @@ final class PostTrack: Model {
     @Field(key: "group_name")
     var groupName: String
     
+    @Field(key: "order")
+    var order: Int
+    
     @Enum(key: "type")
     var type: FeedType
     
@@ -334,6 +337,9 @@ final class PostGroup: Model {
     
     @Parent(key: "post_id")
     var post: Post
+    
+    @Field(key: "order")
+    var order: Int
     
     @Parent(key: "group_id")
     var group: Group
@@ -391,12 +397,16 @@ extension Endpoint.Post {
         let eventLoop = db.eventLoop
         let id = eventLoop.submit { try entity.requireID() }
         let author = entity.$author.get(on: db).flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
-        let imageUrls = entity.$imageUrls.get(on: db)
-        let tracks = entity.$tracks.get(on: db)
+        let imageUrls = entity.$imageUrls.query(on: db)
+            .sort(\.$order, .ascending).all()
+        let tracks = entity.$tracks
+            .query(on: db)
+            .sort(\.$order, .ascending).all()
             .flatMapEach(on: eventLoop) { [db] in
             Domain.PostTrack.translate(fromPersistance: $0, on: db)
         }
-        let groups = entity.$groups.get(on: db).flatMapEach(on: eventLoop) { [db] in
+        let groups = entity.$groups.query(on: db)
+            .sort(\.$order, .ascending).all().flatMapEach(on: eventLoop) { [db] in
             $0.$group.get(on: db)
                 .flatMap { [db] in
                     Domain.Group.translate(fromPersistance: $0, on: db)

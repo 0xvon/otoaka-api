@@ -294,6 +294,7 @@ struct CreatePostTrack: Migration {
                 .field("youtube_url", .string)
                 .field("apple_music_song_id", .string)
                 .field("thumbnail_url", .string)
+                .field("order", .int, .required)
                 .create()
         }
     }
@@ -343,6 +344,7 @@ struct CreatePostGroup: Migration {
             .foreignKey("group_id", references: Group.schema, .id)
             .field("post_id", .uuid, .required)
             .foreignKey("post_id", references: Post.schema, .id)
+            .field("order", .int, .required)
             .create()
     }
 
