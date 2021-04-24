@@ -108,6 +108,10 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
             })
+        try routes.on(endpoint: Endpoint.GetGroupPosts.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return repository.getGroupPosts(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
+        })
         try routes.on(
             endpoint: Endpoint.GetGroupsUserFeeds.self,
             use: injectProvider { req, uri, repository in
