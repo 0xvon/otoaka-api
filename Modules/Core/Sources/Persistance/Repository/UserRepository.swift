@@ -254,27 +254,29 @@ public class UserRepository: Domain.UserRepository {
         post.text = input.text
         
         let created = post.create(on: db)
-        input.tracks.forEach { [db] in
-            let track = PostTrack()
-            track.$post.id = post.id!
-            track.trackName = $0.name
-            track.groupName = $0.artistName
-            track.thumbnailUrl = $0.artwork
-            switch $0.trackType {
+        for (index, track) in input.tracks.enumerated() {
+            let postTrack = PostTrack()
+            postTrack.$post.id = post.id!
+            postTrack.trackName = track.name
+            postTrack.groupName = track.artistName
+            postTrack.thumbnailUrl = track.artwork
+            postTrack.order = index
+            switch track.trackType {
             case .youtube(let url):
-                track.type = .youtube
-                track.youtubeURL = url.absoluteString
+                postTrack.type = .youtube
+                postTrack.youtubeURL = url.absoluteString
             case .appleMusic(let songId):
-                track.type = .apple_music
-                track.appleMusicSongId = songId
+                postTrack.type = .apple_music
+                postTrack.appleMusicSongId = songId
             }
-            _ = track.create(on: db)
+            _ = postTrack.create(on: db)
         }
-        input.groups.forEach { [db] in
-            let group = PostGroup()
-            group.$group.id = $0.id.rawValue
-            group.$post.id = post.id!
-            _ = group.create(on: db)
+        for (index, group) in input.groups.enumerated() {
+            let postGroup = PostGroup()
+            postGroup.$group.id = group.id.rawValue
+            postGroup.$post.id = post.id!
+            postGroup.order = index
+            _ = postGroup.create(on: db)
         }
         for (index, imageUrl) in input.imageUrls.enumerated() {
             let postImageUrl = PostImageUrl()
