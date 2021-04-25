@@ -295,6 +295,22 @@ class AppClient {
         }
         return created
     }
+    
+    func createPost(with user: AppUser, groups: [Group]) throws -> Post {
+        let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
+            $0.set(\.author, value: user.user)
+            $0.set(\.groups, value: groups)
+            $0.set(\.imageUrls, value: ["something", "something2"])
+            $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        var created: Endpoint.Post!
+        try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) { res in
+            created = try res.content.decode(Endpoint.CreatePost.Response.self)
+        }
+        return created
+    }
 
     func deletePost(postId: Post.ID, with user: AppUser) throws {
         let body = try! Stub.make(DeletePost.Request.self) {

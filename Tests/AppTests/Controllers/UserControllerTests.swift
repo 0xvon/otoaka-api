@@ -251,6 +251,14 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetPosts.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
+        
+        let group = try appClient.createGroup(with: user)
+        _ = try appClient.createPost(with: user, groups: [group])
+        try app.test(.GET, "groups/\(group.id)/posts?page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetGroupPosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
     }
 
     func testPostCommentOnUserFeed() throws {
