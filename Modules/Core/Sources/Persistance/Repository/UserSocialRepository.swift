@@ -508,4 +508,12 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return like
         }.flatMap { [db] in $0.delete(force: true, on: db) }
     }
+    
+    public func userPostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        Post.query(on: db).filter(\.$author.$id == selfUser.rawValue).count()
+    }
+    
+    public func userLikePostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        PostLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
 }

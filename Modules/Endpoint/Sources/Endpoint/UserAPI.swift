@@ -85,6 +85,8 @@ public struct UserDetail: Codable, Equatable {
     public var followingUsersCount: Int
     public var feedCount: Int
     public var likeFeedCount: Int
+    public var postCount: Int
+    public var likePostCount: Int
     public var followingGroupsCount: Int
     public var isFollowed: Bool
     public var isFollowing: Bool
@@ -93,12 +95,14 @@ public struct UserDetail: Codable, Equatable {
         user[keyPath: keyPath]
     }
 
-    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool) {
+    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, postCount: Int, likePostCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool) {
         self.user = user
         self.followersCount = followersCount
         self.followingUsersCount = followingUsersCount
         self.feedCount = feedCount
         self.likeFeedCount = likeFeedCount
+        self.postCount = postCount
+        self.likePostCount = likePostCount
         self.followingGroupsCount = followingGroupsCount
         self.isFollowed = isFollowed
         self.isFollowing = isFollowing

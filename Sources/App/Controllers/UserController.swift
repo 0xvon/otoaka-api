@@ -211,12 +211,23 @@ struct UserController: RouteCollection {
         let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
         let feedCount = userSocialRepository.usersFeedCount(selfUser: uri.userId)
         let likeFeedCount = userSocialRepository.userLikeFeedCount(selfUser: uri.userId)
+        let postCount = userSocialRepository.userPostCount(selfUser: uri.userId)
+        let likePostCount = userSocialRepository.userLikePostCount(selfUser: uri.userId)
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
         let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
         let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
         
-        return user.and(followersCount).and(followingUsersCount).and(feedCount).and(likeFeedCount).and(followingGroupsCount).and(isFollowed).and(isFollowing).map {
-            ($0.0.0.0.0.0.0, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
+        return user.and(followersCount)
+            .and(followingUsersCount)
+            .and(feedCount)
+            .and(likeFeedCount)
+            .and(postCount)
+            .and(likePostCount)
+            .and(followingGroupsCount)
+            .and(isFollowed)
+            .and(isFollowing)
+            .map {
+                ($0.0.0.0.0.0.0.0.0, $0.0.0.0.0.0.0.0.1, $0.0.0.0.0.0.0.1, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
         }.map {
             GetUserDetail.Response(
                 user: $0,
@@ -224,9 +235,11 @@ struct UserController: RouteCollection {
                 followingUsersCount: $2,
                 feedCount: $3,
                 likeFeedCount: $4,
-                followingGroupsCount: $5,
-                isFollowed: $6,
-                isFollowing: $7
+                postCount: $5,
+                likePostCount: $6,
+                followingGroupsCount: $7,
+                isFollowed: $8,
+                isFollowing: $9
             )
         }
     }
