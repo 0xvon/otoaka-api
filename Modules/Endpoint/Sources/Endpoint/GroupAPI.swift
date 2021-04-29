@@ -35,16 +35,6 @@ public struct CreateGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
-public struct CreateGroupAsMaster: EndpointProtocol {
-    public typealias Request = CreateGroup.Request
-    public typealias Response = Group
-    public struct URI: CodableURL {
-        @StaticPath("groups", "master") public var prefix: Void
-        public init() {}
-    }
-    public static let method: HTTPMethod = .post
-}
-
 public struct EditGroup: EndpointProtocol {
     public typealias Request = CreateGroup.Request
     public typealias Response = Group

@@ -308,4 +308,24 @@ public class GroupRepository: Domain.GroupRepository {
             }
         }
     }
+    
+    public func followedGroups() -> EventLoopFuture<[Domain.Group]> {
+        Group.query(on: db)
+            .join(Following.self, on: \Following.$target.$id == \Group.$id)
+            .unique()
+            .all()
+            .flatMapEach(on: db.eventLoop) { [db] in
+                Domain.Group.translate(fromPersistance: $0, on: db)
+            }
+    }
+    
+    public func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void> {
+        let notification = UserNotification()
+        notification.isRead = false
+        notification.notificationType = .official_announce
+        notification.title = item.snippet!.title
+        notification.url = "https://youtube.com/watch?v=\(item.id.videoId!)"
+        notification.$user.id = user.rawValue
+        return notification.save(on: db)
+    }
 }

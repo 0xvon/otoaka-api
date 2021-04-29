@@ -26,12 +26,6 @@ struct GroupController: RouteCollection {
                     groupRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((input: input, user: user.id))
             })
-        try routes.on(
-            endpoint: Endpoint.CreateGroupAsMaster.self,
-            use: injectProvider { req, uri, repository in
-                let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
-                return repository.create(input: input)
-            })
         try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
         try routes.on(
             endpoint: Endpoint.DeleteGroup.self,
