@@ -4,11 +4,15 @@ import Foundation
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public init(
-            name: String, biography: String? = nil, thumbnailURL: String? = nil,
+            name: String, biography: String? = nil, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String? = nil,
             role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
         ) {
             self.name = name
             self.biography = biography
+            self.sex = sex
+            self.age = age
+            self.liveStyle = liveStyle
+            self.residence = residence
             self.thumbnailURL = thumbnailURL
             self.role = role
             self.twitterUrl = twitterUrl
@@ -17,6 +21,10 @@ public struct Signup: EndpointProtocol {
 
         public var name: String
         public var biography: String?
+        public var sex: String?
+        public var age: Int?
+        public var liveStyle: String?
+        public var residence: String?
         public var thumbnailURL: String?
         public var role: RoleProperties
         public var twitterUrl: URL?

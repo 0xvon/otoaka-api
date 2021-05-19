@@ -144,8 +144,17 @@ class AuthenticationTests: XCTestCase {
             Endpoint.User
         > {
             let newUser = Endpoint.User(
-                id: .init(UUID()), name: input.name, biography: input.biography,
-                thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make()
+                id: .init(UUID()),
+                name: input.name,
+                biography: input.biography,
+                sex: try! Stub.make(),
+                age: try! Stub.make(),
+                liveStyle: try! Stub.make(),
+                residence: try! Stub.make(),
+                thumbnailURL: input.thumbnailURL,
+                role: input.role,
+                twitterUrl: try! Stub.make(),
+                instagramUrl: try! Stub.make()
             )
             users[cognitoUsername.lowercased()] = newUser
             return eventLoop.makeSucceededFuture(newUser)

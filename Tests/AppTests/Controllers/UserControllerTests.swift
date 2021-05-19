@@ -39,7 +39,18 @@ class UserControllerTests: XCTestCase {
         }
 
         let dummyUserName = UUID().uuidString
-        let signupBody = Endpoint.Signup.Request(name: dummyUserName, role: .fan(Fan()), twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make())
+        let signupBody = Endpoint.Signup.Request(
+            name: dummyUserName,
+            biography: try! Stub.make(),
+            sex: try! Stub.make(),
+            age: try! Stub.make(),
+            liveStyle: try! Stub.make(),
+            residence: try! Stub.make(),
+            thumbnailURL: try! Stub.make(),
+            role: .fan(Fan()),
+            twitterUrl: try! Stub.make(),
+            instagramUrl: try! Stub.make()
+        )
         let signupBodyData = try ByteBuffer(data: JSONEncoder().encode(signupBody))
 
         try app.test(.GET, "users/get_signup_status", headers: headers) { res in
@@ -71,7 +82,18 @@ class UserControllerTests: XCTestCase {
         }
 
         let updatedName = UUID().uuidString
-        let editBody = Endpoint.Signup.Request(name: updatedName, role: .fan(Fan()), twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make())
+        let editBody = Endpoint.Signup.Request(
+            name: updatedName,
+            biography: try! Stub.make(),
+            sex: try! Stub.make(),
+            age: try! Stub.make(),
+            liveStyle: try! Stub.make(),
+            residence: try! Stub.make(),
+            thumbnailURL: try! Stub.make(),
+            role: .fan(Fan()),
+            twitterUrl: try! Stub.make(),
+            instagramUrl: try! Stub.make()
+        )
         let editBodyData = try ByteBuffer(data: JSONEncoder().encode(editBody))
         try app.test(.POST, "users/edit_user_info", headers: headers, body: editBodyData) { res in
             XCTAssertEqual(res.status, .ok)
@@ -80,7 +102,17 @@ class UserControllerTests: XCTestCase {
         }
 
         let changeRoleBody = Endpoint.EditUserInfo.Request(
-            name: UUID().uuidString, role: .artist(try! Stub.make()), twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make())
+            name: UUID().uuidString,
+            biography: try! Stub.make(),
+            sex: try! Stub.make(),
+            age: try! Stub.make(),
+            liveStyle: try! Stub.make(),
+            residence: try! Stub.make(),
+            thumbnailURL: try! Stub.make(),
+            role: .artist(try! Stub.make()),
+            twitterUrl: try! Stub.make(),
+            instagramUrl: try! Stub.make()
+        )
         let changeRoleBodyData = try ByteBuffer(data: JSONEncoder().encode(changeRoleBody))
         try app.test(.POST, "users/edit_user_info", headers: headers, body: changeRoleBodyData) {
             res in

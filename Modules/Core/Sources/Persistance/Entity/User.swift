@@ -17,6 +17,18 @@ final class User: Model {
 
     @Field(key: "biography")
     var biography: String?
+    
+    @OptionalField(key: "sex")
+    var sex: String?
+    
+    @OptionalField(key: "age")
+    var age: Int?
+    
+    @OptionalField(key: "live_style")
+    var liveStyle: String?
+    
+    @OptionalField(key: "residence")
+    var residence: String?
 
     @Field(key: "thumbnail_url")
     var thumbnailURL: String?
@@ -47,13 +59,17 @@ final class User: Model {
     init(
         cognitoId: Domain.CognitoID, cognitoUsername: CognitoUsername,
         email: String, name: String,
-        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.cognitoId = cognitoId
         self.cognitoUsername = cognitoUsername
         self.email = email
         self.name = name
         self.biography = biography
+        self.sex = sex
+        self.age = age
+        self.liveStyle = liveStyle
+        self.residence = residence
         self.thumbnailURL = thumbnailURL
         switch role {
         case .artist(let artist):
@@ -78,8 +94,7 @@ extension Endpoint.User {
         }
         return db.eventLoop.submit {
             try Self.init(
-                id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
-                thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
+                id: ID(entity.requireID()), name: entity.name, biography: entity.biography, sex: entity.sex, age: entity.age, liveStyle: entity.liveStyle, residence: entity.residence, thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
         }
     }
 }

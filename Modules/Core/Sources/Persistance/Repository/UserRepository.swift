@@ -27,9 +27,19 @@ public class UserRepository: Domain.UserRepository {
         return existing.guard({ $0 == nil }, else: Error.alreadyCreated)
             .flatMap { [db] _ -> EventLoopFuture<Endpoint.User> in
                 let storedUser = User(
-                    cognitoId: cognitoId, cognitoUsername: cognitoUsername, email: email,
-                    name: input.name, biography: input.biography,
-                    thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: input.twitterUrl, instagramUrl: input.instagramUrl
+                    cognitoId: cognitoId,
+                    cognitoUsername: cognitoUsername,
+                    email: email,
+                    name: input.name,
+                    biography: input.biography,
+                    sex: input.sex,
+                    age: input.age,
+                    liveStyle: input.liveStyle,
+                    residence: input.residence,
+                    thumbnailURL: input.thumbnailURL,
+                    role: input.role,
+                    twitterUrl: input.twitterUrl,
+                    instagramUrl: input.instagramUrl
                 )
                 return storedUser.create(on: db).flatMap { [db] in
                     Endpoint.User.translate(fromPersistance: storedUser, on: db)
@@ -44,6 +54,10 @@ public class UserRepository: Domain.UserRepository {
         return user.flatMapThrowing { user -> User in
             user.name = input.name
             user.biography = input.biography
+            user.sex = input.sex
+            user.age = input.age
+            user.liveStyle = input.liveStyle
+            user.residence = input.residence
             user.thumbnailURL = input.thumbnailURL
             user.twitterUrl = input.twitterUrl?.absoluteString
             user.instagramUrl = input.instagramUrl?.absoluteString

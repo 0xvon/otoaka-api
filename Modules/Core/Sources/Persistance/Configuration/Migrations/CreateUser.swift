@@ -199,25 +199,11 @@ struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
 }
 
 struct InstagramAndTwitterUrlToUser: Migration {
-    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        let addColumn = database.schema(User.schema)
+        database.schema(User.schema)
             .field("instagram_url", .string)
             .field("twitter_url", .string)
             .update()
-        
-        return addColumn.flatMap {
-            User.query(on: database)
-                .filter(\.$cognitoUsername == nil)
-                .all()
-                .flatMap { users in
-                    migrator(users).map { users }
-                }
-                .flatMapEach(on: database.eventLoop) {
-                    $0.save(on: database)
-                }
-                .transform(to: ())
-        }
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
@@ -399,5 +385,39 @@ struct AddPostOnUserNotification: Migration {
             .deleteField("liked_post_id")
             .deleteField("post_comment_id")
             .delete()
+    }
+}
+
+struct MoreInfoToUser: Migration {
+    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let addColumn = database.schema(User.schema)
+            .field("sex", .string)
+            .field("age", .string)
+            .field("live_style", .string)
+            .field("residence", .string)
+            .update()
+        
+        return addColumn.flatMap {
+            User.query(on: database)
+                .filter(\.$cognitoUsername == nil)
+                .all()
+                .flatMap { users in
+                    migrator(users).map { users }
+                }
+                .flatMapEach(on: database.eventLoop) {
+                    $0.save(on: database)
+                }
+                .transform(to: ())
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("sex")
+            .deleteField("age")
+            .deleteField("live_style")
+            .deleteField("residence")
+            .update()
     }
 }

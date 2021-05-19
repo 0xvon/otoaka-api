@@ -52,17 +52,25 @@ public struct User: Codable, Identifiable, Equatable {
     public var id: ID
     public var name: String
     public var biography: String?
+    public var sex: String?
+    public var age: Int?
+    public var liveStyle: String?
+    public var residence: String?
     public var thumbnailURL: String?
     public var role: RoleProperties
     public var twitterUrl: URL?
     public var instagramUrl: URL?
 
     public init(
-        id: ID, name: String, biography: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        id: ID, name: String, biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.id = id
         self.name = name
         self.biography = biography
+        self.sex = sex
+        self.age = age
+        self.liveStyle = liveStyle
+        self.residence = residence
         self.thumbnailURL = thumbnailURL
         self.role = role
         self.twitterUrl = twitterUrl
