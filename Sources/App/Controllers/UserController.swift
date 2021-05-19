@@ -216,6 +216,8 @@ struct UserController: RouteCollection {
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
         let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
         let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
+        let isBlocked = userSocialRepository.isBlocking(selfUser: uri.userId, target: selfUser.id)
+        let isBlocking = userSocialRepository.isBlocking(selfUser: selfUser.id, target: uri.userId)
         
         return user.and(followersCount)
             .and(followingUsersCount)
@@ -226,8 +228,10 @@ struct UserController: RouteCollection {
             .and(followingGroupsCount)
             .and(isFollowed)
             .and(isFollowing)
+            .and(isBlocked)
+            .and(isBlocking)
             .map {
-                ($0.0.0.0.0.0.0.0.0, $0.0.0.0.0.0.0.0.1, $0.0.0.0.0.0.0.1, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
+                ($0.0.0.0.0.0.0.0.0.0.0, $0.0.0.0.0.0.0.0.0.0.1, $0.0.0.0.0.0.0.0.1, $0.0.0.0.0.0.0.0.1, $0.0.0.0.0.0.0.1, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
         }.map {
             GetUserDetail.Response(
                 user: $0,
@@ -239,7 +243,9 @@ struct UserController: RouteCollection {
                 likePostCount: $6,
                 followingGroupsCount: $7,
                 isFollowed: $8,
-                isFollowing: $9
+                isFollowing: $9,
+                isBlocked: $10,
+                isBlocking: $11
             )
         }
     }

@@ -146,6 +146,65 @@ class UserSocialControllerTests: XCTestCase {
         }
     }
     
+    func testBlockUser() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        
+        let blockUserBody = try! Stub.make(Endpoint.BlockUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let blockUserBodyData = try ByteBuffer(data: appClient.encoder.encode(blockUserBody))
+        
+        let unblockUserBody = try! Stub.make(Endpoint.UnblockUser.Request.self) {
+            $0.set(\.id, value: userA.user.id)
+        }
+        let unblockUserBodyData = try ByteBuffer(data: appClient.encoder.encode(unblockUserBody))
+
+        try app.test(
+            .POST, "user_social/block_user", headers: appClient.makeHeaders(for: userB),
+            body: blockUserBodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+        
+        try app.test(
+            .GET, "users/\(userA.user.id)", headers: appClient.makeHeaders(for: userB)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertTrue(response.isBlocking)
+        }
+        
+        try app.test(
+            .POST, "user_social/unblock_user", headers: appClient.makeHeaders(for: userB),
+            body: unblockUserBodyData
+        ) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+        
+        try app.test(
+            .GET, "users/\(userA.user.id)", headers: appClient.makeHeaders(for: userB)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertFalse(response.isBlocking)
+        }
+        
+        _ = try appClient.followUser(target: userA, with: userB)
+        _ = try appClient.blockUser(target: userA, with: userB)
+        
+        try app.test(
+            .GET, "users/\(userA.user.id)", headers: appClient.makeHeaders(for: userB)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserDetail.Response.self)
+            XCTAssertTrue(response.isBlocking)
+            XCTAssertFalse(response.isFollowing)
+        }
+    }
+    
     func testGetFollowingUsers() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()

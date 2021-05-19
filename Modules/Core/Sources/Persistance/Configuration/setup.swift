@@ -48,6 +48,7 @@ public func setupMigration(
         CreatePostComment(), CreatePostGroup(),
         AddPostOnUserNotification(),
         MoreInfoToUser(migrator: cognitoUserMigrator),
+        CreateUserBlocking(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

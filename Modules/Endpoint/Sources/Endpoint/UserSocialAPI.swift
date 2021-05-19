@@ -112,6 +112,36 @@ public struct FollowingUsers: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct BlockUser: EndpointProtocol {
+    public struct Request: Codable {
+        public var id: User.ID
+        public init(userId: User.ID) {
+            self.id = userId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "block_user") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct UnblockUser: EndpointProtocol {
+    public struct Request: Codable {
+        public var id: User.ID
+        public init(userId: User.ID) {
+            self.id = userId
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "unblock_user") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct RecommendedUsers: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>

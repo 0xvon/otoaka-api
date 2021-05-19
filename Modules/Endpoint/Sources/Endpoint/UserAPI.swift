@@ -98,12 +98,14 @@ public struct UserDetail: Codable, Equatable {
     public var followingGroupsCount: Int
     public var isFollowed: Bool
     public var isFollowing: Bool
+    public var isBlocked: Bool
+    public var isBlocking: Bool
 
     public subscript<T>(dynamicMember keyPath: KeyPath<User, T>) -> T {
         user[keyPath: keyPath]
     }
 
-    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, postCount: Int, likePostCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool) {
+    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, postCount: Int, likePostCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool, isBlocked: Bool, isBlocking: Bool) {
         self.user = user
         self.followersCount = followersCount
         self.followingUsersCount = followingUsersCount
@@ -114,6 +116,8 @@ public struct UserDetail: Codable, Equatable {
         self.followingGroupsCount = followingGroupsCount
         self.isFollowed = isFollowed
         self.isFollowing = isFollowing
+        self.isBlocked = isBlocked
+        self.isBlocking = isBlocking
     }
 }
 

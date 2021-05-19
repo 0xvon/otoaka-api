@@ -149,6 +149,21 @@ final class UserFollowing: Model {
     init() {}
 }
 
+final class UserBlocking: Model {
+    static let schema = "user_blockings"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "self_user_id")
+    var user: User
+    
+    @Parent(key: "target_user_id")
+    var target: User
+    
+    init() {}
+}
+
 final class LiveLike: Model {
     static let schema = "live_likes"
 

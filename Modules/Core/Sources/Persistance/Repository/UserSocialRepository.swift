@@ -10,6 +10,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     enum Error: Swift.Error {
         case alreadyFollowing
         case notFollowing
+        case alreadyBlocking
+        case notBlocking
         case targetGroupNotFound
         case feedNotFound
         case notHavingLiveLike
@@ -174,6 +176,66 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 Domain.User.translate(fromPersistance: $0.target, on: db)
             }
         }
+    }
+    
+    public func block(
+        selfUser: Domain.User.ID,
+        target: Domain.User.ID
+    ) -> EventLoopFuture<Void> {
+        let alreadyBlocking = UserBlocking.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == target.rawValue)
+            .count().map { $0 > 0 }
+        let isTargetExisting = User.find(target.rawValue, on: db)
+            .map { $0 != nil }
+        let precondition = alreadyBlocking.and(isTargetExisting)
+            .flatMapThrowing { alreadyBlocking, isTargetExisting in
+                guard !alreadyBlocking else { throw Error.alreadyBlocking }
+                guard isTargetExisting else { throw Error.targetGroupNotFound }
+                return
+            }
+        let isFollowing = UserFollowing.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == target.rawValue)
+            .count().map { $0 > 0 }
+        
+        _ = isFollowing.flatMapThrowing { isFollowing in
+                if isFollowing { _ = self.unfollowUser(selfUser: selfUser, targetUser: target) }
+            }
+        return precondition.flatMap { [db] _ in
+            let blocking = UserBlocking()
+            blocking.$user.id = selfUser.rawValue
+            blocking.$target.id = target.rawValue
+            return blocking.save(on: db)
+        }
+    }
+
+    public func unblock(selfUser: Domain.User.ID, target: Domain.User.ID) -> EventLoopFuture<
+        Void
+    > {
+        let blocking = UserBlocking.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == target.rawValue)
+            .first()
+        let precondition = blocking.flatMapThrowing { blocking -> UserBlocking in
+            guard let blocking = blocking else {
+                throw Error.notBlocking
+            }
+            return blocking
+        }
+        return precondition.flatMap { [db] blocking in
+            blocking.delete(force: true, on: db)
+        }
+    }
+    
+    public func isBlocking(
+        selfUser: Domain.User.ID,
+        target: Domain.User.ID
+    ) -> EventLoopFuture<Bool> {
+        UserBlocking.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == target.rawValue)
+            .first().map { $0 != nil }
     }
     
     public func recommendedUsers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {

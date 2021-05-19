@@ -192,6 +192,26 @@ class AppClient {
         try app.test(
             .POST, "user_social/unfollow_user", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func blockUser(target: AppUser, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.BlockUser.Request.self) {
+            $0.set(\.id, value: target.user.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(
+            .POST, "user_social/block_user", headers: makeHeaders(for: user), body: bodyData)
+    }
+    
+    func unblockUser(target: AppUser, with user: AppUser) throws {
+        let body = try! Stub.make(Endpoint.UnblockUser.Request.self) {
+            $0.set(\.id, value: target.user.id)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(
+            .POST, "user_social/unblock_user", headers: makeHeaders(for: user), body: bodyData)
+    }
 
     func like(live: Live, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikeLive.Request.self) {
