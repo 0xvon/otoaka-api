@@ -27,5 +27,5 @@ func routes(_ app: Application) throws {
     try signedUp.register(collection: GroupController())
     try signedUp.register(collection: LiveController())
     try signedUp.register(collection: UserSocialController())
-
+    try signedUp.register(collection: MessageController())
 }

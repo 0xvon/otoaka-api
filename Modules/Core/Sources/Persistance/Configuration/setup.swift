@@ -43,12 +43,17 @@ public func setupMigration(
         ThumbnailUrlAndAppleMusicToArtistFeed(), ThumbnailUrlAndAppleMusicToUserFeed(),
         InstagramAndTwitterUrlToUser(),
         CreateUserNotification(),
+        
         CreatePost(), CreatePostTrack(),
         CreatePostImageUrl(), CreatePostLike(),
         CreatePostComment(), CreatePostGroup(),
         AddPostOnUserNotification(),
+        
         MoreInfoToUser(migrator: cognitoUserMigrator),
         CreateUserBlocking(),
+        
+        CreateMessageRoom(), CreateMessageRoomMember(),
+        CreateMessage(), CreateMessageReading()
     ])
 
     try migrator.setupIfNeeded().flatMap {

@@ -389,4 +389,60 @@ class AppClient {
         try app.test(
             .POST, "user_social/add_post_comment", headers: makeHeaders(for: user), body: bodyData)
     }
+    
+    func createMessageRoom(with user: AppUser, member: [AppUser]) throws -> MessageRoom {
+        let body = try! Stub.make(Endpoint.CreateMessageRoom.Request.self) {
+            $0.set(\.members, value: member.map { $0.user.id })
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        var created: Endpoint.MessageRoom!
+        try app.test(
+            .POST, "messages/create_room", headers: makeHeaders(for: user), body: bodyData
+        ) { res in
+            created = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
+        }
+        return created
+    }
+    
+    func sendMessage(with user: AppUser, roomId: MessageRoom.ID) throws -> Message {
+        let body = try! Stub.make(Endpoint.SendMessage.Request.self) {
+            $0.set(\.roomId, value: roomId)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        var created: Endpoint.Message!
+        try app.test(
+            .POST, "messages", headers: makeHeaders(for: user), body: bodyData
+        ) { res in
+            created = try res.content.decode(Endpoint.SendMessage.Response.self)
+        }
+        return created
+    }
+    
+    func getRooms(page: Int = 1, per: Int = 10, with user: AppUser) throws -> [MessageRoom] {
+        var rooms: [MessageRoom] = []
+        try app.test(
+            .GET, "messages/rooms?page=\(page)&per=\(per)", headers: makeHeaders(for: user)
+        ) { res in
+            rooms = try res.content.decode(Endpoint.GetRooms.Response.self).items
+        }
+        return rooms
+    }
+    
+    func openMessageRoom(page: Int = 1, per: Int = 10, with user: AppUser, roomId: MessageRoom.ID) throws -> [Message] {
+        var messages: [Message] = []
+        try app.test(
+            .GET, "messages/\(roomId)?page=\(page)&per=\(per)", headers: makeHeaders(for: user)
+        ) { res in
+            messages = try res.content.decode(Endpoint.OpenRoomMessages.Response.self).items
+        }
+        return messages
+    }
+    
+    func deleteMessageRoom(with user: AppUser, roomId: MessageRoom.ID) throws {
+        let body = Endpoint.DeleteMessageRoom.Request(roomId: roomId)
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        try app.test(
+            .DELETE, "messages/delete_room", headers: makeHeaders(for: user), body: bodyData
+        )
+    }
 }
