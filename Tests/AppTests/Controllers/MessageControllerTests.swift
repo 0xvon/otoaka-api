@@ -27,21 +27,24 @@ class MessageControllerTests: XCTestCase {
         let body =  Endpoint.CreateMessageRoom.Request(members: [userB.user.id, userC.user.id], name: "room1")
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         
+        var room: MessageRoom!
         try app.test(
             .POST, "messages/create_room", headers: appClient.makeHeaders(for: userA), body: bodyData
         ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
-            let room = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
+            room = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
             XCTAssertEqual(room.members.count, 2)
             XCTAssertEqual(room.owner.id, userA.user.id)
             XCTAssertEqual(room.latestMessage, nil)
         }
         
-        // try to create the same room again: expected to respond bad-request error
+        // try to create the same room again: expected to respond existing room
         try app.test(
             .POST, "messages/create_room", headers: appClient.makeHeaders(for: userA), body: bodyData
         ) { res in
-            XCTAssertEqual(res.status, .badRequest, res.body.string)
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let existingRoom = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
+            XCTAssertEqual(room.id, existingRoom.id)
         }
     }
     

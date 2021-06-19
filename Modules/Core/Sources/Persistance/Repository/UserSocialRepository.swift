@@ -242,6 +242,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         // TODO: CHANGE LOGIC
         let users = User.query(on: db)
             .filter(\.$id != selfUser.rawValue)
+//            .join(UserBlocking.self, on: \UserBlocking.$user.$id == \User.$id, method: .left)
+//            .filter(UserBlocking.self, \UserBlocking.$id == nil)
             .unique()
         return users.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {

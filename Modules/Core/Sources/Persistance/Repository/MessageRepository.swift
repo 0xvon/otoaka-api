@@ -16,39 +16,39 @@ public class MessageRepository: Domain.MessageRepository {
     }
     
     public func createRoom(selfUser: Domain.User.ID, input: Domain.CreateMessageRoom.Request) -> EventLoopFuture<Domain.MessageRoom> {
-        input.members.map { member -> EventLoopFuture<Void> in
-            let existing = MessageRoomMember.query(on: db)
-                .filter(\.$user.$id == member.rawValue)
-                .first()
-                .map { $0 == nil }
-            
-            return existing
-                .flatMapThrowing { roomNotExsisting in
-                    guard roomNotExsisting else { throw Error.alreadyCreated }
-                    return
-                }
-        }.first!.flatMap { [db] _ -> EventLoopFuture<Domain.MessageRoom> in
-            let room = MessageRoom()
-            room.name = input.name
-            let created = room.create(on: db)
-            
-            return created.flatMap { [db] in
-                input.members.forEach { member in
-                    let roomMember = MessageRoomMember()
-                    roomMember.$room.id = room.id!
-                    roomMember.$user.id = member.rawValue
-                    roomMember.isOwner = false
-                    _ = roomMember.save(on: db)
-                }
-                let roomMaster = MessageRoomMember()
-                roomMaster.$room.id = room.id!
-                roomMaster.$user.id = selfUser.rawValue
-                roomMaster.isOwner = true
-                _ = roomMaster.create(on: db)
-                
-                return Endpoint.MessageRoom.translate(fromPersistence: room, on: db)
+        MessageRoomMember.query(on: db)
+            .group(.or) {
+                $0.filter(\.$user.$id == input.members[0].rawValue)
+                    .filter(\.$user.$id == selfUser.rawValue)
             }
-        }
+            .first()
+            .flatMap { [db] existing -> EventLoopFuture<Domain.MessageRoom> in
+                if let existing = existing { // return existing room
+                    return existing.$room.query(on: db).first()
+                        .flatMap { [db] in Domain.MessageRoom.translate(fromPersistence: $0!, on: db) }
+                } else {
+                    let room = MessageRoom()
+                    room.name = input.name
+                    let created = room.create(on: db)
+                    
+                    return created.flatMap { [db] in
+                        input.members.forEach { member in
+                            let roomMember = MessageRoomMember()
+                            roomMember.$room.id = room.id!
+                            roomMember.$user.id = member.rawValue
+                            roomMember.isOwner = false
+                            _ = roomMember.save(on: db)
+                        }
+                        let roomMaster = MessageRoomMember()
+                        roomMaster.$room.id = room.id!
+                        roomMaster.$user.id = selfUser.rawValue
+                        roomMaster.isOwner = true
+                        _ = roomMaster.create(on: db)
+                        
+                        return Endpoint.MessageRoom.translate(fromPersistence: room, on: db)
+                    }
+                }
+            }
     }
     
     public func deleteRoom(selfUser: Domain.User.ID, roomId: Domain.MessageRoom.ID) -> EventLoopFuture<Void> {
