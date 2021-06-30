@@ -46,6 +46,14 @@ class MessageControllerTests: XCTestCase {
             let existingRoom = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
             XCTAssertEqual(room.id, existingRoom.id)
         }
+        
+        try app.test(
+            .GET, "messages/rooms?page=1&per=100", headers: appClient.makeHeaders(for: userA)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let items = try res.content.decode(Endpoint.GetRooms.Response.self)
+            XCTAssertEqual(items.items.count, 1)
+        }
     }
     
     func testSendMessage() throws {

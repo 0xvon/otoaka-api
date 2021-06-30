@@ -84,7 +84,7 @@ public class MessageRepository: Domain.MessageRepository {
     public func rooms(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.MessageRoom>> {
         MessageRoom.query(on: db)
             .join(MessageRoomMember.self, on: \MessageRoomMember.$room.$id == \MessageRoom.$id)
-            .join(Message.self, on: \Message.$room.$id == \MessageRoom.$id)
+            .join(Message.self, on: \Message.$room.$id == \MessageRoom.$id, method: .left)
             .filter(MessageRoomMember.self, \.$user.$id == selfUser.rawValue)
             .with(\.$members)
             .with(\.$messages)
