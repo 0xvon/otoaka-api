@@ -53,7 +53,8 @@ public func setupMigration(
         CreateUserBlocking(),
         
         CreateMessageRoom(), CreateMessageRoomMember(),
-        CreateMessage(), CreateMessageReading()
+        CreateMessage(), CreateMessageReading(),
+        AddMessageRoomToLatestMessageAt(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

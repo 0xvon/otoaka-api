@@ -71,3 +71,17 @@ struct CreateMessageReading: Migration {
         database.schema(MessageReading.schema).delete()
     }
 }
+
+struct AddMessageRoomToLatestMessageAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(MessageRoom.schema)
+            .field("latest_message_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(MessageRoom.schema)
+            .deleteField("latest_message_at")
+            .update()
+    }
+}

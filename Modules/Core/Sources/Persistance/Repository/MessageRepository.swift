@@ -1,5 +1,6 @@
 import Domain
 import FluentKit
+import Foundation
 
 public class MessageRepository: Domain.MessageRepository {
     private let db: Database
@@ -84,11 +85,12 @@ public class MessageRepository: Domain.MessageRepository {
     public func rooms(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.MessageRoom>> {
         MessageRoom.query(on: db)
             .join(MessageRoomMember.self, on: \MessageRoomMember.$room.$id == \MessageRoom.$id)
-            .join(Message.self, on: \Message.$room.$id == \MessageRoom.$id, method: .left)
             .filter(MessageRoomMember.self, \.$user.$id == selfUser.rawValue)
+            .filter(\.$latestMessageAt != nil)
             .with(\.$members)
             .with(\.$messages)
-            .sort(Message.self, \Message.$sentAt, .descending)
+            .sort(\.$latestMessageAt, .descending)
+            .fields(for: MessageRoom.self)
             .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
@@ -140,12 +142,21 @@ public class MessageRepository: Domain.MessageRepository {
         message.$sentBy.id = selfUser.rawValue
         let created = message.create(on: db)
         
+        let room = MessageRoom.find(input.roomId.rawValue, on: db).unwrap(orError: Error.roomNotFound).flatMapThrowing { room -> MessageRoom in
+            room.latestMessageAt = Date()
+            return room
+        }
+        .flatMap { [db] room in
+            return room.update(on: db).transform(to: room)
+        }
+        
         let messageReading = MessageReading()
         messageReading.$message.id = message.id!
         messageReading.$user.id = selfUser.rawValue
         _ = messageReading.create(on: db)
         
-        return created.flatMap { [db] in
+        return created.and(room)
+            .flatMap { [db] _ in
             Domain.Message.translate(fromPersistence: message, on: db)
         }
     }

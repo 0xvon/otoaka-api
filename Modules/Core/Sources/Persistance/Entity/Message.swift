@@ -18,6 +18,9 @@ final class MessageRoom: Model {
     @OptionalField(key: "name")
     var name: String?
     
+    @OptionalField(key: "latest_message_at")
+    var latestMessageAt: Date?
+    
     @Children(for: \.$room)
     var members: [MessageRoomMember]
     

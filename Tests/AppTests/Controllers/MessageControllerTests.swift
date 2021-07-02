@@ -38,6 +38,19 @@ class MessageControllerTests: XCTestCase {
             XCTAssertEqual(room.latestMessage, nil)
         }
         
+        // return 0 rooms because there is no message related to it
+        try app.test(
+            .GET, "messages/rooms?page=1&per=100", headers: appClient.makeHeaders(for: userA)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let items = try res.content.decode(Endpoint.GetRooms.Response.self)
+            XCTAssertEqual(items.items.count, 0)
+        }
+        
+        _ = try appClient.sendMessage(with: userA, roomId: room.id)
+        _ = try appClient.sendMessage(with: userA, roomId: room.id)
+        _ = try appClient.sendMessage(with: userA, roomId: room.id)
+    
         // try to create the same room again: expected to respond existing room
         try app.test(
             .POST, "messages/create_room", headers: appClient.makeHeaders(for: userA), body: bodyData
