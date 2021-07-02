@@ -89,6 +89,7 @@ public class MessageRepository: Domain.MessageRepository {
             .with(\.$members)
             .with(\.$messages)
             .sort(Message.self, \Message.$sentAt, .descending)
+            .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { room -> EventLoopFuture<Domain.MessageRoom> in
