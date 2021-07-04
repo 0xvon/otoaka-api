@@ -24,19 +24,23 @@ class MessageControllerTests: XCTestCase {
         let userB = try appClient.createUser()
         let userC = try appClient.createUser()
         
-        let body =  Endpoint.CreateMessageRoom.Request(members: [userB.user.id, userC.user.id], name: "room1")
+        let body =  Endpoint.CreateMessageRoom.Request(members: [userB.user.id], name: "room1")
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         
         var room: MessageRoom!
+        let room2: MessageRoom = try appClient.createMessageRoom(with: userA, member: [userC])
         try app.test(
             .POST, "messages/create_room", headers: appClient.makeHeaders(for: userA), body: bodyData
         ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             room = try res.content.decode(Endpoint.CreateMessageRoom.Response.self)
-            XCTAssertEqual(room.members.count, 2)
+            XCTAssertFalse(room.id == room2.id)
+            XCTAssertEqual(room.members.count, 1)
             XCTAssertEqual(room.owner.id, userA.user.id)
             XCTAssertEqual(room.latestMessage, nil)
         }
+        
+        
         
         // return 0 rooms because there is no message related to it
         try app.test(

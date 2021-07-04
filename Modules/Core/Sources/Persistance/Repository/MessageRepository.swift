@@ -18,10 +18,9 @@ public class MessageRepository: Domain.MessageRepository {
     
     public func createRoom(selfUser: Domain.User.ID, input: Domain.CreateMessageRoom.Request) -> EventLoopFuture<Domain.MessageRoom> {
         MessageRoomMember.query(on: db)
-            .group(.or) {
-                $0.filter(\.$user.$id == input.members[0].rawValue)
-                    .filter(\.$user.$id == selfUser.rawValue)
-            }
+            .join(MessageRoomPartner.self, on: \MessageRoomMember.$room.$id == \MessageRoomPartner.$room.$id)
+            .filter(MessageRoomMember.self, \.$user.$id == input.members[0].rawValue)
+            .filter(MessageRoomPartner.self, \.$user.$id == selfUser.rawValue)
             .first()
             .flatMap { [db] existing -> EventLoopFuture<Domain.MessageRoom> in
                 if let existing = existing { // return existing room

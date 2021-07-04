@@ -44,6 +44,11 @@ final class MessageRoomMember: Model {
     var isOwner: Bool
 }
 
+final class MessageRoomPartner: ModelAlias {
+    static let name = "message_room_partners"
+    let model = MessageRoomMember()
+}
+
 final class Message: Model {
     static var schema: String = "messages"
     
