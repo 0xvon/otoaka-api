@@ -27,6 +27,16 @@ public struct BatchGroupUpdates: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct CheckGlobalIP: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = String
+    public struct URI: CodableURL {
+        @StaticPath("external", "global_ip") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct ListChannel: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = YouTubePage<YouTubeVideo>

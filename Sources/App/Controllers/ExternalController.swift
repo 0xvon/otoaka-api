@@ -30,6 +30,16 @@ struct ExternalController: RouteCollection {
             return groupRepository.create(input: input)
         })
         try routes.on(endpoint: Endpoint.BatchGroupUpdates.self, use: injectProvider(batchGroupInfo(req:uri:repository:)))
+        try routes.on(endpoint: Endpoint.CheckGlobalIP.self, use: injectProvider { req, uri, repository in
+            var headers = HTTPHeaders()
+            headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
+            let res = req.client.get("https://ifconfig.me", headers: headers)
+                
+            return res
+                .flatMapThrowing {
+                    try $0.content.decode(CheckGlobalIP.Response.self)
+                }
+        })
     }
     
     func batchGroupInfo(req: Request, uri: BatchGroupUpdates.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<Empty> {
