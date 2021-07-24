@@ -37,6 +37,17 @@ public struct CheckGlobalIP: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct TestGetPiaArtist: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = PiaSearchArtists.Response
+    public struct URI: CodableURL {
+        @StaticPath("external", "test_pia") public var prefix: Void
+        @Query public var piaApiKey: String
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct ListChannel: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = YouTubePage<YouTubeVideo>
@@ -68,7 +79,7 @@ public struct PiaSearchArtists: EndpointProtocol {
         }
     }
     public struct URI: CodableURL {
-        @StaticPath("artists") public var prefix: Void
+        @StaticPath("1.1", "artists") public var prefix: Void
         @Query public var apiKey: String
         @Query public var keyword: String?
         @Query public var artist_code: String?
@@ -93,7 +104,7 @@ public struct PiaSearchVenues: EndpointProtocol {
         }
     }
     public struct URI: CodableURL {
-        @StaticPath("venues") public var prefix: Void
+        @StaticPath("1.1", "venues") public var prefix: Void
         @Query public var apiKey: String
         @Query public var keyword: String?
         @Query public var latitude: Double?
@@ -122,7 +133,7 @@ public struct PiaSearchEventReleasesBriefly: EndpointProtocol {
         }
     }
     public struct URI: CodableURL {
-        @StaticPath("artists") public var prefix: Void
+        @StaticPath("1.1", "event_releases") public var prefix: Void
         @Query public var apiKey: String
         @Query public var keyword: String?
         @Query public var lgenre_code: String?

@@ -40,6 +40,22 @@ struct ExternalController: RouteCollection {
                     try $0.content.decode(CheckGlobalIP.Response.self)
                 }
         })
+        try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
+            var reqUri = PiaSearchArtists.URI()
+            reqUri.apiKey = uri.piaApiKey
+            reqUri.keyword = "MY FIRST STORY"
+            reqUri.get_count = 10
+            let path = URI(path: try! reqUri.encode(baseURL: URL(string: "https://chk-search-api.pia.jp")!).absoluteString)
+            var headers = HTTPHeaders()
+            headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
+            headers.add(name: "End-User-Agent", value: "N252i DoCoMo/1.0/N252i/c10/TB/W22H10")
+            let res = req.client.get(path, headers: headers)
+            return res
+                .flatMapThrowing {
+                    try $0.content.decode(TestGetPiaArtist.Response.self)
+                }
+            
+        })
     }
     
     func batchGroupInfo(req: Request, uri: BatchGroupUpdates.URI, repository: Domain.GroupRepository) throws -> EventLoopFuture<Empty> {
@@ -79,3 +95,5 @@ struct ExternalController: RouteCollection {
         .map { Empty() }
     }
 }
+
+extension PiaSearchArtists.Response: Content {}
