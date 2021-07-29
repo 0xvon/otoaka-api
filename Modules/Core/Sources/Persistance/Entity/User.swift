@@ -164,6 +164,11 @@ final class UserBlocking: Model {
     init() {}
 }
 
+final class AnotherUserBlocking: ModelAlias {
+    static let name = "another_user_blockings"
+    let model = UserBlocking()
+}
+
 final class LiveLike: Model {
     static let schema = "live_likes"
 

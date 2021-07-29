@@ -1,5 +1,6 @@
 import Domain
 import FluentKit
+import FluentSQL
 
 public class UserSocialRepository: Domain.UserSocialRepository {
     private let db: Database
@@ -238,18 +239,37 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .first().map { $0 != nil }
     }
     
-    public func recommendedUsers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {
-        // TODO: CHANGE LOGIC
-        let users = User.query(on: db)
-            .filter(\.$id != selfUser.rawValue)
-//            .join(UserBlocking.self, on: \UserBlocking.$user.$id == \User.$id, method: .left)
-//            .filter(UserBlocking.self, \UserBlocking.$id == nil)
-            .unique()
-        return users.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.User.translate(fromPersistance: $0, on: db)
-            }
+    public func recommendedUsers(selfUser: Domain.User, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {
+        // (=^･ω･^=)
+        var users = User.query(on: db)
+        if db is SQLDatabase {
+            users = users
+                .join(UserBlocking.self, on: \UserBlocking.$target.$id == \User.$id, method: .left)
+                .group(.or) {
+                    $0.filter(.sql(raw: "user_blockings.id is NULL"))
+                        .filter(UserBlocking.self, \.$user.$id != selfUser.id.rawValue)
+                }
+                .join(AnotherUserBlocking.self, on: \AnotherUserBlocking.$user.$id == \User.$id, method: .left)
+                .group(.or) {
+                    $0.filter(.sql(raw: "another_user_blockings.id is NULL"))
+                        .filter(AnotherUserBlocking.self, \.$target.$id != selfUser.id.rawValue)
+                }
+                .join(UserFollowing.self, on: \UserFollowing.$target.$id == \User.$id, method: .left)
+                .group(.or) {
+                    $0.filter(.sql(raw: "user_followings.id is NULL"))
+                        .filter(UserFollowing.self, \.$user.$id != selfUser.id.rawValue)
+                }
         }
+        return users
+            .fields(for: User.self)
+            .unique()
+            .filter(\.$id != selfUser.id.rawValue)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.User.translate(fromPersistance: $0, on: db)
+                }
+            }
     }
 
     public func userFollowers(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<

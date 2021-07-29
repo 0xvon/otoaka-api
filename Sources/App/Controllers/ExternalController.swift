@@ -42,7 +42,7 @@ struct ExternalController: RouteCollection {
         })
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
-            reqUri.apiKey = uri.piaApiKey
+            reqUri.apikey = uri.piaApiKey
             reqUri.keyword = "MY FIRST STORY"
             reqUri.get_count = 10
             let path = URI(path: try! reqUri.encode(baseURL: URL(string: "https://chk-search-api.pia.jp")!).absoluteString)

@@ -16,7 +16,7 @@ public protocol UserSocialRepository {
     func block(selfUser: User.ID, target: User.ID) -> EventLoopFuture<Void>
     func unblock(selfUser: User.ID, target: User.ID) -> EventLoopFuture<Void>
     func isBlocking(selfUser: User.ID, target: User.ID) -> EventLoopFuture<Bool>
-    func recommendedUsers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
+    func recommendedUsers(selfUser: User, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func userFollowers(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func userFollowers(selfUser: User.ID) -> EventLoopFuture<[User.ID]>
     func isUserFollowing(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Bool>

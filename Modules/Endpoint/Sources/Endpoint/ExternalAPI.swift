@@ -80,7 +80,7 @@ public struct PiaSearchArtists: EndpointProtocol {
     }
     public struct URI: CodableURL {
         @StaticPath("1.1", "artists") public var prefix: Void
-        @Query public var apiKey: String
+        @Query public var apikey: String
         @Query public var keyword: String?
         @Query public var artist_code: String?
         @Query public var style_lclass_code: String?
@@ -105,7 +105,7 @@ public struct PiaSearchVenues: EndpointProtocol {
     }
     public struct URI: CodableURL {
         @StaticPath("1.1", "venues") public var prefix: Void
-        @Query public var apiKey: String
+        @Query public var apikey: String
         @Query public var keyword: String?
         @Query public var latitude: Double?
         @Query public var longitude: Double?
@@ -134,7 +134,7 @@ public struct PiaSearchEventReleasesBriefly: EndpointProtocol {
     }
     public struct URI: CodableURL {
         @StaticPath("1.1", "event_releases") public var prefix: Void
-        @Query public var apiKey: String
+        @Query public var apikey: String
         @Query public var keyword: String?
         @Query public var lgenre_code: String?
         @Query public var sgenre_code: String?
@@ -289,7 +289,7 @@ public struct PiaPerform: Codable, Equatable {
     public var songTitle: String?
     public var appearInfo: String?
     public var saleStopFlag: String
-    public var safeStopReason: String?
+    public var saleStopReason: String?
     public var appearMainArtist: [PiaArtist]
     public var appearArtist: [PiaArtist]
     public var venue: PiaVenue

@@ -233,18 +233,52 @@ class UserSocialControllerTests: XCTestCase {
         _ = try appClient.createUser()
         
         _ = try appClient.followUser(target: userB, with: userA)
-        _ = try appClient.followUser(target: userC, with: userA)
-        _ = try appClient.followUser(target: userD, with: userA)
         
         try app.test(
             .GET,
-            "user_social/recommended_users/\(userA.user.id)?page=1&per=10",
+            "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
             headers: appClient.makeHeaders(for: userA)
         ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let body = try res.content.decode(RecommendedUsers.Response.self)
             XCTAssertGreaterThanOrEqual(body.items.count, 5)
-            XCTAssertFalse(body.items.contains(userA.user))
+            let uids = body.items.map { $0.id }
+            XCTAssertFalse(uids.contains(userA.user.id))
+            XCTAssertFalse(uids.contains(userB.user.id))
+            XCTAssertTrue(uids.contains(userC.user.id))
+            XCTAssertTrue(uids.contains(userD.user.id))
+        }
+        
+        _ = try appClient.blockUser(target: userD, with: userA)
+        
+        try app.test(
+            .GET,
+            "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
+            headers: appClient.makeHeaders(for: userA)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(RecommendedUsers.Response.self)
+            XCTAssertGreaterThanOrEqual(body.items.count, 4)
+            let uids = body.items.map { $0.id }
+            XCTAssertFalse(uids.contains(userA.user.id))
+            XCTAssertFalse(uids.contains(userD.user.id))
+            XCTAssertTrue(uids.contains(userC.user.id))
+        }
+        
+        _ = try appClient.blockUser(target: userA, with: userC)
+        
+        try app.test(
+            .GET,
+            "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
+            headers: appClient.makeHeaders(for: userA)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(RecommendedUsers.Response.self)
+            XCTAssertGreaterThanOrEqual(body.items.count, 4)
+            let uids = body.items.map { $0.id }
+            XCTAssertFalse(uids.contains(userA.user.id))
+            XCTAssertFalse(uids.contains(userD.user.id))
+            XCTAssertFalse(uids.contains(userC.user.id))
         }
     }
 
