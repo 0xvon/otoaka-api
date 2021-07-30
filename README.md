@@ -29,7 +29,7 @@ $ swift test
 ## ぴあAPIの呼び出し
 
 ```
-$ curl 'http://chk-search-api.pia.jp/1.1/event_releases?apikey=qYR2nF3ugLSw1gvdzrR5oA7onr7MWW7H14Z6h%2FJQlk3APCXGjp2zVOJf4HI1kidOVkBZeEHZmKVIj1Ys51P6Jg%3D%3D&get_count=2' -H 'Content-Type:application/xml' -H 'End-User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
+$ curl 'http://chk-search-api.pia.jp/1.1/event_releases?apikey=xxxxx&get_count=2' -H 'Content-Type:application/xml' -H 'End-User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
 ```
 
 ## パッケージ分割戦略
