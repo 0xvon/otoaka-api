@@ -10,6 +10,7 @@ import Endpoint
 import Foundation
 import Persistance
 import Vapor
+import XMLCoder
 
 private func injectProvider<T, URI>(
     _ handler: @escaping (Request, URI, Domain.GroupRepository) throws -> T
@@ -43,18 +44,33 @@ struct ExternalController: RouteCollection {
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
             reqUri.apikey = uri.piaApiKey
-            reqUri.keyword = "MY FIRST STORY"
-            reqUri.get_count = 10
-            let path = URI(path: try! reqUri.encode(baseURL: URL(string: "https://chk-search-api.pia.jp")!).absoluteString)
+            reqUri.keyword = uri.keyword ?? "MY FIRST STORY"
+            reqUri.get_count = 1
+            let path = try! reqUri.encode(baseURL: URL(string:"http://chk-search-api.pia.jp")!).absoluteString
             var headers = HTTPHeaders()
             headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
             headers.add(name: "End-User-Agent", value: "N252i DoCoMo/1.0/N252i/c10/TB/W22H10")
-            let res = req.client.get(path, headers: headers)
+            let res = req.client.get(URI(string: path), headers: headers)
             return res
                 .flatMapThrowing {
-                    try $0.content.decode(TestGetPiaArtist.Response.self)
+                    return try! XMLDecoder().decode(TestGetPiaArtist.Response.self, from: Data(buffer: $0.body!))
+                }            
+        })
+        try routes.on(endpoint: Endpoint.TestGetPiaEventRelease.self, use: injectProvider { req, uri, repository in
+            var reqUri = PiaSearchEventReleasesBriefly.URI()
+            reqUri.apikey = uri.piaApiKey
+            reqUri.keyword = uri.keyword ?? "MY FIRST STORY"
+            reqUri.get_count = 1
+            let path = try! reqUri.encode(baseURL: URL(string:"http://chk-search-api.pia.jp")!).absoluteString
+            var headers = HTTPHeaders()
+            headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
+            headers.add(name: "End-User-Agent", value: "N252i DoCoMo/1.0/N252i/c10/TB/W22H10")
+            let res = req.client.get(URI(string: path), headers: headers)
+            return res
+                .flatMapThrowing {
+                    print($0)
+                    return try! XMLDecoder().decode(TestGetPiaEventRelease.Response.self, from: Data(buffer: $0.body!))
                 }
-            
         })
     }
     
@@ -97,3 +113,5 @@ struct ExternalController: RouteCollection {
 }
 
 extension PiaSearchArtists.Response: Content {}
+
+extension PiaSearchEventReleasesBriefly.Response: Content {}

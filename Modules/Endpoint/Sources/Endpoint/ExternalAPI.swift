@@ -41,8 +41,21 @@ public struct TestGetPiaArtist: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = PiaSearchArtists.Response
     public struct URI: CodableURL {
-        @StaticPath("external", "test_pia") public var prefix: Void
+        @StaticPath("external", "test_pia_artist") public var prefix: Void
         @Query public var piaApiKey: String
+        @Query public var keyword: String?
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct TestGetPiaEventRelease: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = PiaSearchEventReleasesBriefly.Response
+    public struct URI: CodableURL {
+        @StaticPath("external", "test_pia_event_release") public var prefix: Void
+        @Query public var piaApiKey: String
+        @Query public var keyword: String?
         public init() {}
     }
     public static var method: HTTPMethod = .get
@@ -71,11 +84,11 @@ public struct PiaSearchArtists: EndpointProtocol {
     public typealias Request = Empty
     public struct Response: Codable, Equatable {
         public var searchHeader: PiaApiGetResponseHeader
-        public var artist: [PiaArtist]
-        
-        public init(searchHeader: PiaApiGetResponseHeader, artist: [PiaArtist]) {
+        public var artists: PiaArtist?
+
+        public init(searchHeader: PiaApiGetResponseHeader, artists: PiaArtist?) {
             self.searchHeader = searchHeader
-            self.artist = artist
+            self.artists = artists
         }
     }
     public struct URI: CodableURL {
@@ -96,9 +109,9 @@ public struct PiaSearchVenues: EndpointProtocol {
     public typealias Request = Empty
     public struct Response: Codable, Equatable {
         public var searchHeader: PiaApiGetResponseHeader
-        public var venue: [PiaVenue]
+        public var venue: PiaVenue?
         
-        public init(searchHeader: PiaApiGetResponseHeader, venue: [PiaVenue]) {
+        public init(searchHeader: PiaApiGetResponseHeader, venue: PiaVenue?) {
             self.searchHeader = searchHeader
             self.venue = venue
         }
@@ -125,11 +138,11 @@ public struct PiaSearchEventReleasesBriefly: EndpointProtocol {
     public typealias Request = Empty
     public struct Response: Codable, Equatable {
         public var searchHeader: PiaApiGetResponseHeader
-        public var eventRelease: [PiaEventRelease]
+        public var eventReleases: PiaEventRelease?
         
-        public init(searchHeader: PiaApiGetResponseHeader, eventRelease: [PiaEventRelease]) {
+        public init(searchHeader: PiaApiGetResponseHeader, eventReleases: PiaEventRelease?) {
             self.searchHeader = searchHeader
-            self.eventRelease = eventRelease
+            self.eventReleases = eventReleases
         }
     }
     public struct URI: CodableURL {
@@ -144,7 +157,7 @@ public struct PiaSearchEventReleasesBriefly: EndpointProtocol {
         @Query public var prefecture_code: String?
         @Query public var venue_code: String?
         @Query public var perform_date_from: String?
-        @Query public var perform_date_end: String
+        @Query public var perform_date_end: String?
         @Query public var sale_date_from: String?
         @Query public var sale_date_end: String?
         @Query public var pia_code: String?
@@ -172,26 +185,42 @@ public struct PiaApiGetResponseHeader: Codable, Equatable {
 }
 
 public struct PiaArtist: Codable, Equatable {
+    public var artist: [PiaArtistItem]
+    
+    public init(artist: [PiaArtistItem]) {
+        self.artist = artist
+    }
+}
+
+public struct PiaImageUrlXl: Codable, Equatable {
+    public var imageUrlXl: [PiaImageUrlType]
+}
+
+public struct PiaImageUrlS: Codable, Equatable {
+    public var imageUrlS: [PiaImageUrlType]
+}
+
+public struct PiaArtistItem: Codable, Equatable {
     public var artistCode: String
     public var artistName: String
-    public var artistKana: String
+    public var artistKana: String?
     public var title: String?
     public var aritstUrlPc: String?
     public var artistUrlMobile: String?
-    public var imageUrlXl: [PiaImageUrlType]
-    public var imageUrlS: [PiaImageUrlType]
-    public var relatedArtist: [PiaRelatedArtist]
+    public var imageUrlXls: PiaImageUrlXl?
+    public var imageUrlSs: PiaImageUrlS?
+//    public var relatedArtist: [PiaRelatedArtist]
     
     public init(
         artistCode: String,
         artistName: String,
-        artistKana: String,
+        artistKana: String?,
         title: String?,
         artistUrlPc: String?,
         artistUrlMobile: String?,
-        imageUrlXl: [PiaImageUrlType],
-        imageUrlS: [PiaImageUrlType],
-        relatedArtist: [PiaRelatedArtist]
+        imageUrlXls: PiaImageUrlXl?,
+        imageUrlSs: PiaImageUrlS?
+//        relatedArtist: [PiaRelatedArtist]
     ) {
         self.artistCode = artistCode
         self.artistName = artistName
@@ -199,9 +228,9 @@ public struct PiaArtist: Codable, Equatable {
         self.title = title
         self.aritstUrlPc = artistUrlPc
         self.artistUrlMobile = artistUrlMobile
-        self.imageUrlXl = imageUrlXl
-        self.imageUrlS = imageUrlS
-        self.relatedArtist = relatedArtist
+        self.imageUrlXls = imageUrlXls
+        self.imageUrlSs = imageUrlSs
+//        self.relatedArtist = relatedArtist
     }
 }
 
@@ -234,19 +263,39 @@ public struct PiaRelatedArtist: Codable, Equatable {
 }
 
 public struct PiaEventRelease: Codable, Equatable {
-    public var event: PiaEvent
-    public var release: PiaRelease
-    public var perform: PiaPerform
+    public var eventRelease: [PiaEventReleaseItem]
+    
+    public init(eventRelease: [PiaEventReleaseItem]) {
+        self.eventRelease = eventRelease
+    }
+}
+
+public struct PiaEventReleaseItem: Codable, Equatable {
+    public var event: PiaEventItem
+    public var release: PiaReleaseItem
+    public var performs: PiaPerform
 }
 
 public struct PiaEvent: Codable, Equatable {
+    public var event: [PiaEventItem]
+}
+
+public struct PiaRelease: Codable, Equatable {
+    public var release: [PiaReleaseItem]
+}
+
+public struct PiaPerform: Codable, Equatable {
+    public var perform: [PiaPerformItem]
+}
+
+public struct PiaEventItem: Codable, Equatable {
     public var eventCode: String
     public var bundle: String
     public var bundleCode: String?
     public var mainTitle: String
     public var mainTitleKana: String
-    public var imageUrlXl: [PiaImageUrlType]
-    public var imageUrlS: [PiaImageUrlType]
+    public var imageUrlXls: PiaImageUrlXl
+    public var imageUrlSs: PiaImageUrlS
     public var lGenreName: String
     public var lGenreCode: String
     public var sGenreName: String
@@ -256,7 +305,7 @@ public struct PiaEvent: Codable, Equatable {
     public var eventRank: String
 }
 
-public struct PiaRelease: Codable, Equatable {
+public struct PiaReleaseItem: Codable, Equatable {
     public var releaseCode: String?
     public var lotReleaseCode: String?
     public var releaseName: String
@@ -265,37 +314,53 @@ public struct PiaRelease: Codable, Equatable {
     public var releaseStatusName: String
     public var releaseKindCode: String
     public var releaseKindName: String
-    public var releasekindShortCode: String
+    public var releaseKindShortCode: String
     public var releaseKindShortName: String
     public var premiumFlag: String
-    public var releaseDateFrom: Date
-    public var releaseDateEnd: Date
+    public var releaseDateFrom: String
+    public var releaseDateEnd: String
     public var releaseUrlPc: String
     public var releaseUrlMobile: String
     public var saleStopFlag: String
-    public var saleStopReason: String
+    public var saleStopReason: String?
 }
 
-public struct PiaPerform: Codable, Equatable {
+public struct PiaPerformItem: Codable, Equatable {
     public var performCode: String
     public var performTitle: String?
-    public var performDate: Date?
-    public var openTime: Date?
-    public var performStartTime: Date?
-    public var performTermFrom: Date?
-    public var performTermEnd: Date?
+    public var performDate: String?
+    public var openTime: String?
+    public var performStartTime: String?
+    public var performTermFrom: String?
+    public var performTermEnd: String?
     public var termValidFlag: String
     public var performItemName: String?
     public var songTitle: String?
     public var appearInfo: String?
     public var saleStopFlag: String
     public var saleStopReason: String?
-    public var appearMainArtist: [PiaArtist]
-    public var appearArtist: [PiaArtist]
-    public var venue: PiaVenue
+    public var appearMainArtists: PiaAppearMainArtist
+    public var appearArtist: PiaAppearArtist?
+    public var venue: PiaVenueItem?
+}
+
+public struct PiaAppearMainArtist: Codable, Equatable {
+    public var appearMainArtist: [PiaArtistItem]
+}
+
+public struct PiaAppearArtist: Codable, Equatable {
+    public var appearArtist: [PiaArtistItem]
 }
 
 public struct PiaVenue: Codable, Equatable {
+    public var venue: [PiaVenueItem]
+    
+    public init(venue: [PiaVenueItem]) {
+        self.venue = venue
+    }
+}
+
+public struct PiaVenueItem: Codable, Equatable {
     public var venueCode: String
     public var venueName: String
     public var prefectureCode: String
