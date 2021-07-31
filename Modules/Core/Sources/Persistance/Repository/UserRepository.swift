@@ -265,6 +265,7 @@ public class UserRepository: Domain.UserRepository {
     public func createPost(for input: Domain.CreatePost.Request, authorId: Domain.User.ID) -> EventLoopFuture<Domain.Post> {
         let post = Post()
         post.$author.id = input.author.id.rawValue
+        post.$live.id = input.live.id.rawValue
         post.text = input.text
         
         let created = post.create(on: db)

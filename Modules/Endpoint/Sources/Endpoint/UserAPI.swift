@@ -226,15 +226,22 @@ public struct Track: Codable {
 public struct CreatePost: EndpointProtocol {
     public struct Request: Codable {
         public var author: User
+        public var live: Live
         public var text: String
         public var tracks: [Track]
         public var groups: [Group]
         public var imageUrls: [String]
         
         public init(
-            author: User, text: String, tracks: [Track], groups: [Group], imageUrls: [String]
+            author: User,
+            live: Live,
+            text: String,
+            tracks: [Track],
+            groups: [Group],
+            imageUrls: [String]
         ) {
             self.author = author
+            self.live = live
             self.text = text
             self.tracks = tracks
             self.groups = groups

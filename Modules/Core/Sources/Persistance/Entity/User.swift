@@ -312,6 +312,9 @@ final class Post: Model {
     @Field(key: "text")
     var text: String
     
+    @OptionalParent(key: "live_id")
+    var live: Live?
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
@@ -432,6 +435,7 @@ extension Endpoint.Post {
         let eventLoop = db.eventLoop
         let id = eventLoop.submit { try entity.requireID() }
         let author = entity.$author.get(on: db).flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+        let live = entity.$live.get(on: db).optionalFlatMap { Endpoint.Live.translate(fromPersistance: $0, on: db) }
         let imageUrls = entity.$imageUrls.query(on: db)
             .sort(\.$order, .ascending).all()
         let tracks = entity.$tracks
@@ -448,16 +452,17 @@ extension Endpoint.Post {
                 }
         }
         
-        return id.and(author).and(imageUrls).and(tracks).and(groups)
-            .map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }
+        return id.and(author).and(live).and(imageUrls).and(tracks).and(groups)
+            .map { ($0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
             .map {
                 Endpoint.Post(
                     id: ID($0),
                     author: $1,
+                    live: $2,
                     text: entity.text,
-                    tracks: $3,
-                    groups: $4,
-                    imageUrls: $2.map { $0.$imageUrl.value! },
+                    tracks: $4,
+                    groups: $5,
+                    imageUrls: $3.map { $0.$imageUrl.value! },
                     createdAt: entity.createdAt!
                 )
             }

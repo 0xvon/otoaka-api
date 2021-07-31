@@ -437,3 +437,18 @@ struct CreateUserBlocking: Migration {
         database.schema(UserBlocking.schema).delete()
     }
 }
+
+struct AssociatePostWithLive: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .field("live_id", .uuid)
+            .foreignKey("live_id", references: Live.schema, .id)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .deleteField("live_id")
+            .update()
+    }
+}

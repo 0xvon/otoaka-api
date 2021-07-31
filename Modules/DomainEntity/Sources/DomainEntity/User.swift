@@ -148,6 +148,7 @@ public struct Post: Codable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var author: User
+    public var live: Live?
     public var text: String
     public var tracks: [PostTrack]
     public var groups: [Group]
@@ -155,10 +156,18 @@ public struct Post: Codable, Equatable {
     public var createdAt: Date
     
     public init(
-        id: Post.ID, author: User, text: String, tracks: [PostTrack], groups: [Group], imageUrls: [String], createdAt: Date
+        id: Post.ID,
+        author: User,
+        live: Live?,
+        text: String,
+        tracks: [PostTrack],
+        groups: [Group],
+        imageUrls: [String],
+        createdAt: Date
     ) {
         self.id = id
         self.author = author
+        self.live = live
         self.text = text
         self.tracks = tracks
         self.groups = groups
