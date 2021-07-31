@@ -55,6 +55,8 @@ public func setupMigration(
         CreateMessageRoom(), CreateMessageRoomMember(),
         CreateMessage(), CreateMessageReading(),
         AddMessageRoomToLatestMessageAt(),
+        
+        UpdateLiveForPia(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

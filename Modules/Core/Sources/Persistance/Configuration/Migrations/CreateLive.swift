@@ -98,3 +98,27 @@ struct CreateTicket: Migration {
             .map { _ in }
     }
 }
+
+struct UpdateLiveForPia: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Live.schema)
+            .field("date", .string)
+            .field("open_at_v2", .string)
+            .field("start_at_v2", .string)
+            .field("pia_event_code", .string)
+            .field("pia_release_url", .string)
+            .field("pia_event_url", .string)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Live.schema)
+            .deleteField("date")
+            .deleteField("open_at_v2")
+            .deleteField("start_at_v2")
+            .deleteField("pia_event_code")
+            .deleteField("pia_release_url")
+            .deleteField("pia_event_url")
+            .update()
+    }
+}

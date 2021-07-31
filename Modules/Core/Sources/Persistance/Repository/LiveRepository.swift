@@ -29,8 +29,9 @@ public class LiveRepository: Domain.LiveRepository {
         let live = Live(
             title: input.title, style: style, price: input.price, artworkURL: input.artworkURL,
             hostGroupId: input.hostGroupId, authorId: authorId,
-            liveHouse: input.liveHouse, openAt: input.openAt, startAt: input.startAt,
-            endAt: input.endAt
+            liveHouse: input.liveHouse,
+            date: input.date, openAt: input.openAt, startAt: input.startAt,
+            piaEventCode: input.piaEventCode, piaReleaseUrl: input.piaReleaseUrl, piaEventUrl: input.piaEventUrl
         )
         return db.transaction { (db) -> EventLoopFuture<Void> in
             live.save(on: db)
@@ -66,9 +67,13 @@ public class LiveRepository: Domain.LiveRepository {
             live.title = input.title
             live.artworkURL = input.artworkURL?.absoluteString
             live.liveHouse = input.liveHouse
-            live.openAt = input.openAt
-            live.startAt = input.startAt
-            live.endAt = input.endAt
+            live.date = input.date
+            live.openAtV2 = input.openAt
+            live.startAtV2 = input.startAt
+            live.piaEventCode = input.piaEventCode
+            live.piaReleaseUrl = input.piaReleaseUrl?.absoluteString
+            live.piaEventUrl = input.piaEventUrl?.absoluteString
+            
             return live
         }
         .flatMap { [db] live in live.update(on: db).map { live } }

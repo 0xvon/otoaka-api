@@ -38,6 +38,23 @@ final class Live: Model {
     var startAt: Date?
     @Timestamp(key: "end_at", on: .none)
     var endAt: Date?
+    
+    @OptionalField(key: "date")
+    var date: String?
+    @OptionalField(key: "open_at_v2")
+    var openAtV2: String?
+    @OptionalField(key: "start_at_v2")
+    var startAtV2: String?
+    
+    @OptionalField(key: "pia_event_code")
+    var piaEventCode: String?
+    
+    @OptionalField(key: "pia_release_url")
+    var piaReleaseUrl: String?
+    
+    @OptionalField(key: "pia_event_url")
+    var piaEventUrl: String?
+    
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -50,7 +67,8 @@ final class Live: Model {
         price: Int, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
         authorId: Domain.User.ID, liveHouse: String?,
-        openAt: Date?, startAt: Date?, endAt: Date?
+        date: String?, openAt: String?, startAt: String?,
+        piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
     ) {
         self.id = nil
         self.title = title
@@ -60,9 +78,15 @@ final class Live: Model {
         self.$hostGroup.id = hostGroupId.rawValue
         self.$author.id = authorId.rawValue
         self.liveHouse = liveHouse
-        self.openAt = openAt
-        self.startAt = startAt
-        self.endAt = endAt
+        self.openAt = nil
+        self.startAt = nil
+        self.endAt = nil
+        self.date = date
+        self.openAtV2 = openAt
+        self.startAtV2 = startAt
+        self.piaEventCode = piaEventCode
+        self.piaReleaseUrl = piaReleaseUrl?.absoluteString
+        self.piaEventUrl = piaEventUrl?.absoluteString
     }
 }
 
@@ -157,7 +181,11 @@ extension Endpoint.Live {
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     author: author,
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,
-                    startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt
+                    date: entity.date, openAt: entity.openAtV2, startAt: entity.startAtV2,
+                    piaEventCode: entity.piaEventCode,
+                    piaReleaseUrl: entity.piaReleaseUrl.map { URL(string: $0)! },
+                    piaEventUrl: entity.piaEventUrl.map { URL(string: $0)! },
+                    createdAt: createdAt
                 )
             }
     }

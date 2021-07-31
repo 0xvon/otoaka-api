@@ -8,14 +8,18 @@ public struct CreateLive: EndpointProtocol {
         public var artworkURL: Foundation.URL?
         public var hostGroupId: Group.ID
         public var liveHouse: String?
-        public var openAt: Date?
-        public var startAt: Date?
-        public var endAt: Date?
+        public var date: String?
+        public var openAt: String?
+        public var startAt: String?
+        public var piaEventCode: String?
+        public var piaReleaseUrl: URL?
+        public var piaEventUrl: URL?
 
         public init(
             title: String, style: LiveStyleInput, price: Int, artworkURL: URL?,
-            hostGroupId: Group.ID, liveHouse: String?, openAt: Date?,
-            startAt: Date?, endAt: Date?
+            hostGroupId: Group.ID, liveHouse: String?,
+            date: String?, openAt: String?, startAt: String?,
+            piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
         ) {
             self.title = title
             self.style = style
@@ -23,9 +27,12 @@ public struct CreateLive: EndpointProtocol {
             self.artworkURL = artworkURL
             self.hostGroupId = hostGroupId
             self.liveHouse = liveHouse
+            self.date = date
             self.openAt = openAt
             self.startAt = startAt
-            self.endAt = endAt
+            self.piaEventCode = piaEventCode
+            self.piaReleaseUrl = piaReleaseUrl
+            self.piaEventUrl = piaEventUrl
         }
     }
     public typealias Response = Live
@@ -41,20 +48,27 @@ public struct EditLive: EndpointProtocol {
         public var title: String
         public var artworkURL: Foundation.URL?
         public var liveHouse: String?
-        public var openAt: Date?
-        public var startAt: Date?
-        public var endAt: Date?
+        public var date: String?
+        public var openAt: String?
+        public var startAt: String?
+        public var piaEventCode: String?
+        public var piaReleaseUrl: URL?
+        public var piaEventUrl: URL?
 
         public init(
             title: String, artworkURL: URL?, liveHouse: String?,
-            openAt: Date?, startAt: Date?, endAt: Date?
+            date: String?, openAt: String?, startAt: String?,
+            piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
         ) {
             self.title = title
             self.artworkURL = artworkURL
             self.liveHouse = liveHouse
+            self.date = date
             self.openAt = openAt
             self.startAt = startAt
-            self.endAt = endAt
+            self.piaEventCode = piaEventCode
+            self.piaReleaseUrl = piaReleaseUrl
+            self.piaEventUrl = piaEventUrl
         }
     }
     public typealias Response = Live
