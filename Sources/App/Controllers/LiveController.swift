@@ -32,7 +32,7 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(Endpoint.RefundTicket.Request.self)
-                return repository.refundTicket(ticketId: input.ticketId, user: user.id)
+                return repository.refundTicket(liveId: input.liveId, user: user.id).map { Empty() }
             })
         try routes.on(
             endpoint: Endpoint.ReplyPerformanceRequest.self, use: injectProvider(replyRequest))
@@ -118,13 +118,14 @@ struct LiveController: RouteCollection {
     func reserveTicket(req: Request, uri: ReserveTicket.URI, repository: Domain.LiveRepository)
         throws
         -> EventLoopFuture<
-            Endpoint.Ticket
+            ReserveTicket.Response
         >
     {
         let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.ReserveTicket.Request.self)
         let useCase = ReserveLiveTicketUseCase(liveRepository: repository, eventLoop: req.eventLoop)
         return try useCase((liveId: input.liveId, user: user))
+            .map { Empty() }
     }
 
     func replyRequest(

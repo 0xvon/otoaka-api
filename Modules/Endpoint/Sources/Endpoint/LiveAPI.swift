@@ -163,12 +163,12 @@ public struct GetLive: EndpointProtocol {
 
 public struct RefundTicket: EndpointProtocol {
     public struct Request: Codable {
-        public let ticketId: Ticket.ID
-        public init(ticketId: Ticket.ID) {
-            self.ticketId = ticketId
+        public let liveId: Live.ID
+        public init(liveId: Live.ID) {
+            self.liveId = liveId
         }
     }
-    public typealias Response = Ticket
+    public typealias Response = Empty
     public struct URI: CodableURL {
         @StaticPath("lives", "refund") public var prefix: Void
         public init() {}
@@ -183,7 +183,7 @@ public struct ReserveTicket: EndpointProtocol {
             self.liveId = liveId
         }
     }
-    public typealias Response = Ticket
+    public typealias Response = Empty
     public struct URI: CodableURL {
         @StaticPath("lives", "reserve") public var prefix: Void
         public init() {}
@@ -193,7 +193,7 @@ public struct ReserveTicket: EndpointProtocol {
 
 public struct GetMyTickets: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Ticket>
+    public typealias Response = Page<Live>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "my_tickets") public var prefix: Void
         @Query public var page: Int

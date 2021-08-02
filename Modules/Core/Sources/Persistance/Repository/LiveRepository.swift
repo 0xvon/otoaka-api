@@ -40,18 +40,10 @@ public class LiveRepository: Domain.LiveRepository {
                     let futures =
                         performerGroups
                         .map { performerId -> EventLoopFuture<Void> in
-                            if performerId == input.hostGroupId {
-                                let request = LivePerformer()
-                                request.$group.id = performerId.rawValue
-                                request.$live.id = liveId
-                                return request.save(on: db)
-                            } else {
-                                let request = PerformanceRequest()
-                                request.$group.id = performerId.rawValue
-                                request.$live.id = liveId
-                                request.status = .pending
-                                return request.save(on: db)
-                            }
+                            let request = LivePerformer()
+                            request.$group.id = performerId.rawValue
+                            request.$live.id = liveId
+                            return request.save(on: db)
                         }
                     return db.eventLoop.flatten(futures)
                 }
@@ -138,7 +130,7 @@ public class LiveRepository: Domain.LiveRepository {
     }
 
     public func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+        Void
     > {
         let isLiveExist = Live.find(liveId.rawValue, on: db).map { $0 != nil }
         let hasValidTicket = Ticket.query(on: db)
@@ -154,40 +146,37 @@ public class LiveRepository: Domain.LiveRepository {
             }
             return ()
         }
-        .flatMap { [db] _ -> EventLoopFuture<Ticket> in
+        .flatMap { [db] _ -> EventLoopFuture<Void> in
             let ticket = Ticket(status: .reserved, liveId: liveId.rawValue, userId: user.rawValue)
-            return ticket.save(on: db).map { _ in ticket }
-        }
-        .flatMap { [db] in
-            Domain.Ticket.translate(fromPersistance: $0, on: db)
+            return ticket.save(on: db)
         }
     }
 
-    public func refundTicket(ticketId: Domain.Ticket.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+    public func refundTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Void
     > {
-        let ticket = Ticket.find(ticketId.rawValue, on: db)
-        return ticket.unwrap(orError: Error.ticketNotFound)
-            .guard({ $0.$user.id == user.rawValue }, else: Error.ticketPermissionError)
-            .flatMap { [db] ticket -> EventLoopFuture<Ticket> in
-                ticket.status = .refunded
-                return ticket.update(on: db).map { _ in ticket }
-            }
-            .flatMap { [db] in
-                Domain.Ticket.translate(fromPersistance: $0, on: db)
+        let ticket = Ticket.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue)
+            .first()
+            
+        return ticket
+            .flatMapThrowing { [db] ticket -> Void in
+                guard let ticket = ticket else { throw Error.ticketNotFound }
+                _ = ticket.delete(on: db)
             }
     }
 
     public func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.Ticket>
+        Domain.Page<Domain.Live>
     > {
-        return Ticket.query(on: db).filter(\.$user.$id == userId.rawValue)
-            .join(parent: \.$live)
-            .sort(Live.self, \.$startAt)
+        return Live.query(on: db)
+            .join(Ticket.self, on: \Ticket.$live.$id == \Live.$id)
+            .filter(Ticket.self, \.$user.$id == userId.rawValue)
+            .sort(Live.self, \.$date)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
-                Domain.Page<Domain.Ticket>.translate(page: $0, eventLoop: db.eventLoop) {
-                    Domain.Ticket.translate(fromPersistance: $0, on: db)
+                Domain.Page<Domain.Live>.translate(page: $0, eventLoop: db.eventLoop) {
+                    Domain.Live.translate(fromPersistance: $0, on: db)
                 }
             }
     }

@@ -12,10 +12,10 @@ public protocol LiveRepository {
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>
 
     func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+        Void
     >
-    func refundTicket(ticketId: Domain.Ticket.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+    func refundTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Void
     >
     func updatePerformerStatus(
         requestId: PerformanceRequest.ID,
@@ -23,7 +23,7 @@ public protocol LiveRepository {
     ) -> EventLoopFuture<Void>
     func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest>
     func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.Ticket>
+        Domain.Page<Domain.Live>
     >
 
     func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>>

@@ -324,7 +324,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         return Live.query(on: db)
             .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
-            .sort(\.$openAt)
+            .sort(\.$openAtV2)
+            .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
@@ -451,6 +452,31 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return like
         }
         .flatMap { [db] in $0.delete(on: db) }
+    }
+    
+    public func likedLive(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>> {
+        Live.query(on: db)
+            .join(LiveLike.self, on: \LiveLike.$live.$id == \Live.$id)
+            .filter(LiveLike.self, \.$user.$id == userId.rawValue)
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
+                    let isLiked = LiveLike.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(\.$user.$id == userId.rawValue)
+                        .count().map { $0 > 0 }
+                    let hasTicket = Ticket.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(\.$user.$id == userId.rawValue)
+                        .count().map { $0 > 0 }
+
+                    return Domain.Live.translate(fromPersistance: live, on: db)
+                        .and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }
+                        .map {
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2)
+                        }
+                }
+            }
     }
     
     public func likeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void> {

@@ -6,7 +6,7 @@ public struct ReserveLiveTicketUseCase: UseCase {
         liveId: Live.ID,
         user: User
     )
-    public typealias Response = Ticket
+    public typealias Response = Void
 
     public enum Error: Swift.Error {
         case artistCannotCreateLive
