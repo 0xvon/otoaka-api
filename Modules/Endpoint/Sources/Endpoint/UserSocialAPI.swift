@@ -159,11 +159,15 @@ public struct LiveFeed: Codable {
     public var live: Live
     public var isLiked: Bool
     public var hasTicket: Bool
+    public var likeCount: Int
+    public var participantCount: Int
 
-    public init(live: Live, isLiked: Bool, hasTicket: Bool) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
+        self.likeCount = likeCount
+        self.participantCount = participantCount
     }
 }
 
@@ -172,6 +176,7 @@ public struct GetUpcomingLives: EndpointProtocol {
     public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "upcoming_lives") public var prefix: Void
+        @Query public var userId: User.ID
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
@@ -341,6 +346,19 @@ public struct UnlikeLive: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .post
+}
+
+public struct GetLikedLive: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<LiveFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "liked_live") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
 }
 
 public struct PostFeedComment: EndpointProtocol {

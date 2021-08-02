@@ -318,30 +318,36 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .first().map { $0 != nil }
     }
 
-    public func upcomingLives(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+    public func upcomingLives(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
         return Live.query(on: db)
             .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
-            .sort(\.$openAtV2)
+            .sort(\.$date)
             .unique()
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
                     let isLiked = LiveLike.query(on: db)
                         .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == userId.rawValue)
+                        .filter(\.$user.$id == selfUser.rawValue)
                         .count().map { $0 > 0 }
                     let hasTicket = Ticket.query(on: db)
                         .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == userId.rawValue)
+                        .filter(\.$user.$id == selfUser.rawValue)
                         .count().map { $0 > 0 }
+                    let likeCount = LiveLike.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .count()
+                    let participantCount = Ticket.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .count()
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }
+                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }
                         .map {
-                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2)
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4)
                         }
                 }
             }
@@ -454,7 +460,11 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         .flatMap { [db] in $0.delete(on: db) }
     }
     
-    public func likedLive(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>> {
+    public func likedLive(
+        userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int
+    ) -> EventLoopFuture<
+        Domain.Page<Domain.LiveFeed>
+    > {
         Live.query(on: db)
             .join(LiveLike.self, on: \LiveLike.$live.$id == \Live.$id)
             .filter(LiveLike.self, \.$user.$id == userId.rawValue)
@@ -463,17 +473,23 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
                     let isLiked = LiveLike.query(on: db)
                         .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == userId.rawValue)
+                        .filter(\.$user.$id == selfUser.rawValue)
                         .count().map { $0 > 0 }
                     let hasTicket = Ticket.query(on: db)
                         .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == userId.rawValue)
+                        .filter(\.$user.$id == selfUser.rawValue)
                         .count().map { $0 > 0 }
+                    let likeCount = LiveLike.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .count()
+                    let participantCount = Ticket.query(on: db)
+                        .filter(\.$live.$id == live.id!)
+                        .count()
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).map { ($0.0, $0.1, $1) }
+                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).map { ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1) }
                         .map {
-                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2)
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4)
                         }
                 }
             }

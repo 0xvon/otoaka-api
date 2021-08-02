@@ -100,7 +100,7 @@ struct UserSocialController: RouteCollection {
             endpoint: GetUpcomingLives.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.upcomingLives(userId: user.id, page: uri.page, per: uri.per)
+                return repository.upcomingLives(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetFollowingGroupFeeds.self,
@@ -138,6 +138,12 @@ struct UserSocialController: RouteCollection {
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnlikeLive.Request.self)
                 return repository.unlikeLive(userId: user.id, liveId: input.liveId).map { Empty() }
+            })
+        try routes.on(
+            endpoint: Endpoint.GetLikedLive.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.likedLive(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: LikeUserFeed.self,

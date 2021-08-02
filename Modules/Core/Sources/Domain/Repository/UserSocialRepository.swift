@@ -22,7 +22,7 @@ public protocol UserSocialRepository {
     func isUserFollowing(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Bool>
     func userFollowersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func followingUsersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
-    func upcomingLives(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
+    func upcomingLives(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
     func followingGroupFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<ArtistFeedSummary>
     >
@@ -37,7 +37,7 @@ public protocol UserSocialRepository {
     func userLikeFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
-    func likedLive(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>>
+    func likedLive(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>>
     func likeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
     func unlikeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
     func followingPosts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>

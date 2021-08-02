@@ -162,7 +162,7 @@ class LiveControllerTests: XCTestCase {
             }
         }
 
-        try app.test(.GET, "lives/my_tickets?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "lives/my_tickets?userId=\(user.user.id)&page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
             XCTAssertEqual(response.items.count, 1)

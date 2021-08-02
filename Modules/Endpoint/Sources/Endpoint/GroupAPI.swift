@@ -150,7 +150,7 @@ public struct GetAllGroups: EndpointProtocol {
 
 public struct GetGroupLives: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Live>
+    public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID

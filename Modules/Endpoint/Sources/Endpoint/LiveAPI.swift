@@ -193,9 +193,10 @@ public struct ReserveTicket: EndpointProtocol {
 
 public struct GetMyTickets: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Live>
+    public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "my_tickets") public var prefix: Void
+        @Query public var userId: User.ID
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
@@ -218,7 +219,7 @@ public struct GetLiveParticipants: EndpointProtocol {
 
 public struct SearchLive: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Live>
+    public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "search") public var prefix: Void
         @Query public var term: String

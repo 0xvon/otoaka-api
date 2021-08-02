@@ -309,7 +309,7 @@ class UserSocialControllerTests: XCTestCase {
         try appClient.follow(group: groupX, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)
-        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
@@ -373,14 +373,14 @@ class UserSocialControllerTests: XCTestCase {
         try appClient.like(live: liveA, with: userB)
 
         let headers = appClient.makeHeaders(for: userB)
-        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             let item = try XCTUnwrap(responseBody.items.first)
             XCTAssertTrue(item.isLiked)
         }
         try appClient.unlike(live: liveA, with: userB)
-        try app.test(.GET, "user_social/upcoming_lives?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             let item = try XCTUnwrap(responseBody.items.first)
