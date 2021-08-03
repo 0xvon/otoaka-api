@@ -26,8 +26,8 @@ final class Live: Model {
     @Parent(key: "host_group_id")
     var hostGroup: Group
 
-    @Parent(key: "author_id")
-    var author: User
+    @OptionalParent(key: "author_id")
+    var author: User?
 
     @OptionalField(key: "live_house")
     var liveHouse: String?
@@ -66,7 +66,7 @@ final class Live: Model {
         title: String, style: LiveStyle,
         price: Int, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
-        authorId: Domain.User.ID, liveHouse: String?,
+        authorId: Domain.User.ID? = nil, liveHouse: String?,
         date: String?, openAt: String?, startAt: String?,
         piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
     ) {
@@ -76,7 +76,7 @@ final class Live: Model {
         self.price = price
         self.artworkURL = artworkURL?.absoluteString
         self.$hostGroup.id = hostGroupId.rawValue
-        self.$author.id = authorId.rawValue
+        self.$author.id = authorId?.rawValue
         self.liveHouse = liveHouse
         self.openAt = nil
         self.startAt = nil
@@ -159,12 +159,9 @@ extension Endpoint.Live {
         let hostGroup = entity.$hostGroup.get(on: db).flatMap {
             Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
-        let author = entity.$author.get(on: db).flatMap {
-            Endpoint.User.translate(fromPersistance: $0, on: db)
-        }
 
-        return hostGroup.and(performers).and(author).map { ($0.0, $0.1, $1) }
-            .flatMapThrowing { (hostGroup, performers, author) -> Endpoint.Live in
+        return hostGroup.and(performers).map { ($0, $1) }
+            .flatMapThrowing { (hostGroup, performers) -> Endpoint.Live in
                 let style: LiveStyleOutput
                 switch entity.style {
                 case .oneman:
@@ -179,7 +176,6 @@ extension Endpoint.Live {
                     title: entity.title,
                     style: style, price: entity.price,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
-                    author: author,
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,
                     date: entity.date, openAt: entity.openAtV2, startAt: entity.startAtV2,
                     piaEventCode: entity.piaEventCode,

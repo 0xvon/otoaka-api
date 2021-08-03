@@ -27,6 +27,36 @@ public struct BatchGroupUpdates: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct ScanGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = [Group]
+    public struct URI: CodableURL {
+        @StaticPath("external", "groups") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct CreateGroupFromBatch: EndpointProtocol {
+    public typealias Request = CreateGroup.Request
+    public typealias Response = CreateGroup.Response
+    public struct URI: CodableURL {
+        @StaticPath("external", "create_group") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}
+
+public struct CreateLiveFromBatch: EndpointProtocol {
+    public typealias Request = CreateLive.Request
+    public typealias Response = CreateLive.Response
+    public struct URI: CodableURL {
+        @StaticPath("external", "create_live") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}
+
 public struct CheckGlobalIP: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = String

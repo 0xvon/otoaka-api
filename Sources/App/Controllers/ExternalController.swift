@@ -41,6 +41,18 @@ struct ExternalController: RouteCollection {
                     try $0.content.decode(CheckGlobalIP.Response.self)
                 }
         })
+        try routes.on(endpoint: ScanGroups.self, use: injectProvider { req, uri, repository in
+            repository.get(page: 1, per: 1000).map { $0.items }
+        })
+        try routes.on(endpoint: CreateGroupFromBatch.self, use: injectProvider { req, uri, repository in
+            let input = try req.content.decode(CreateGroup.Request.self)
+            return repository.create(input: input)
+        })
+        try routes.on(endpoint: CreateLiveFromBatch.self, use: injectProvider { req, uri, repository in
+            let input = try req.content.decode(CreateLive.Request.self)
+            let liveRepository = LiveRepository(db: req.db)
+            return liveRepository.create(input: input)
+        })
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
             reqUri.apikey = uri.piaApiKey

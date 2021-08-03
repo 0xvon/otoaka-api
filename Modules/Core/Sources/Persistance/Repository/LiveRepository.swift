@@ -16,7 +16,7 @@ public class LiveRepository: Domain.LiveRepository {
         case requestNotFound
     }
 
-    public func create(input: Endpoint.CreateLive.Request, authorId: Domain.User.ID)
+    public func create(input: Endpoint.CreateLive.Request)
         -> EventLoopFuture<Endpoint.Live>
     {
         let style: LiveStyle
@@ -28,7 +28,7 @@ public class LiveRepository: Domain.LiveRepository {
         let performerGroups = input.style.performers
         let live = Live(
             title: input.title, style: style, price: input.price, artworkURL: input.artworkURL,
-            hostGroupId: input.hostGroupId, authorId: authorId,
+            hostGroupId: input.hostGroupId,
             liveHouse: input.liveHouse,
             date: input.date, openAt: input.openAt, startAt: input.startAt,
             piaEventCode: input.piaEventCode, piaReleaseUrl: input.piaReleaseUrl, piaEventUrl: input.piaEventUrl

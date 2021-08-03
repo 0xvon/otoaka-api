@@ -24,7 +24,8 @@ public class GroupRepository: Domain.GroupRepository {
             biography: input.biography, since: input.since,
             artworkURL: input.artworkURL,
             twitterId: input.twitterId, youtubeChannelId: input.youtubeChannelId,
-            hometown: input.hometown)
+            hometown: input.hometown
+        )
         return group.save(on: db).flatMap { [db] in
             Domain.Group.translate(fromPersistance: group, on: db)
         }
