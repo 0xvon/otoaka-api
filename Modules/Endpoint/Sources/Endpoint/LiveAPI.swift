@@ -44,33 +44,7 @@ public struct CreateLive: EndpointProtocol {
 }
 
 public struct EditLive: EndpointProtocol {
-    public struct Request: Codable {
-        public var title: String
-        public var artworkURL: Foundation.URL?
-        public var liveHouse: String?
-        public var date: String?
-        public var openAt: String?
-        public var startAt: String?
-        public var piaEventCode: String?
-        public var piaReleaseUrl: URL?
-        public var piaEventUrl: URL?
-
-        public init(
-            title: String, artworkURL: URL?, liveHouse: String?,
-            date: String?, openAt: String?, startAt: String?,
-            piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
-        ) {
-            self.title = title
-            self.artworkURL = artworkURL
-            self.liveHouse = liveHouse
-            self.date = date
-            self.openAt = openAt
-            self.startAt = startAt
-            self.piaEventCode = piaEventCode
-            self.piaReleaseUrl = piaReleaseUrl
-            self.piaEventUrl = piaEventUrl
-        }
-    }
+    public typealias Request = CreateLive.Request
     public typealias Response = Live
     public struct URI: CodableURL {
         @StaticPath("lives", "edit") public var prefix: Void

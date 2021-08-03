@@ -45,8 +45,7 @@ public struct EditLiveUseCase: UseCase {
 
         return precondition.flatMap {
             liveRepository.update(
-                id: request.id, input: request.input,
-                authorId: request.user.id)
+                id: request.id, input: request.input)
         }
     }
 }

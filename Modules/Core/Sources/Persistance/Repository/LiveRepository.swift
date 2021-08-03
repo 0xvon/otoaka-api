@@ -13,6 +13,7 @@ public class LiveRepository: Domain.LiveRepository {
         case ticketNotFound
         case ticketPermissionError
         case ticketAlreadyReserved
+        case eventCodeNotFound
         case requestNotFound
     }
 
@@ -27,7 +28,10 @@ public class LiveRepository: Domain.LiveRepository {
         }
         let performerGroups = input.style.performers
         let live = Live(
-            title: input.title, style: style, price: input.price, artworkURL: input.artworkURL,
+            title: input.title,
+            style: style,
+            price: input.price,
+            artworkURL: input.artworkURL,
             hostGroupId: input.hostGroupId,
             liveHouse: input.liveHouse,
             date: input.date, openAt: input.openAt, startAt: input.startAt,
@@ -51,12 +55,22 @@ public class LiveRepository: Domain.LiveRepository {
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
     }
 
-    public func update(id: Domain.Live.ID, input: EditLive.Request, authorId: Domain.User.ID)
+    public func update(id: Domain.Live.ID, input: EditLive.Request)
         -> EventLoopFuture<Domain.Live>
     {
         let live = Live.find(id.rawValue, on: db).unwrap(orError: Error.liveNotFound)
-        let modified = live.map { live -> Live in
+        let style: LiveStyle
+        switch input.style {
+        case .oneman: style = .oneman
+        case .battle: style = .battle
+        case .festival: style = .festival
+        }
+        let newLive = live.map { live -> Live in
             live.title = input.title
+            
+            live.artworkURL = input.artworkURL?.absoluteString
+            live.style = style
+            live.price = input.price
             live.artworkURL = input.artworkURL?.absoluteString
             live.liveHouse = input.liveHouse
             live.date = input.date
@@ -68,8 +82,37 @@ public class LiveRepository: Domain.LiveRepository {
             
             return live
         }
-        .flatMap { [db] live in live.update(on: db).map { live } }
-        return modified.flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
+        return newLive
+            .flatMap { [db] live in live.update(on: db).map { live } }
+            .flatMap { live -> EventLoopFuture<Live> in
+                let futures =
+                    input.style.performers.map { performerId -> EventLoopFuture<LivePerformer> in
+                        return LivePerformer.query(on: self.db)
+                            .filter(\.$live.$id == id.rawValue)
+                            .filter(\.$group.$id == performerId.rawValue)
+                            .first()
+                            .unwrap(orElse: {
+                                let request = LivePerformer()
+                                request.$group.id = performerId.rawValue
+                                request.$live.id = id.rawValue
+                                _ = request.save(on: self.db)
+                                return request
+                            })
+                    }
+                return self.db.eventLoop.flatten(futures).map { _ in live }
+            }
+            .flatMap { [db] in Domain.Live.translate(fromPersistance: $0, on: db) }
+    }
+    
+    public func fetch(input: Domain.CreateLive.Request) -> EventLoopFuture<Domain.Live> {
+        let live = self.getLive(by: input.piaEventCode!)
+        return live.flatMap { live -> EventLoopFuture<Domain.Live> in
+            if let live = live {
+                return self.update(id: live.id, input: input)
+            } else {
+                return self.create(input: input)
+            }
+        }
     }
 
     public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
@@ -114,6 +157,15 @@ public class LiveRepository: Domain.LiveRepository {
         Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             Domain.Live.translate(fromPersistance: $0, on: db)
         }
+    }
+    
+    public func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?> {
+        Live.query(on: db)
+            .filter(\.$piaEventCode == piaEventCode)
+            .first()
+            .optionalFlatMap { [db] in
+                Domain.Live.translate(fromPersistance: $0, on: db)
+            }
     }
 
     public func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>  {

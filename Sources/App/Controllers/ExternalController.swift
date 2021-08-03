@@ -48,10 +48,10 @@ struct ExternalController: RouteCollection {
             let input = try req.content.decode(CreateGroup.Request.self)
             return repository.create(input: input)
         })
-        try routes.on(endpoint: CreateLiveFromBatch.self, use: injectProvider { req, uri, repository in
+        try routes.on(endpoint: FetchLive.self, use: injectProvider { req, uri, repository in
             let input = try req.content.decode(CreateLive.Request.self)
             let liveRepository = LiveRepository(db: req.db)
-            return liveRepository.create(input: input)
+            return liveRepository.fetch(input: input)
         })
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
