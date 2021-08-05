@@ -369,8 +369,8 @@ public struct PiaPerformItem: Codable, Equatable {
     public var appearInfo: String?
     public var saleStopFlag: String
     public var saleStopReason: String?
-    public var appearMainArtists: PiaAppearMainArtist
-    public var appearArtist: PiaAppearArtist?
+    public var appearMainArtists: PiaAppearMainArtist?
+    public var appearArtists: PiaAppearArtist?
     public var venue: PiaVenueItem?
 }
 
