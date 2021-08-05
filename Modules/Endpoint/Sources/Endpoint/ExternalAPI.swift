@@ -324,8 +324,8 @@ public struct PiaEventItem: Codable, Equatable {
     public var bundleCode: String?
     public var mainTitle: String
     public var mainTitleKana: String
-    public var imageUrlXls: PiaImageUrlXl
-    public var imageUrlSs: PiaImageUrlS
+    public var imageUrlXls: PiaImageUrlXl?
+    public var imageUrlSs: PiaImageUrlS?
     public var lGenreName: String
     public var lGenreCode: String
     public var sGenreName: String
