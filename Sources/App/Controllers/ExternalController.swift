@@ -56,9 +56,9 @@ struct ExternalController: RouteCollection {
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
             reqUri.apikey = uri.piaApiKey
-            reqUri.keyword = uri.keyword ?? "MY FIRST STORY"
-            reqUri.get_count = 1
-            let path = try! reqUri.encode(baseURL: URL(string:"http://chk-search-api.pia.jp")!).absoluteString
+            reqUri.keyword = uri.keyword
+            reqUri.get_count = 10
+            let path = try! reqUri.encode(baseURL: URL(string:"http://search-api.pia.jp")!).absoluteString
             var headers = HTTPHeaders()
             headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
             headers.add(name: "End-User-Agent", value: "N252i DoCoMo/1.0/N252i/c10/TB/W22H10")
@@ -71,9 +71,9 @@ struct ExternalController: RouteCollection {
         try routes.on(endpoint: Endpoint.TestGetPiaEventRelease.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchEventReleasesBriefly.URI()
             reqUri.apikey = uri.piaApiKey
-            reqUri.keyword = uri.keyword ?? "MY FIRST STORY"
-            reqUri.get_count = 1
-            let path = try! reqUri.encode(baseURL: URL(string:"http://chk-search-api.pia.jp")!).absoluteString
+            reqUri.keyword = uri.keyword
+            reqUri.get_count = 10
+            let path = try! reqUri.encode(baseURL: URL(string:"http://search-api.pia.jp")!).absoluteString
             var headers = HTTPHeaders()
             headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
             headers.add(name: "End-User-Agent", value: "N252i DoCoMo/1.0/N252i/c10/TB/W22H10")
