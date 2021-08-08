@@ -307,39 +307,43 @@ public class UserRepository: Domain.UserRepository {
     }
     
     public func deletePost(postId: Domain.Post.ID) -> EventLoopFuture<Void> {
-        _ = PostLike.query(on: db)
-            .filter(\.$post.$id == postId.rawValue).all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
-        let comments = PostComment.query(on: db)
-            .filter(\.$post.$id == postId.rawValue).all()
-        _ = comments.flatMapEach(on: db.eventLoop) { [db] in
-            UserNotification.query(on: db)
-                .filter(\.$postComment.$id == $0.id)
-                .all()
-                .flatMap { [db] in $0.delete(force: true, on: db) }
-        }
-        _ = comments.flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = PostTrack.query(on: db)
-            .filter(\.$post.$id == postId.rawValue).all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = PostGroup.query(on: db)
-            .filter(\.$post.$id == postId.rawValue).all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = PostImageUrl.query(on: db)
-            .filter(\.$post.$id == postId.rawValue).all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = UserNotification.query(on: db)
+        let postLikeDeleted = UserNotification.query(on: db)
             .filter(\.$likedPost.$id == postId.rawValue)
             .all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
-        
-        return Post.find(postId.rawValue, on: db)
-            .unwrap(orError: Error.postNotFound)
-            .flatMapThrowing { post -> Post in
-                guard post.$id.exists else { throw Error.postDeleted }
-                return post
+            .flatMap{ [db] in
+                PostLike.query(on: db)
+                    .filter(\.$post.$id == postId.rawValue).all()
+                    .flatMap { [db] in $0.delete(force: true, on: db) }
             }
+        let commentDeleted = PostComment.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all().flatMapEach(on: db.eventLoop) { [db] comment in
+            UserNotification.query(on: db)
+                .filter(\.$postComment.$id == comment.id)
+                .all()
+                .flatMap { [db] in $0.delete(force: true, on: db) }
+                .flatMap { [db] in comment.delete(force: true, on: db)}
+        }
+        let postTrackDeleted = PostTrack.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
+        let postGroupDeleted = PostGroup.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        let postImageUrlDeleted = PostImageUrl.query(on: db)
+            .filter(\.$post.$id == postId.rawValue).all()
+            .flatMap { [db] in $0.delete(force: true, on: db) }
+        
+        return postLikeDeleted.and(commentDeleted).and(postTrackDeleted).and(postGroupDeleted).and(postImageUrlDeleted)
+            .flatMap { [db] _ in
+                Post.find(postId.rawValue, on: db)
+                    .unwrap(orError: Error.postNotFound)
+                    .flatMapThrowing { post -> Post in
+                        guard post.$id.exists else { throw Error.postDeleted }
+                        return post
+                    }
+                    .flatMap { [db] in $0.delete(force: true, on: db) }
+            }
     }
     
     public func getPost(postId: Domain.Post.ID) -> EventLoopFuture<Domain.Post> {

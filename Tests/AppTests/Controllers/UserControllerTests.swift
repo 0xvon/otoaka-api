@@ -327,7 +327,7 @@ class UserControllerTests: XCTestCase {
         let groupX = try appClient.createGroup(with: userX)
         let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
         let post = try appClient.createPost(with: userX)
-        let _ = try appClient.followUser(target: userX, with: userY)
+        let _ = try appClient.followUser(target: userX, with: userY) // notify
         let headers = appClient.makeHeaders(for: userX)
         
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -395,7 +395,7 @@ class UserControllerTests: XCTestCase {
         }
         
         // unlike post → delete notification
-        let _ = try appClient.unlikePost(post: post, with: userY)
+        _ = try appClient.unlikePost(post: post, with: userY)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
@@ -403,7 +403,7 @@ class UserControllerTests: XCTestCase {
         }
         
         // delete post -> delete all notification about this post
-        let _ = try appClient.deletePost(postId: post.id, with: userX)
+        _ = try appClient.deletePost(postId: post.id, with: userX)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
