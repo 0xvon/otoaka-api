@@ -379,6 +379,15 @@ class UserSocialControllerTests: XCTestCase {
             let item = try XCTUnwrap(responseBody.items.first)
             XCTAssertTrue(item.isLiked)
         }
+        
+        try app.test(.GET, "user_social/live_liked_users?liveId=\(liveA.id)&page=1&per=10", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetLiveLikedUsers.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertTrue(item.id == userB.user.id)
+        }
+        
         try appClient.unlike(live: liveA, with: userB)
         try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
@@ -438,6 +447,26 @@ class UserSocialControllerTests: XCTestCase {
         try app.test(.GET, "user_social/liked_posts/\(userB.user.id)?page=1&per=10", headers: headers) { res in
             let responseBody = try res.content.decode(GetLikedPosts.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
+        }
+    }
+    
+    func testGetLivePost() throws {
+        let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let group = try appClient.createGroup(with: userA)
+        let live = try appClient.createLive(hostGroup: group, with: userA)
+        
+        // create 3 posts
+        _ = try appClient.createPost(with: userB, live: live)
+        _ = try appClient.createPost(with: userB, live: live)
+        _ = try appClient.createPost(with: userC, live: live)
+        
+        let headers = appClient.makeHeaders(for: userA)
+        
+        try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: headers) { res in
+            let responseBody = try res.content.decode(GetLivePosts.Response.self)
+            XCTAssertGreaterThanOrEqual(responseBody.items.count, 3)
         }
     }
 }

@@ -51,6 +51,8 @@ class LiveControllerTests: XCTestCase {
         let newTitle = "a new live title"
         let body = try! Stub.make(EditLive.Request.self) {
             $0.set(\.title, value: newTitle)
+            $0.set(\.style, value: .oneman(performer: groupX.id))
+            $0.set(\.hostGroupId, value: groupX.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 

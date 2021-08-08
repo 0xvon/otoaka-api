@@ -70,7 +70,7 @@ final class Live: Model {
         date: String?, openAt: String?, startAt: String?,
         piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
     ) {
-        self.id = nil
+        self.id = id
         self.title = title
         self.style = style
         self.price = price

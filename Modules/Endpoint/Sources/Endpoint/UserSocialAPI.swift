@@ -155,19 +155,34 @@ public struct RecommendedUsers: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetLiveLikedUsers: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<User>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "live_liked_users") public var prefix: Void
+        @Query public var liveId: Live.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct LiveFeed: Codable {
     public var live: Live
     public var isLiked: Bool
     public var hasTicket: Bool
     public var likeCount: Int
     public var participantCount: Int
+    public var postCount: Int
 
-    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
         self.likeCount = likeCount
         self.participantCount = participantCount
+        self.postCount = postCount
     }
 }
 
