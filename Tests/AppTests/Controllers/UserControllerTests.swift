@@ -134,6 +134,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertTrue(response.isFollowing)
             XCTAssertFalse(response.isFollowed)
             XCTAssertEqual(response.feedCount, 1)
+            XCTAssertEqual(response.followersCount, 1)
         }
         
         try app.test(.GET, "users/\(userB.user.id)", headers: header) { res in
@@ -142,6 +143,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertFalse(response.isFollowing)
             XCTAssertFalse(response.isFollowed)
             XCTAssertEqual(response.feedCount, 0)
+            XCTAssertEqual(response.followingUsersCount, 1)
         }
     }
 
