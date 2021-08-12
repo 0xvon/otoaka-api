@@ -207,7 +207,7 @@ struct UserSocialController: RouteCollection {
                 return repository.unlikePost(userId: user.id, postId: input.postId).map { Empty() }
             })
         try routes.on(endpoint: GetLiveLikedUsers.self, use: injectProvider { req, uri, repository in
-            return repository.getLiveLikedUsers(liveId: uri.liveId, page: uri.page, per: uri.page)
+            return repository.getLiveLikedUsers(liveId: uri.liveId, page: uri.page, per: uri.per)
         })
     }
 }

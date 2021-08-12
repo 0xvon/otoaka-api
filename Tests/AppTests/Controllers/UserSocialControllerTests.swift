@@ -366,11 +366,13 @@ class UserSocialControllerTests: XCTestCase {
     func testLikeLive() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
         let groupX = try appClient.createGroup(with: userA)
         let liveA = try appClient.createLive(hostGroup: groupX, with: userA)
         try appClient.follow(group: groupX, with: userB)
 
         try appClient.like(live: liveA, with: userB)
+        try appClient.like(live: liveA, with: userC)
 
         let headers = appClient.makeHeaders(for: userB)
         try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
@@ -378,14 +380,15 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 1)
             let item = try XCTUnwrap(responseBody.items.first)
             XCTAssertTrue(item.isLiked)
+            XCTAssertEqual(item.likeCount, 2)
         }
         
         try app.test(.GET, "user_social/live_liked_users?liveId=\(liveA.id)&page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(GetLiveLikedUsers.Response.self)
-            XCTAssertEqual(responseBody.items.count, 1)
-            let item = try XCTUnwrap(responseBody.items.first)
-            XCTAssertTrue(item.id == userB.user.id)
+            XCTAssertEqual(responseBody.items.count, 2)
+            let items = try XCTUnwrap(responseBody.items)
+            XCTAssertTrue(items.map { $0.id }.contains(userB.user.id))
         }
         
         try appClient.unlike(live: liveA, with: userB)
