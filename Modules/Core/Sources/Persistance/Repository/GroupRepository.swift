@@ -251,7 +251,11 @@ public class GroupRepository: Domain.GroupRepository {
     public func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
         Post.query(on: db)
             .join(PostGroup.self, on: \PostGroup.$post.$id == \Post.$id, method: .left)
-            .filter(PostGroup.self, \PostGroup.$group.$id == groupId.rawValue)
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Post.$live.$id, method: .left)
+            .group(.or) {
+                $0.filter(PostGroup.self, \PostGroup.$group.$id == groupId.rawValue)
+                    .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
+            }
             .sort(\.$createdAt, .descending)
             .with(\.$comments)
             .with(\.$likes)
