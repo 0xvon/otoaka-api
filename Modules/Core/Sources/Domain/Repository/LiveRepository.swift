@@ -3,34 +3,37 @@ import Foundation
 import NIO
 
 public protocol LiveRepository {
-    func create(input: CreateLive.Request, authorId: User.ID) -> EventLoopFuture<Live>
-    func update(id: Live.ID, input: EditLive.Request, authorId: User.ID) -> EventLoopFuture<Live>
-    func getLiveDetail(by id: Domain.Live.ID, selfUerId: Domain.User.ID) -> EventLoopFuture<
+    func create(input: CreateLive.Request) -> EventLoopFuture<Live>
+    func update(id: Live.ID, input: EditLive.Request) -> EventLoopFuture<Live>
+    func fetch(input: Domain.CreateLive.Request) -> EventLoopFuture<Domain.Live>
+    func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
         Domain.LiveDetail?
     >
     func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
+    func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?>
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>
 
     func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+        Void
     >
-    func refundTicket(ticketId: Domain.Ticket.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Domain.Ticket
+    func refundTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
+        Void
     >
     func updatePerformerStatus(
         requestId: PerformanceRequest.ID,
         status: PerformanceRequest.Status
     ) -> EventLoopFuture<Void>
     func find(requestId: PerformanceRequest.ID) -> EventLoopFuture<PerformanceRequest>
-    func getUserTickets(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.Ticket>
+    func getUserTickets(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.LiveFeed>
     >
 
-    func get(page: Int, per: Int) -> EventLoopFuture<Page<Live>>
-    func get(page: Int, per: Int, group: Group.ID) -> EventLoopFuture<Page<Live>>
+    func get(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
+    func get(selfUser: Domain.User.ID, page: Int, per: Int, group: Group.ID) -> EventLoopFuture<Page<LiveFeed>>
     func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<PerformanceRequest>
     >
     func getPendingRequestCount(for user: Domain.User.ID) -> EventLoopFuture<Int>
-    func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Live>>
+    func search(selfUser: Domain.User.ID, query: String, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
+    func getLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>
 }

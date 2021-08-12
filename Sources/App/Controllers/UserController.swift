@@ -93,6 +93,48 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try loggedIn.on(endpoint: Endpoint.CreatePost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(CreatePost.Request.self)
+                return repository.createPost(for: input, authorId: user.id)
+            })
+        try routes.on(
+            endpoint: Endpoint.DeletePost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(DeletePost.Request.self)
+                let useCase = DeletePostUseCase(userRepository: repository, eventLoop: req.eventLoop)
+                return try useCase((postId: input.postId, userId: user.id)).map { Empty() }
+            })
+        try routes.on(
+            endpoint: Endpoint.GetPosts.self,
+            use: injectProvider { req, uri, repository in
+                return repository.posts(userId: uri.userId, page: uri.page, per: uri.per)
+            })
+        try loggedIn.on(
+            endpoint: AddPostComment.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                let input = try req.content.decode(AddPostComment.Request.self)
+                let notificationService = makePushNotificationService(request: req)
+                // FIXME: Move to use case
+                return repository.addPostComment(userId: user.id, input: input)
+                    .and(repository.getPost(postId: input.postId))
+                    .flatMap { (comment, post) in
+                        let notification = PushNotification(
+                            message: "\(user.name) さんがあなたの投稿にコメントしました")
+                        return notificationService.publish(
+                            to: post.author.id, notification: notification
+                        )
+                        .map { comment }
+                    }
+            })
+        try routes.on(
+            endpoint: GetPostComments.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getPostComments(postId: uri.postId, page: uri.page, per: uri.per)
+            })
         try routes.on(
             endpoint: Endpoint.SearchUser.self,
             use: injectProvider { req, uri, repository in
@@ -169,12 +211,40 @@ struct UserController: RouteCollection {
         let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
         let feedCount = userSocialRepository.usersFeedCount(selfUser: uri.userId)
         let likeFeedCount = userSocialRepository.userLikeFeedCount(selfUser: uri.userId)
+        let postCount = userSocialRepository.userPostCount(selfUser: uri.userId)
+        let likePostCount = userSocialRepository.userLikePostCount(selfUser: uri.userId)
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
         let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
         let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
+        let isBlocked = userSocialRepository.isBlocking(selfUser: uri.userId, target: selfUser.id)
+        let isBlocking = userSocialRepository.isBlocking(selfUser: selfUser.id, target: uri.userId)
         
-        return user.and(followersCount).and(followingUsersCount).and(feedCount).and(likeFeedCount).and(followingGroupsCount).and(isFollowed).and(isFollowing).map {
-            ($0.0.0.0.0.0.0, $0.0.0.0.0.0.1, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1,  $0.0.1, $0.1, $1)
+        return user.and(followersCount)
+            .and(followingUsersCount)
+            .and(feedCount)
+            .and(likeFeedCount)
+            .and(postCount)
+            .and(likePostCount)
+            .and(followingGroupsCount)
+            .and(isFollowed)
+            .and(isFollowing)
+            .and(isBlocked)
+            .and(isBlocking)
+            .map {
+                (
+                    $0.0.0.0.0.0.0.0.0.0.0,
+                    $0.0.0.0.0.0.0.0.0.0.1,
+                    $0.0.0.0.0.0.0.0.0.1,
+                    $0.0.0.0.0.0.0.0.1,
+                    $0.0.0.0.0.0.0.1,
+                    $0.0.0.0.0.0.1,
+                    $0.0.0.0.0.1,
+                    $0.0.0.0.1,
+                    $0.0.0.1,
+                    $0.0.1,
+                    $0.1,
+                    $1
+                )
         }.map {
             GetUserDetail.Response(
                 user: $0,
@@ -182,21 +252,21 @@ struct UserController: RouteCollection {
                 followingUsersCount: $2,
                 feedCount: $3,
                 likeFeedCount: $4,
-                followingGroupsCount: $5,
-                isFollowed: $6,
-                isFollowing: $7
+                postCount: $5,
+                likePostCount: $6,
+                followingGroupsCount: $7,
+                isFollowed: $8,
+                isFollowing: $9,
+                isBlocked: $10,
+                isBlocking: $11
             )
         }
     }
 }
 
 extension Endpoint.User: Content {}
-
 extension Endpoint.SignupStatus.Response: Content {}
-
 extension Endpoint.UserDetail: Content {}
-
-extension Endpoint.UserFeedSummary: Content {}
 
 extension Endpoint.Empty: Content {}
 extension Persistance.UserRepository.Error: AbortError {
@@ -210,10 +280,16 @@ extension Persistance.UserRepository.Error: AbortError {
         case .cantChangeRole: return .badRequest
         case .feedNotFound: return .forbidden
         case .feedDeleted: return .badRequest
+        case .postNotFound: return .forbidden
+        case .postDeleted: return .badRequest
         }
     }
 }
 
 extension Endpoint.UserFeed: Content {}
-
+extension Endpoint.UserFeedSummary: Content {}
 extension Endpoint.UserFeedComment: Content {}
+
+extension Endpoint.Post: Content {}
+extension Endpoint.PostSummary: Content {}
+extension Endpoint.PostComment: Content {}

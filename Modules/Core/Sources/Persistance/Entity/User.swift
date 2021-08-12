@@ -17,6 +17,18 @@ final class User: Model {
 
     @Field(key: "biography")
     var biography: String?
+    
+    @OptionalField(key: "sex")
+    var sex: String?
+    
+    @OptionalField(key: "age")
+    var age: Int?
+    
+    @OptionalField(key: "live_style")
+    var liveStyle: String?
+    
+    @OptionalField(key: "residence")
+    var residence: String?
 
     @Field(key: "thumbnail_url")
     var thumbnailURL: String?
@@ -47,13 +59,17 @@ final class User: Model {
     init(
         cognitoId: Domain.CognitoID, cognitoUsername: CognitoUsername,
         email: String, name: String,
-        biography: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: Domain.RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.cognitoId = cognitoId
         self.cognitoUsername = cognitoUsername
         self.email = email
         self.name = name
         self.biography = biography
+        self.sex = sex
+        self.age = age
+        self.liveStyle = liveStyle
+        self.residence = residence
         self.thumbnailURL = thumbnailURL
         switch role {
         case .artist(let artist):
@@ -78,8 +94,7 @@ extension Endpoint.User {
         }
         return db.eventLoop.submit {
             try Self.init(
-                id: ID(entity.requireID()), name: entity.name, biography: entity.biography,
-                thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
+                id: ID(entity.requireID()), name: entity.name, biography: entity.biography, sex: entity.sex, age: entity.age, liveStyle: entity.liveStyle, residence: entity.residence, thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
         }
     }
 }
@@ -132,6 +147,26 @@ final class UserFollowing: Model {
     var target: User
     
     init() {}
+}
+
+final class UserBlocking: Model {
+    static let schema = "user_blockings"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "self_user_id")
+    var user: User
+    
+    @Parent(key: "target_user_id")
+    var target: User
+    
+    init() {}
+}
+
+final class AnotherUserBlocking: ModelAlias {
+    static let name = "another_user_blockings"
+    let model = UserBlocking()
 }
 
 final class LiveLike: Model {
@@ -266,10 +301,213 @@ extension Endpoint.UserFeedComment {
     }
 }
 
+final class Post: Model {
+    static let schema: String = "posts"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "author_id")
+    var author: User
+    
+    @Field(key: "text")
+    var text: String
+    
+    @Parent(key: "live_id")
+    var live: Live
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
+    @Timestamp(key: "deleted_at", on: .delete)
+    var deletedAt: Date?
+    
+    @Children(for: \.$post)
+    var tracks: [PostTrack]
+    
+    @Children(for: \.$post)
+    var groups: [PostGroup]
+    
+    @Children(for: \.$post)
+    var imageUrls: [PostImageUrl]
+    
+    @Children(for: \.$post)
+    var likes: [PostLike]
+    
+    @Children(for: \.$post)
+    var comments: [PostComment]
+}
+
+final class PostTrack: Model {
+    static let schema: String = "post_tracks"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "post_id")
+    var post: Post
+    
+    @Field(key: "track_name")
+    var trackName: String
+    
+    @Field(key: "group_name")
+    var groupName: String
+    
+    @Field(key: "order")
+    var order: Int
+    
+    @Enum(key: "type")
+    var type: FeedType
+    
+    @OptionalField(key: "youtube_url")
+    var youtubeURL: String?
+    
+    @OptionalField(key: "apple_music_song_id")
+    var appleMusicSongId: String?
+    
+    @OptionalField(key: "thumbnail_url")
+    var thumbnailUrl: String?
+}
+
+final class PostGroup: Model {
+    static let schema: String = "post_groups"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "post_id")
+    var post: Post
+    
+    @Field(key: "order")
+    var order: Int
+    
+    @Parent(key: "group_id")
+    var group: Group
+}
+
+final class PostImageUrl: Model {
+    static let schema: String = "post_image_urls"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "post_id")
+    var post: Post
+    
+    @Field(key: "image_url")
+    var imageUrl: String
+    
+    @Field(key: "order")
+    var order: Int
+}
+
+final class PostLike: Model {
+    static let schema: String = "post_likes"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "user_id")
+    var user: User
+    
+    @Parent(key: "post_id")
+    var post: Post
+}
+
+final class PostComment: Model {
+    static let schema: String = "post_comments"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "text")
+    var text: String
+    
+    @Parent(key: "author_id")
+    var author: User
+    
+    @Parent(key: "post_id")
+    var post: Post
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+}
+
+extension Endpoint.Post {
+    static func translate(fromPersistance entity: Post, on db: Database) -> EventLoopFuture<Endpoint.Post> {
+        let eventLoop = db.eventLoop
+        let id = eventLoop.submit { try entity.requireID() }
+        let author = entity.$author.get(on: db).flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+        let live = entity.$live.get(on: db).flatMap { Endpoint.Live.translate(fromPersistance: $0, on: db) }
+        let imageUrls = entity.$imageUrls.query(on: db)
+            .sort(\.$order, .ascending).all()
+        let tracks = entity.$tracks
+            .query(on: db)
+            .sort(\.$order, .ascending).all()
+            .flatMapEach(on: eventLoop) { [db] in
+            Domain.PostTrack.translate(fromPersistance: $0, on: db)
+        }
+        let groups = entity.$groups.query(on: db)
+            .sort(\.$order, .ascending).all().flatMapEach(on: eventLoop) { [db] in
+            $0.$group.get(on: db)
+                .flatMap { [db] in
+                    Domain.Group.translate(fromPersistance: $0, on: db)
+                }
+        }
+        
+        return id.and(author).and(live).and(imageUrls).and(tracks).and(groups)
+            .map { ($0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
+            .map {
+                Endpoint.Post(
+                    id: ID($0),
+                    author: $1,
+                    live: $2,
+                    text: entity.text,
+                    tracks: $4,
+                    groups: $5,
+                    imageUrls: $3.map { $0.$imageUrl.value! },
+                    createdAt: entity.createdAt!
+                )
+            }
+    }
+}
+
+extension Endpoint.PostTrack {
+    static func translate(fromPersistance entity: PostTrack, on db: Database) -> EventLoopFuture<Endpoint.PostTrack> {
+        let eventLoop = db.eventLoop
+        let id = eventLoop.submit { try entity.requireID() }
+        
+        let type: Endpoint.FeedType
+        switch entity.type {
+        case .youtube:
+            type = .youtube(URL(string: entity.youtubeURL!)!)
+        case .apple_music:
+            type = .appleMusic(entity.appleMusicSongId!)
+        }
+        
+        return id.map { $0 }
+            .map {
+                Endpoint.PostTrack(id: ID($0), trackName: entity.trackName, groupName: entity.groupName, type: type, thumbnailUrl: entity.thumbnailUrl)
+            }
+    }
+}
+
+extension Endpoint.PostComment {
+    static func translate(fromPersistance entity: PostComment, on db: Database) -> EventLoopFuture<Endpoint.PostComment> {
+        let author = entity.$author.get(on: db).flatMap { Endpoint.User.translate(fromPersistance: $0, on: db) }
+        let post = entity.$post.get(on: db).flatMap { Endpoint.Post.translate(fromPersistance: $0, on: db) }
+        
+        return author.and(post)
+            .map { ($0, $1) }
+            .flatMapThrowing {
+                try Endpoint.PostComment(id: .init(entity.requireID()), text: entity.text, author: $0, post: $1, createdAt: entity.createdAt!)
+            }
+    }
+}
+
 public enum UserNotificationType: String, Codable {
     case follow
     case like
     case comment
+    case like_post
+    case comment_post
     case official_announce
 }
 
@@ -296,8 +534,14 @@ final class UserNotification: Model {
     @OptionalParent(key: "liked_feed_id")
     var likedFeed: UserFeed?
     
+    @OptionalParent(key: "liked_post_id")
+    var likedPost: Post?
+    
     @OptionalParent(key: "feed_comment_id")
     var feedComment: UserFeedComment?
+    
+    @OptionalParent(key: "post_comment_id")
+    var postComment: PostComment?
     
     @OptionalField(key: "title")
     var title: String?
@@ -322,9 +566,16 @@ final class UserNotification: Model {
             self.notificationType = .like
             self.$likedBy.id = likeUserFeed.likedBy.id.rawValue
             self.$likedFeed.id = likeUserFeed.feed.id.rawValue
+        case let .likePost(likePost):
+            self.notificationType = .like
+            self.$likedBy.id = likePost.likedBy.id.rawValue
+            self.$likedPost.id = likePost.post.id.rawValue
         case let .comment(comment):
             self.notificationType = .comment
             self.$feedComment.id = comment.id.rawValue
+        case let .postComment(comment):
+            self.notificationType = .comment
+            self.$postComment.id = comment.id.rawValue
         case let .officialAnnounce(announce):
             self.notificationType = .official_announce
             self.title = announce.title
@@ -354,12 +605,28 @@ extension Endpoint.UserNotification {
                 .flatMapThrowing { user, likedBy, likedFeed in
                     return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .like(Endpoint.UserFeedLike(feed: likedFeed, likedBy: likedBy)), createdAt: entity.createdAt!)
                 }
+        case .like_post:
+            let likedBy = entity.$likedBy.get(on: db)
+                .flatMap { Endpoint.User.translate(fromPersistance: $0!, on: db) }
+            let likedPost = entity.$likedPost.get(on: db)
+                .flatMap { Endpoint.Post.translate(fromPersistance: $0!, on: db) }
+            return user.and(likedBy).and(likedPost).map { ( $0.0, $0.1, $1 )}
+                .flatMapThrowing { user, likedBy, likedPost in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .likePost(Endpoint.PostLike(post: likedPost, likedBy: likedBy)), createdAt: entity.createdAt!)
+                }
         case .comment:
             let comment = entity.$feedComment.get(on: db)
                 .flatMap { Endpoint.UserFeedComment.translate(fromPersistance: $0!, on: db) }
             return user.and(comment).map { ($0, $1) }
                 .flatMapThrowing { user, comment in
                     return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .comment(comment), createdAt: entity.createdAt!)
+                }
+        case .comment_post:
+            let comment = entity.$postComment.get(on: db)
+                .flatMap { Endpoint.PostComment.translate(fromPersistance: $0!, on: db) }
+            return user.and(comment).map { ($0, $1) }
+                .flatMapThrowing { user, comment in
+                    return try Endpoint.UserNotification(id: .init(entity.requireID()), user: user, isRead: entity.isRead, notificationType: .postComment(comment), createdAt: entity.createdAt!)
                 }
         case .official_announce:
             return user.flatMapThrowing { user in

@@ -31,7 +31,7 @@ public struct EditLiveUseCase: UseCase {
         guard case .artist = request.user.role else {
             return eventLoop.makeFailedFuture(Error.fanCannotEditLive)
         }
-        let live = liveRepository.getLiveDetail(by: request.id, selfUerId: request.user.id)
+        let live = liveRepository.getLiveDetail(by: request.id, selfUserId: request.user.id)
             .unwrap(orError: Error.liveNotFound)
         let precondition = live.map(\.live.hostGroup).flatMap { hostGroup in
             groupRepository.isMember(
@@ -45,8 +45,7 @@ public struct EditLiveUseCase: UseCase {
 
         return precondition.flatMap {
             liveRepository.update(
-                id: request.id, input: request.input,
-                authorId: request.user.id)
+                id: request.id, input: request.input)
         }
     }
 }

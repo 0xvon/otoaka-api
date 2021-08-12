@@ -31,7 +31,10 @@ public protocol GroupRepository {
         -> EventLoopFuture<Page<ArtistFeedComment>>
     func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeedSummary>>
     func getGroupUserFeeds(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedSummary>>
+    func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>
     func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<Group>>
+    func followedGroups() -> EventLoopFuture<[Domain.Group]>
+    func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void>
 }
 
 extension GroupRepository {

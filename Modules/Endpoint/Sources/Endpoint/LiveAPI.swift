@@ -8,14 +8,18 @@ public struct CreateLive: EndpointProtocol {
         public var artworkURL: Foundation.URL?
         public var hostGroupId: Group.ID
         public var liveHouse: String?
-        public var openAt: Date?
-        public var startAt: Date?
-        public var endAt: Date?
+        public var date: String?
+        public var openAt: String?
+        public var startAt: String?
+        public var piaEventCode: String?
+        public var piaReleaseUrl: URL?
+        public var piaEventUrl: URL?
 
         public init(
             title: String, style: LiveStyleInput, price: Int, artworkURL: URL?,
-            hostGroupId: Group.ID, liveHouse: String?, openAt: Date?,
-            startAt: Date?, endAt: Date?
+            hostGroupId: Group.ID, liveHouse: String?,
+            date: String?, openAt: String?, startAt: String?,
+            piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
         ) {
             self.title = title
             self.style = style
@@ -23,9 +27,12 @@ public struct CreateLive: EndpointProtocol {
             self.artworkURL = artworkURL
             self.hostGroupId = hostGroupId
             self.liveHouse = liveHouse
+            self.date = date
             self.openAt = openAt
             self.startAt = startAt
-            self.endAt = endAt
+            self.piaEventCode = piaEventCode
+            self.piaReleaseUrl = piaReleaseUrl
+            self.piaEventUrl = piaEventUrl
         }
     }
     public typealias Response = Live
@@ -37,26 +44,7 @@ public struct CreateLive: EndpointProtocol {
 }
 
 public struct EditLive: EndpointProtocol {
-    public struct Request: Codable {
-        public var title: String
-        public var artworkURL: Foundation.URL?
-        public var liveHouse: String?
-        public var openAt: Date?
-        public var startAt: Date?
-        public var endAt: Date?
-
-        public init(
-            title: String, artworkURL: URL?, liveHouse: String?,
-            openAt: Date?, startAt: Date?, endAt: Date?
-        ) {
-            self.title = title
-            self.artworkURL = artworkURL
-            self.liveHouse = liveHouse
-            self.openAt = openAt
-            self.startAt = startAt
-            self.endAt = endAt
-        }
-    }
+    public typealias Request = CreateLive.Request
     public typealias Response = Live
     public struct URI: CodableURL {
         @StaticPath("lives", "edit") public var prefix: Void
@@ -149,12 +137,12 @@ public struct GetLive: EndpointProtocol {
 
 public struct RefundTicket: EndpointProtocol {
     public struct Request: Codable {
-        public let ticketId: Ticket.ID
-        public init(ticketId: Ticket.ID) {
-            self.ticketId = ticketId
+        public let liveId: Live.ID
+        public init(liveId: Live.ID) {
+            self.liveId = liveId
         }
     }
-    public typealias Response = Ticket
+    public typealias Response = Empty
     public struct URI: CodableURL {
         @StaticPath("lives", "refund") public var prefix: Void
         public init() {}
@@ -169,7 +157,7 @@ public struct ReserveTicket: EndpointProtocol {
             self.liveId = liveId
         }
     }
-    public typealias Response = Ticket
+    public typealias Response = Empty
     public struct URI: CodableURL {
         @StaticPath("lives", "reserve") public var prefix: Void
         public init() {}
@@ -179,9 +167,25 @@ public struct ReserveTicket: EndpointProtocol {
 
 public struct GetMyTickets: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Ticket>
+    public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "my_tickets") public var prefix: Void
+        @Query public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct GetLivePosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("lives") public var prefix: Void
+        @DynamicPath public var liveId: Live.ID
+        @StaticPath("posts") public var suffix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
@@ -204,7 +208,7 @@ public struct GetLiveParticipants: EndpointProtocol {
 
 public struct SearchLive: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Live>
+    public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "search") public var prefix: Void
         @Query public var term: String

@@ -26,8 +26,8 @@ final class Live: Model {
     @Parent(key: "host_group_id")
     var hostGroup: Group
 
-    @Parent(key: "author_id")
-    var author: User
+    @OptionalParent(key: "author_id")
+    var author: User?
 
     @OptionalField(key: "live_house")
     var liveHouse: String?
@@ -38,6 +38,23 @@ final class Live: Model {
     var startAt: Date?
     @Timestamp(key: "end_at", on: .none)
     var endAt: Date?
+    
+    @OptionalField(key: "date")
+    var date: String?
+    @OptionalField(key: "open_at_v2")
+    var openAtV2: String?
+    @OptionalField(key: "start_at_v2")
+    var startAtV2: String?
+    
+    @OptionalField(key: "pia_event_code")
+    var piaEventCode: String?
+    
+    @OptionalField(key: "pia_release_url")
+    var piaReleaseUrl: String?
+    
+    @OptionalField(key: "pia_event_url")
+    var piaEventUrl: String?
+    
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -49,20 +66,27 @@ final class Live: Model {
         title: String, style: LiveStyle,
         price: Int, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
-        authorId: Domain.User.ID, liveHouse: String?,
-        openAt: Date?, startAt: Date?, endAt: Date?
+        authorId: Domain.User.ID? = nil, liveHouse: String?,
+        date: String?, openAt: String?, startAt: String?,
+        piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
     ) {
-        self.id = nil
+        self.id = id
         self.title = title
         self.style = style
         self.price = price
         self.artworkURL = artworkURL?.absoluteString
         self.$hostGroup.id = hostGroupId.rawValue
-        self.$author.id = authorId.rawValue
+        self.$author.id = authorId?.rawValue
         self.liveHouse = liveHouse
-        self.openAt = openAt
-        self.startAt = startAt
-        self.endAt = endAt
+        self.openAt = nil
+        self.startAt = nil
+        self.endAt = nil
+        self.date = date
+        self.openAtV2 = openAt
+        self.startAtV2 = startAt
+        self.piaEventCode = piaEventCode
+        self.piaReleaseUrl = piaReleaseUrl?.absoluteString
+        self.piaEventUrl = piaEventUrl?.absoluteString
     }
 }
 
@@ -135,12 +159,9 @@ extension Endpoint.Live {
         let hostGroup = entity.$hostGroup.get(on: db).flatMap {
             Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
-        let author = entity.$author.get(on: db).flatMap {
-            Endpoint.User.translate(fromPersistance: $0, on: db)
-        }
 
-        return hostGroup.and(performers).and(author).map { ($0.0, $0.1, $1) }
-            .flatMapThrowing { (hostGroup, performers, author) -> Endpoint.Live in
+        return hostGroup.and(performers).map { ($0, $1) }
+            .flatMapThrowing { (hostGroup, performers) -> Endpoint.Live in
                 let style: LiveStyleOutput
                 switch entity.style {
                 case .oneman:
@@ -155,9 +176,12 @@ extension Endpoint.Live {
                     title: entity.title,
                     style: style, price: entity.price,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
-                    author: author,
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,
-                    startAt: entity.startAt, endAt: entity.endAt, createdAt: createdAt
+                    date: entity.date, openAt: entity.openAtV2, startAt: entity.startAtV2,
+                    piaEventCode: entity.piaEventCode,
+                    piaReleaseUrl: entity.piaReleaseUrl.map { URL(string: $0)! },
+                    piaEventUrl: entity.piaEventUrl.map { URL(string: $0)! },
+                    createdAt: createdAt
                 )
             }
     }

@@ -4,11 +4,15 @@ import Foundation
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public init(
-            name: String, biography: String? = nil, thumbnailURL: String? = nil,
+            name: String, biography: String? = nil, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String? = nil,
             role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
         ) {
             self.name = name
             self.biography = biography
+            self.sex = sex
+            self.age = age
+            self.liveStyle = liveStyle
+            self.residence = residence
             self.thumbnailURL = thumbnailURL
             self.role = role
             self.twitterUrl = twitterUrl
@@ -17,6 +21,10 @@ public struct Signup: EndpointProtocol {
 
         public var name: String
         public var biography: String?
+        public var sex: String?
+        public var age: Int?
+        public var liveStyle: String?
+        public var residence: String?
         public var thumbnailURL: String?
         public var role: RoleProperties
         public var twitterUrl: URL?
@@ -85,23 +93,31 @@ public struct UserDetail: Codable, Equatable {
     public var followingUsersCount: Int
     public var feedCount: Int
     public var likeFeedCount: Int
+    public var postCount: Int
+    public var likePostCount: Int
     public var followingGroupsCount: Int
     public var isFollowed: Bool
     public var isFollowing: Bool
+    public var isBlocked: Bool
+    public var isBlocking: Bool
 
     public subscript<T>(dynamicMember keyPath: KeyPath<User, T>) -> T {
         user[keyPath: keyPath]
     }
 
-    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool) {
+    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, postCount: Int, likePostCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool, isBlocked: Bool, isBlocking: Bool) {
         self.user = user
         self.followersCount = followersCount
         self.followingUsersCount = followingUsersCount
         self.feedCount = feedCount
         self.likeFeedCount = likeFeedCount
+        self.postCount = postCount
+        self.likePostCount = likePostCount
         self.followingGroupsCount = followingGroupsCount
         self.isFollowed = isFollowed
         self.isFollowing = isFollowing
+        self.isBlocked = isBlocked
+        self.isBlocking = isBlocking
     }
 }
 
@@ -189,6 +205,88 @@ public struct GetUserFeed: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct Track: Codable {
+    public var name: String
+    public var artistName: String
+    public var artwork: String
+    public var trackType: FeedType
+    
+    public init(
+        name: String, artistName: String, artwork: String, trackType: FeedType
+    ) {
+        self.name = name
+        self.artistName = artistName
+        self.artwork = artwork
+        self.trackType = trackType
+    }
+}
+
+public struct CreatePost: EndpointProtocol {
+    public struct Request: Codable {
+        public var author: User
+        public var live: Live
+        public var text: String
+        public var tracks: [Track]
+        public var groups: [Group]
+        public var imageUrls: [String]
+        
+        public init(
+            author: User,
+            live: Live,
+            text: String,
+            tracks: [Track],
+            groups: [Group],
+            imageUrls: [String]
+        ) {
+            self.author = author
+            self.live = live
+            self.text = text
+            self.tracks = tracks
+            self.groups = groups
+            self.imageUrls = imageUrls
+        }
+    }
+    
+    public typealias Response = Post
+    public struct URI: CodableURL {
+        @StaticPath("users", "create_post") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
+public struct DeletePost: EndpointProtocol {
+    public struct Request: Codable {
+        public let postId: Post.ID
+        
+        public init(postId: Post.ID) {
+            self.postId = postId
+        }
+    }
+    
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("users", "delete_post") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .delete
+}
+
+public struct GetPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("users") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @StaticPath("posts") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
 }
 
 public struct SearchUser: EndpointProtocol {

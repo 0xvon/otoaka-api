@@ -26,6 +26,12 @@ $ swift test
 # or Xcodeでテスト実行
 ```
 
+## ぴあAPIの呼び出し
+
+```
+$ curl 'http://chk-search-api.pia.jp/1.1/event_releases?apikey=xxxxx&get_count=2' -H 'Content-Type:application/xml' -H 'End-User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
+```
+
 ## パッケージ分割戦略
 
 メインのアプリケーション以外にいくつかExecutableなターゲットがあり、それらをビルドするときに不必要な依存をビルド/チェックアウトせずに済むようにパッケージを細かく切っている。

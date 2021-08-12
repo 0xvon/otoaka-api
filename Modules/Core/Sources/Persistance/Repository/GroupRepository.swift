@@ -24,7 +24,8 @@ public class GroupRepository: Domain.GroupRepository {
             biography: input.biography, since: input.since,
             artworkURL: input.artworkURL,
             twitterId: input.twitterId, youtubeChannelId: input.youtubeChannelId,
-            hometown: input.hometown)
+            hometown: input.hometown
+        )
         return group.save(on: db).flatMap { [db] in
             Domain.Group.translate(fromPersistance: group, on: db)
         }
@@ -246,6 +247,33 @@ public class GroupRepository: Domain.GroupRepository {
                 }
             }
     }
+    
+    public func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .join(PostGroup.self, on: \PostGroup.$post.$id == \Post.$id, method: .left)
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Post.$live.$id, method: .left)
+            .group(.or) {
+                $0.filter(PostGroup.self, \PostGroup.$group.$id == groupId.rawValue)
+                    .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
+            }
+            .sort(\.$createdAt, .descending)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .fields(for: Post.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+        
+    }
 
     public func addArtistFeedComment(userId: Domain.User.ID, input: PostFeedComment.Request)
         -> EventLoopFuture<
@@ -284,5 +312,25 @@ public class GroupRepository: Domain.GroupRepository {
                 Domain.Group.translate(fromPersistance: $0, on: db)
             }
         }
+    }
+    
+    public func followedGroups() -> EventLoopFuture<[Domain.Group]> {
+        Group.query(on: db)
+            .join(Following.self, on: \Following.$target.$id == \Group.$id)
+            .unique()
+            .all()
+            .flatMapEach(on: db.eventLoop) { [db] in
+                Domain.Group.translate(fromPersistance: $0, on: db)
+            }
+    }
+    
+    public func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void> {
+        let notification = UserNotification()
+        notification.isRead = false
+        notification.notificationType = .official_announce
+        notification.title = item.snippet!.title
+        notification.url = "https://youtube.com/watch?v=\(item.id.videoId!)"
+        notification.$user.id = user.rawValue
+        return notification.save(on: db)
     }
 }

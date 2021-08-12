@@ -51,6 +51,8 @@ class LiveControllerTests: XCTestCase {
         let newTitle = "a new live title"
         let body = try! Stub.make(EditLive.Request.self) {
             $0.set(\.title, value: newTitle)
+            $0.set(\.style, value: .oneman(performer: groupX.id))
+            $0.set(\.hostGroupId, value: groupX.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
@@ -121,6 +123,7 @@ class LiveControllerTests: XCTestCase {
         var performers: [Endpoint.Group] = []
         var artists: [AppUser] = []
 
+        // create 3 artists
         for _ in 0..<3 {
             let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
             artists.append(artist)
@@ -130,25 +133,14 @@ class LiveControllerTests: XCTestCase {
             let group = try appClient.createGroup(body: request, with: artist)
             performers.append(group)
         }
-
+        
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: performers.map(\.id)), with: user)
 
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
-            XCTAssertEqual(Set([]), Set(responseBody.live.style.performers.map(\.id)))
-        }
-        for artist in artists {
-            let requests = try appClient.getPerformanceRequests(with: artist)
-            let request = try XCTUnwrap(requests.items.first)
-            try appClient.replyPerformanceRequest(request: request, reply: .accept, with: artist)
-        }
-        try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
-            XCTAssertEqual(
-                Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
+            XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
         }
     }
 
@@ -158,7 +150,6 @@ class LiveControllerTests: XCTestCase {
         let hostGroup = try appClient.createGroup(with: user)
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: []), with: user)
-        var ticket: Ticket!
         do {
             let body = try! Stub.make(Endpoint.ReserveTicket.Request.self) {
                 $0.set(\.liveId, value: live.id)
@@ -167,15 +158,13 @@ class LiveControllerTests: XCTestCase {
 
             try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
-                ticket = try res.content.decode(Endpoint.ReserveTicket.Response.self)
-                XCTAssertEqual(ticket.status, .reserved)
             }
             try app.test(.POST, "lives/reserve", headers: headers, body: bodyData) { res in
                 XCTAssertNotEqual(res.status, .ok, res.body.string)
             }
         }
 
-        try app.test(.GET, "lives/my_tickets?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "lives/my_tickets?userId=\(user.user.id)&page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
             XCTAssertEqual(response.items.count, 1)
@@ -183,14 +172,12 @@ class LiveControllerTests: XCTestCase {
 
         do {
             let body = try! Stub.make(Endpoint.RefundTicket.Request.self) {
-                $0.set(\.ticketId, value: ticket.id)
+                $0.set(\.liveId, value: live.id)
             }
             let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
             try app.test(.POST, "lives/refund", headers: headers, body: bodyData) { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
-                let responseBody = try res.content.decode(Endpoint.RefundTicket.Response.self)
-                XCTAssertEqual(responseBody.status, .refunded)
             }
         }
     }
@@ -207,40 +194,40 @@ class LiveControllerTests: XCTestCase {
         }
     }
 
-    func testReplyRequestAccept() throws {
-        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))
-        let hostGroup = try appClient.createGroup(with: hostUser)
-
-        let userX = try appClient.createUser(role: .artist(.init(part: "foo")))
-        let groupA = try appClient.createGroup(with: userX)
-
-        _ = try appClient.createLive(
-            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]),
-            with: hostUser
-        )
-
-        let requests = try appClient.getPerformanceRequests(with: userX)
-        XCTAssertEqual(requests.items.count, 1)
-        let receivedRequest = try XCTUnwrap(requests.items.first)
-        XCTAssertEqual(receivedRequest.status, .pending)
-
-        do {
-            let requests = try appClient.getPerformanceRequests(with: hostUser)
-            XCTAssertEqual(requests.items.count, 0)
-        }
-
-        let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
-            $0.set(\.reply, value: .accept)
-            $0.set(\.requestId, value: receivedRequest.id)
-        }
-        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-
-        let headers = appClient.makeHeaders(for: userX)
-        try app.test(.POST, "lives/reply", headers: headers, body: bodyData) { res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-        }
-
-        let updatedRequests = try appClient.getPerformanceRequests(with: userX)
-        XCTAssertEqual(updatedRequests.items.first?.status, .accepted)
-    }
+//    func testReplyRequestAccept() throws {
+//        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))
+//        let hostGroup = try appClient.createGroup(with: hostUser)
+//
+//        let userX = try appClient.createUser(role: .artist(.init(part: "foo")))
+//        let groupA = try appClient.createGroup(with: userX)
+//
+//        _ = try appClient.createLive(
+//            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]),
+//            with: hostUser
+//        )
+//
+//        let requests = try appClient.getPerformanceRequests(with: userX)
+//        XCTAssertEqual(requests.items.count, 1)
+//        let receivedRequest = try XCTUnwrap(requests.items.first)
+//        XCTAssertEqual(receivedRequest.status, .pending)
+//
+//        do {
+//            let requests = try appClient.getPerformanceRequests(with: hostUser)
+//            XCTAssertEqual(requests.items.count, 0)
+//        }
+//
+//        let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
+//            $0.set(\.reply, value: .accept)
+//            $0.set(\.requestId, value: receivedRequest.id)
+//        }
+//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+//
+//        let headers = appClient.makeHeaders(for: userX)
+//        try app.test(.POST, "lives/reply", headers: headers, body: bodyData) { res in
+//            XCTAssertEqual(res.status, .ok, res.body.string)
+//        }
+//
+//        let updatedRequests = try appClient.getPerformanceRequests(with: userX)
+//        XCTAssertEqual(updatedRequests.items.first?.status, .accepted)
+//    }
 }

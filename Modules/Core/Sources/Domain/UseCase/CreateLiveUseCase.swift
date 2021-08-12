@@ -45,7 +45,7 @@ public struct CreateLiveUseCase: UseCase {
             return
         }
         return precondition.flatMap {
-            liveRepository.create(input: input, authorId: request.user.id)
+            liveRepository.create(input: input)
         }
         .flatMap { live in
             let notification = PushNotification(message: "\(live.hostGroup.name) さんが新しいライブを公開しました")

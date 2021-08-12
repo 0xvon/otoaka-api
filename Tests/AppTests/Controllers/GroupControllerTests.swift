@@ -100,7 +100,7 @@ class GroupControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let createdGroup = try appClient.createGroup(with: user)
-        let createdGroupAsMaster = try appClient.createGroupAsMaster(with: user)
+        let createdGroupAsMaster = try appClient.createGroupAsMaster()
 
         try app.test(.GET, "groups/\(createdGroup.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)

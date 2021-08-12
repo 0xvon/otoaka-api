@@ -52,17 +52,25 @@ public struct User: Codable, Identifiable, Equatable {
     public var id: ID
     public var name: String
     public var biography: String?
+    public var sex: String?
+    public var age: Int?
+    public var liveStyle: String?
+    public var residence: String?
     public var thumbnailURL: String?
     public var role: RoleProperties
     public var twitterUrl: URL?
     public var instagramUrl: URL?
 
     public init(
-        id: ID, name: String, biography: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        id: ID, name: String, biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.id = id
         self.name = name
         self.biography = biography
+        self.sex = sex
+        self.age = age
+        self.liveStyle = liveStyle
+        self.residence = residence
         self.thumbnailURL = thumbnailURL
         self.role = role
         self.twitterUrl = twitterUrl
@@ -136,10 +144,82 @@ public struct UserNotification: Codable, Identifiable, Equatable {
     }
 }
 
+public struct Post: Codable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var author: User
+    public var live: Live?
+    public var text: String
+    public var tracks: [PostTrack]
+    public var groups: [Group]
+    public var imageUrls: [String]
+    public var createdAt: Date
+    
+    public init(
+        id: Post.ID,
+        author: User,
+        live: Live?,
+        text: String,
+        tracks: [PostTrack],
+        groups: [Group],
+        imageUrls: [String],
+        createdAt: Date
+    ) {
+        self.id = id
+        self.author = author
+        self.live = live
+        self.text = text
+        self.tracks = tracks
+        self.groups = groups
+        self.imageUrls = imageUrls
+        self.createdAt = createdAt
+    }
+}
+
+public struct PostTrack: Codable, Equatable, Identifiable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var trackName: String
+    public var groupName: String
+    public var type: FeedType
+    public var thumbnailUrl: String?
+    
+    public init(
+        id: PostTrack.ID, trackName: String, groupName: String, type: FeedType, thumbnailUrl: String?
+    ) {
+        self.id = id
+        self.trackName = trackName
+        self.groupName = groupName
+        self.type = type
+        self.thumbnailUrl = thumbnailUrl
+    }
+}
+
+public struct PostComment: Codable, Identifiable, Equatable {
+    public typealias ID = Identifier<Self>
+    public var id: ID
+    public var text: String
+    public var author: User
+    public var post: Post
+    public var createdAt: Date
+    
+    public init(
+        id: PostComment.ID, text: String, author: User, post: Post, createdAt: Date
+    ) {
+        self.id = id
+        self.text = text
+        self.author = author
+        self.post = post
+        self.createdAt = createdAt
+    }
+}
+
 public enum UserNotificationType: Codable, Equatable {
     case follow(User)
     case like(UserFeedLike)
     case comment(UserFeedComment)
+    case likePost(PostLike)
+    case postComment(PostComment)
     case officialAnnounce(OfficialAnnounce)
     
     enum CodingKeys: CodingKey {
@@ -147,7 +227,7 @@ public enum UserNotificationType: Codable, Equatable {
     }
     
     enum Kind: String, Codable {
-        case follow, like, comment, officialAnnounce
+        case follow, like, likePost, comment, postComment, officialAnnounce
     }
     
     public init(from decoder: Decoder) throws {
@@ -158,8 +238,12 @@ public enum UserNotificationType: Codable, Equatable {
             self = try .follow(container.decode(User.self, forKey: .value))
         case .like:
             self = try .like(container.decode(UserFeedLike.self, forKey: .value))
+        case .likePost:
+            self = try .likePost(container.decode(PostLike.self, forKey: .value))
         case .comment:
             self = try .comment(container.decode(UserFeedComment.self, forKey: .value))
+        case .postComment:
+            self = try .postComment(container.decode(PostComment.self, forKey: .value))
         case .officialAnnounce:
             self = try .officialAnnounce(container.decode(OfficialAnnounce.self, forKey: .value))
         }
@@ -174,8 +258,14 @@ public enum UserNotificationType: Codable, Equatable {
         case let .like(likeUserFeed):
             try container.encode(Kind.like, forKey: .kind)
             try container.encode(likeUserFeed, forKey: .value)
+        case let .likePost(postLike):
+            try container.encode(Kind.likePost, forKey: .kind)
+            try container.encode(postLike, forKey: .value)
         case let .comment(comment):
             try container.encode(Kind.comment, forKey: .kind)
+            try container.encode(comment, forKey: .value)
+        case let .postComment(comment):
+            try container.encode(Kind.postComment, forKey: .kind)
             try container.encode(comment, forKey: .value)
         case let .officialAnnounce(officialAnnounce):
             try container.encode(Kind.officialAnnounce, forKey: .kind)
@@ -200,6 +290,16 @@ public struct UserFeedLike: Codable, Equatable {
     
     public init(feed: UserFeed, likedBy: User) {
         self.feed = feed
+        self.likedBy = likedBy
+    }
+}
+
+public struct PostLike: Codable, Equatable {
+    public var post: Post
+    public var likedBy: User
+    
+    public init(post: Post, likedBy: User) {
+        self.post = post
         self.likedBy = likedBy
     }
 }

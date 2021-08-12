@@ -49,6 +49,34 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func addPostComment(userId: User.ID, input: AddPostComment.Request) -> EventLoopFuture<PostComment> {
+            fatalError("unimplemented")
+        }
+        
+        func getPostComments(postId: Post.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostComment>> {
+            fatalError("unimplemented")
+        }
+        
+        func createPost(for input: CreatePost.Request, authorId: User.ID) -> EventLoopFuture<Post> {
+            fatalError("unimplemented")
+        }
+        
+        func deletePost(postId: Post.ID) -> EventLoopFuture<Void> {
+            fatalError("unimplemented")
+        }
+        
+        func getPost(postId: Post.ID) -> EventLoopFuture<Post> {
+            fatalError("unimplemented")
+        }
+        
+        func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary?> {
+            fatalError("unimplemented")
+        }
+        
+        func posts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>> {
+            fatalError("unimplemented")
+        }
+        
         func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<UserFeedSummary?> {
             fatalError("unimplemented")
         }
@@ -116,8 +144,17 @@ class AuthenticationTests: XCTestCase {
             Endpoint.User
         > {
             let newUser = Endpoint.User(
-                id: .init(UUID()), name: input.name, biography: input.biography,
-                thumbnailURL: input.thumbnailURL, role: input.role, twitterUrl: try! Stub.make(), instagramUrl: try! Stub.make()
+                id: .init(UUID()),
+                name: input.name,
+                biography: input.biography,
+                sex: try! Stub.make(),
+                age: try! Stub.make(),
+                liveStyle: try! Stub.make(),
+                residence: try! Stub.make(),
+                thumbnailURL: input.thumbnailURL,
+                role: input.role,
+                twitterUrl: try! Stub.make(),
+                instagramUrl: try! Stub.make()
             )
             users[cognitoUsername.lowercased()] = newUser
             return eventLoop.makeSucceededFuture(newUser)

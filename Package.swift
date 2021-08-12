@@ -11,11 +11,12 @@ let package = Package(
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
-        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.47.0"),
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
+        .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
         .package(path: "Modules/Endpoint"),
@@ -25,6 +26,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
+                .product(name: "XMLCoder", package: "XMLCoder"),
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "Persistance", package: "Core"),

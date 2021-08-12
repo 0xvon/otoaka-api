@@ -66,29 +66,36 @@ public struct Live: Codable, Identifiable, Equatable {
     public var price: Int
     public var artworkURL: URL?
     public var hostGroup: Group
-    public var author: User
     public var liveHouse: String?
-    public var openAt: Date?
-    public var startAt: Date?
-    public var endAt: Date?
+    public var date: String?
+    public var openAt: String?
+    public var startAt: String?
+    public var piaEventCode: String?
+    public var piaReleaseUrl: URL?
+    public var piaEventUrl: URL?
     public var createdAt: Date
 
     public init(
         id: ID, title: String,
-        style: LiveStyleOutput, price: Int, artworkURL: URL?,
-        author: User, hostGroup: Group, liveHouse: String?,
-        startAt: Date?, endAt: Date?, createdAt: Date
+        style: LiveStyleOutput,price: Int, artworkURL: URL?,
+        hostGroup: Group, liveHouse: String?,
+        date: String?, openAt: String?, startAt: String?,
+        piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?,
+        createdAt: Date
     ) {
         self.id = id
         self.title = title
         self.style = style
         self.price = price
         self.artworkURL = artworkURL
-        self.author = author
         self.hostGroup = hostGroup
         self.liveHouse = liveHouse
+        self.date = date
+        self.openAt = openAt
         self.startAt = startAt
-        self.endAt = endAt
+        self.piaEventCode = piaEventCode
+        self.piaReleaseUrl = piaReleaseUrl
+        self.piaEventUrl = piaEventUrl
         self.createdAt = createdAt
     }
 }

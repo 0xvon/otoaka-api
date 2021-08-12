@@ -26,12 +26,6 @@ struct GroupController: RouteCollection {
                     groupRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((input: input, user: user.id))
             })
-        try routes.on(
-            endpoint: Endpoint.CreateGroupAsMaster.self,
-            use: injectProvider { req, uri, repository in
-                let input = try req.content.decode(Endpoint.CreateGroup.Request.self)
-                return repository.create(input: input)
-            })
         try routes.on(endpoint: Endpoint.EditGroup.self, use: injectProvider(edit))
         try routes.on(
             endpoint: Endpoint.DeleteGroup.self,
@@ -108,6 +102,10 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
             })
+        try routes.on(endpoint: Endpoint.GetGroupPosts.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return repository.getGroupPosts(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
+        })
         try routes.on(
             endpoint: Endpoint.GetGroupsUserFeeds.self,
             use: injectProvider { req, uri, repository in

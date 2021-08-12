@@ -199,25 +199,11 @@ struct ThumbnailUrlAndAppleMusicToUserFeed: Migration {
 }
 
 struct InstagramAndTwitterUrlToUser: Migration {
-    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        let addColumn = database.schema(User.schema)
+        database.schema(User.schema)
             .field("instagram_url", .string)
             .field("twitter_url", .string)
             .update()
-        
-        return addColumn.flatMap {
-            User.query(on: database)
-                .filter(\.$cognitoUsername == nil)
-                .all()
-                .flatMap { users in
-                    migrator(users).map { users }
-                }
-                .flatMapEach(on: database.eventLoop) {
-                    $0.save(on: database)
-                }
-                .transform(to: ())
-        }
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
@@ -258,5 +244,211 @@ struct CreateUserNotification: Migration {
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(UserNotification.schema)
             .delete()
+    }
+}
+
+struct CreatePost: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .id()
+            .field("author_id", .uuid, .required)
+            .foreignKey("author_id", references: User.schema, .id)
+            .field("text", .string, .required)
+            .field("created_at", .datetime, .required)
+            .field("deleted_at", .datetime)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema).delete()
+    }
+}
+
+struct CreatePostTrack: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("user_feed_type")
+            .read()
+        
+        return typeEnum.flatMap { typeEnum in
+            database.schema(PostTrack.schema)
+                .id()
+                .field("post_id", .uuid, .required)
+                .foreignKey("post_id", references: Post.schema, .id)
+                .field("track_name", .string, .required)
+                .field("group_name", .string, .required)
+                .field("type", typeEnum, .required)
+                .field("youtube_url", .string)
+                .field("apple_music_song_id", .string)
+                .field("thumbnail_url", .string)
+                .field("order", .int, .required)
+                .create()
+        }
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostTrack.schema).delete()
+    }
+}
+
+struct CreatePostImageUrl: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostImageUrl.schema)
+            .id()
+            .field("post_id", .uuid, .required)
+            .foreignKey("post_id", references: Post.schema, .id)
+            .field("image_url", .string, .required)
+            .field("order", .int, .required)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostImageUrl.schema).delete()
+    }
+}
+
+struct CreatePostLike: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostLike.schema)
+            .id()
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .field("post_id", .uuid, .required)
+            .foreignKey("post_id", references: Post.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostLike.schema).delete()
+    }
+}
+
+struct CreatePostGroup: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostGroup.schema)
+            .id()
+            .field("group_id", .uuid, .required)
+            .foreignKey("group_id", references: Group.schema, .id)
+            .field("post_id", .uuid, .required)
+            .foreignKey("post_id", references: Post.schema, .id)
+            .field("order", .int, .required)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostGroup.schema).delete()
+    }
+}
+
+struct CreatePostComment: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostComment.schema)
+            .id()
+            .field("text", .string, .required)
+            .field("post_id", .uuid, .required)
+            .foreignKey("post_id", references: Post.schema, .id)
+            .field("author_id", .uuid, .required)
+            .foreignKey("author_id", references: User.schema, .id)
+            .field("created_at", .datetime, .required)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(PostComment.schema).delete()
+    }
+}
+
+struct AddPostOnUserNotification: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let typeEnum = database.enum("notification_type")
+            .case("follow")
+            .case("like")
+            .case("like_post")
+            .case("comment")
+            .case("comment_post")
+            .case("official_announce")
+            .update()
+        
+        return typeEnum.flatMap { typeEnum in
+            database.schema(UserNotification.schema)
+                .field("liked_post_id", .uuid)
+                .foreignKey("liked_post_id", references: Post.schema, .id)
+                .field("post_comment_id", .uuid)
+                .foreignKey("post_comment_id", references: PostComment.schema, .id)
+                .updateField("notification_type", typeEnum)
+                .update()
+        }
+        
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserNotification.schema)
+            .deleteField("liked_post_id")
+            .deleteField("post_comment_id")
+            .delete()
+    }
+}
+
+struct MoreInfoToUser: Migration {
+    let migrator: (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let addColumn = database.schema(User.schema)
+            .field("sex", .string)
+            .field("age", .string)
+            .field("live_style", .string)
+            .field("residence", .string)
+            .update()
+        
+        return addColumn.flatMap {
+            User.query(on: database)
+                .filter(\.$cognitoUsername == nil)
+                .all()
+                .flatMap { users in
+                    migrator(users).map { users }
+                }
+                .flatMapEach(on: database.eventLoop) {
+                    $0.save(on: database)
+                }
+                .transform(to: ())
+        }
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("sex")
+            .deleteField("age")
+            .deleteField("live_style")
+            .deleteField("residence")
+            .update()
+    }
+}
+
+struct CreateUserBlocking: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserBlocking.schema)
+            .id()
+            .field("self_user_id", .uuid, .required)
+            .foreignKey("self_user_id", references: User.schema, .id)
+            .field("target_user_id", .uuid, .required)
+            .foreignKey("target_user_id", references: User.schema, .id)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserBlocking.schema).delete()
+    }
+}
+
+struct AssociatePostWithLive: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .field("live_id", .uuid)
+            .foreignKey("live_id", references: Live.schema, .id)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .deleteField("live_id")
+            .update()
     }
 }
