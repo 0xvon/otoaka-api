@@ -1,6 +1,7 @@
 import Domain
 import FluentKit
 import FluentSQL
+import Foundation
 
 public class UserSocialRepository: Domain.UserSocialRepository {
     private let db: Database
@@ -321,9 +322,16 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     public func upcomingLives(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
         return Live.query(on: db)
-            .join(Following.self, on: \Following.$target.$id == \Live.$hostGroup.$id)
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
+            .join(Following.self, on: \Following.$target.$id == \LivePerformer.$group.$id)
             .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
             .sort(\.$date)
             .unique()
             .paginate(PageRequest(page: page, per: per))

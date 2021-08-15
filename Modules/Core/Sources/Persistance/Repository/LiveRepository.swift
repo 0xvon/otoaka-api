@@ -381,7 +381,15 @@ public class LiveRepository: Domain.LiveRepository {
     public func search(selfUser: Domain.User.ID, query: String, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
-        let lives = Live.query(on: db).filter(\.$title =~ query)
+        let lives = Live.query(on: db)
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
+            .join(Group.self, on: \Group.$id == \LivePerformer.$group.$id)
+            .group(.or) {
+                $0.filter(Live.self, \.$title =~ query)
+                    .filter(Group.self, \.$name =~ query)
+            }
+            .unique()
+            .sort(\.$date)
         return lives.paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in

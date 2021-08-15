@@ -383,6 +383,16 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(item.likeCount, 2)
         }
         
+        // create past live
+        _ = try appClient.createLive(hostGroup: groupX, with: userA, date: "20000101")
+        try app.test(.GET, "user_social/upcoming_lives?userId=\(userB.user.id)&page=1&per=10", headers: headers) { res in
+            let responseBody = try res.content.decode(GetUpcomingLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            let item = try XCTUnwrap(responseBody.items.first)
+            XCTAssertTrue(item.isLiked)
+            XCTAssertEqual(item.likeCount, 2)
+        }
+        
         try app.test(.GET, "user_social/live_liked_users?liveId=\(liveA.id)&page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(GetLiveLikedUsers.Response.self)
