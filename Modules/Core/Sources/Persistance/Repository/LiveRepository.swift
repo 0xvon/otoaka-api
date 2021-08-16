@@ -389,6 +389,7 @@ public class LiveRepository: Domain.LiveRepository {
                     .filter(Group.self, \.$name =~ query)
             }
             .unique()
+            .fields(for: Live.self)
             .sort(\.$date)
         return lives.paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
