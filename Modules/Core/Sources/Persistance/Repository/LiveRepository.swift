@@ -385,10 +385,11 @@ public class LiveRepository: Domain.LiveRepository {
             .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
             .join(Group.self, on: \Group.$id == \LivePerformer.$group.$id)
             .group(.or) {
-                $0.filter(Live.self, \.$title =~ query)
-                    .filter(Group.self, \.$name =~ query)
+                $0.filter(Live.self, \.$title, .custom("LIKE"), "%\(query)%")
+                    .filter(Group.self, \.$name, .custom("LIKE"), "%\(query)%")
             }
             .unique()
+            .fields(for: Live.self)
             .sort(\.$date)
         return lives.paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in

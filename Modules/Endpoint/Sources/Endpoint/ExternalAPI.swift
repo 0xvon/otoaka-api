@@ -57,6 +57,16 @@ public struct FetchLive: EndpointProtocol {
     public static var method: HTTPMethod = .post
 }
 
+public struct ExtCreateLive: EndpointProtocol {
+    public typealias Request = CreateLive.Request
+    public typealias Response = CreateLive.Response
+    public struct URI: CodableURL {
+        @StaticPath("external", "create_live") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}
+
 public struct CheckGlobalIP: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = String

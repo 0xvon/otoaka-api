@@ -53,6 +53,11 @@ struct ExternalController: RouteCollection {
             let liveRepository = LiveRepository(db: req.db)
             return liveRepository.fetch(input: input)
         })
+        try routes.on(endpoint: ExtCreateLive.self, use: injectProvider { req, uri, repository in
+            let input = try req.content.decode(CreateLive.Request.self)
+            let liveRepository = LiveRepository(db: req.db)
+            return liveRepository.create(input: input)
+        })
         try routes.on(endpoint: Endpoint.TestGetPiaArtist.self, use: injectProvider { req, uri, repository in
             var reqUri = PiaSearchArtists.URI()
             reqUri.apikey = uri.piaApiKey
