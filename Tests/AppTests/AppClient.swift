@@ -127,6 +127,7 @@ class AppClient {
         let host = try createGroup(with: user)
         let battleStyle: LiveStyleInput = .battle(performers: [host.id, hostGroup.id])
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.title, value: "DEAD POP FESTiVAL 2021")
             $0.set(\.hostGroupId, value: (style != nil) ? hostGroup.id : host.id)
             $0.set(\.date, value: date)
             $0.set(\.style, value: style ?? battleStyle)

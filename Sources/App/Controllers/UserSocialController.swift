@@ -180,6 +180,12 @@ struct UserSocialController: RouteCollection {
                 return repository.likedPosts(userId: uri.userId, page: uri.page, per: uri.per)
             })
         try routes.on(
+            endpoint: GetTrendPosts.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.trendPosts(userId: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
             endpoint: GetFollowingPosts.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)

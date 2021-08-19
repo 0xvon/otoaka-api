@@ -193,6 +193,24 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 1)
         }
     }
+    
+    func testSearchLive() throws {
+        let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
+        let group = try appClient.createGroup(with: user)
+        let live = try appClient.createLive(hostGroup: group, with: user)
+        
+        let headers = appClient.makeHeaders(for: user)
+        
+        try app.test(
+            .GET, "lives/search?term=dead+pop&page=1&per=1", headers: headers
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(Endpoint.SearchLive.Response.self)
+            XCTAssertGreaterThanOrEqual(body.items.count, 1)
+            guard let item = body.items.first else { return }
+            XCTAssertEqual(item.live.title, live.title)
+        }
+    }
 
 //    func testReplyRequestAccept() throws {
 //        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))

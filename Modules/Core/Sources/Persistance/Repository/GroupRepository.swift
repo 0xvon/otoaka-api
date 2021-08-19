@@ -153,6 +153,7 @@ public class GroupRepository: Domain.GroupRepository {
 
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Group>> {
         let groups = Group.query(on: db)
+            .sort(\.$name, .ascending)
         return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.Group.translate(fromPersistance: $0, on: db)

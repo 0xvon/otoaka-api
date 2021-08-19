@@ -329,8 +329,6 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }()
         return Live.query(on: db)
             .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
-            .join(Following.self, on: \Following.$target.$id == \LivePerformer.$group.$id)
-            .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
             .sort(\.$date)
             .unique()
@@ -559,6 +557,25 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return like
         }
         .flatMap { [db] in $0.delete(on: db) }
+    }
+    
+    public func trendPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .sort(\.$createdAt, .descending)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
     }
     
     public func followingPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
