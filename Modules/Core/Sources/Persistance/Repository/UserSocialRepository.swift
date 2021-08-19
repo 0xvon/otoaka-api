@@ -328,7 +328,6 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return dateFormatter
         }()
         return Live.query(on: db)
-            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
             .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
             .sort(\.$date)
             .unique()
@@ -651,7 +650,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return like.create(on: db)
                 .flatMap { [db] in
                     let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
-                    return post.flatMapThrowing { post -> UserNotification in
+                    return post.flatMapThrowing { post -> UserNotification? in
+                        if post.$author.id == userId.rawValue {
+                           return nil
+                        }
                         let notification = UserNotification()
                         notification.$likedPost.id = postId.rawValue
                         notification.$likedBy.id = userId.rawValue
@@ -660,7 +662,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                         notification.notificationType = .like_post
                         return notification
                     }
-                    .flatMap { [db] in $0.save(on: db) }
+                    .optionalFlatMap { [db] in $0.save(on: db) }
+                    .map { _ in return }
                 }
     }
     

@@ -257,6 +257,17 @@ public struct CreatePost: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct EditPost: EndpointProtocol {
+    public typealias Request = CreatePost.Request
+    public typealias Response = Post
+    public struct URI: CodableURL {
+        @StaticPath("users", "edit_post") public var prefix: Void
+        @DynamicPath public var id: Post.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct DeletePost: EndpointProtocol {
     public struct Request: Codable {
         public let postId: Post.ID

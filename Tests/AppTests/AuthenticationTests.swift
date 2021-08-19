@@ -49,6 +49,10 @@ class AuthenticationTests: XCTestCase {
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
+        func editPost(for input: CreatePost.Request, postId: Post.ID) -> EventLoopFuture<Post> {
+            fatalError("unimplemented")
+        }
+        
         func addPostComment(userId: User.ID, input: AddPostComment.Request) -> EventLoopFuture<PostComment> {
             fatalError("unimplemented")
         }

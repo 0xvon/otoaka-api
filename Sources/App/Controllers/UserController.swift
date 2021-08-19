@@ -99,6 +99,11 @@ struct UserController: RouteCollection {
                 let input = try req.content.decode(CreatePost.Request.self)
                 return repository.createPost(for: input, authorId: user.id)
             })
+        try loggedIn.on(endpoint: Endpoint.EditPost.self,
+            use: injectProvider { req, uri, repository in
+                let input = try req.content.decode(EditPost.Request.self)
+                return repository.editPost(for: input, postId: uri.id)
+            })
         try routes.on(
             endpoint: Endpoint.DeletePost.self,
             use: injectProvider { req, uri, repository in
@@ -121,13 +126,15 @@ struct UserController: RouteCollection {
                 // FIXME: Move to use case
                 return repository.addPostComment(userId: user.id, input: input)
                     .and(repository.getPost(postId: input.postId))
-                    .flatMap { (comment, post) in
-                        let notification = PushNotification(
-                            message: "\(user.name) さんがあなたの投稿にコメントしました")
-                        return notificationService.publish(
-                            to: post.author.id, notification: notification
-                        )
-                        .map { comment }
+                    .flatMap { (comment, post) -> EventLoopFuture<PostComment> in
+                        if comment.author.id != post.author.id {
+                            let notification = PushNotification(
+                                message: "\(user.name)があなたのレポートにコメントしました")
+                            return notificationService.publish(
+                                to: post.author.id, notification: notification
+                            ).map { comment }
+                        }
+                        return req.eventLoop.makeSucceededFuture(comment)
                     }
             })
         try routes.on(

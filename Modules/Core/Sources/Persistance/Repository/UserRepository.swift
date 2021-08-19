@@ -306,6 +306,60 @@ public class UserRepository: Domain.UserRepository {
         }
     }
     
+    public func editPost(for input: Domain.CreatePost.Request, postId: Domain.Post.ID) -> EventLoopFuture<Domain.Post> {
+        let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.postNotFound)
+        let modified = post.map { (post) -> Post in
+            post.$live.id = input.live.id.rawValue
+            post.text = input.text
+            return post
+        }
+        .flatMap { [db] post in
+            post.update(on: db).map { post }
+        }
+        
+        let trackDeleted = PostTrack.query(on: db).filter(\.$post.$id == postId.rawValue).all().flatMap { [db] in $0.delete(force: true, on: db) }
+        let imageUrlDeleted = PostImageUrl.query(on: db).filter(\.$post.$id == postId.rawValue).all().flatMap { [db] in $0.delete(force: true, on: db) }
+        
+        for (index, track) in input.tracks.enumerated() {
+            let postTrack = PostTrack()
+            postTrack.$post.id = postId.rawValue
+            postTrack.trackName = track.name
+            postTrack.groupName = track.artistName
+            postTrack.thumbnailUrl = track.artwork
+            postTrack.order = index
+            switch track.trackType {
+            case .youtube(let url):
+                postTrack.type = .youtube
+                postTrack.youtubeURL = url.absoluteString
+            case .appleMusic(let songId):
+                postTrack.type = .apple_music
+                postTrack.appleMusicSongId = songId
+            }
+            _ = postTrack.create(on: db)
+        }
+        for (index, group) in input.groups.enumerated() {
+            let postGroup = PostGroup()
+            postGroup.$group.id = group.id.rawValue
+            postGroup.$post.id = postId.rawValue
+            postGroup.order = index
+            _ = postGroup.create(on: db)
+        }
+        for (index, imageUrl) in input.imageUrls.enumerated() {
+            let postImageUrl = PostImageUrl()
+            postImageUrl.$post.id = postId.rawValue
+            postImageUrl.imageUrl = imageUrl
+            postImageUrl.order = index
+            _ = postImageUrl.create(on: db)
+        }
+        
+        return modified
+            .and(trackDeleted)
+            .and(imageUrlDeleted)
+            .flatMap { [db] in
+                Domain.Post.translate(fromPersistance: $0.0.0, on: db)
+            }
+    }
+    
     public func deletePost(postId: Domain.Post.ID) -> EventLoopFuture<Void> {
         let postLikeDeleted = UserNotification.query(on: db)
             .filter(\.$likedPost.$id == postId.rawValue)
@@ -395,7 +449,10 @@ public class UserRepository: Domain.UserRepository {
         }
         .flatMap { [db] comment in
             let post = Post.find(input.postId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
-            return post.flatMapThrowing { post -> UserNotification in
+            return post.flatMapThrowing { post -> UserNotification? in
+                if post.$author.id == userId.rawValue {
+                   return nil
+                }
                 let notification = UserNotification()
                 notification.$postComment.id = comment.id.rawValue
                 notification.$user.id = post.$author.id
@@ -403,8 +460,8 @@ public class UserRepository: Domain.UserRepository {
                 notification.notificationType = .comment_post
                 return notification
             }
-            .flatMap { [db] in $0.save(on: db) }
-            .map { comment }
+            .optionalFlatMap { [db] in $0.save(on: db) }
+            .map { _ in comment }
         }
     }
     

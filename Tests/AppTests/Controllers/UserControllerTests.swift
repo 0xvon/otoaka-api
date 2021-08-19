@@ -276,6 +276,9 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.first!.groups.count, 2)
             XCTAssertEqual(responseBody.items.first!.imageUrls.count, 2)
         }
+        
+        // edit 1 post
+        _ = try appClient.editPost(with: user, post: post)
 
         // delete 1 post
         _ = try appClient.deletePost(postId: post.id, with: user)

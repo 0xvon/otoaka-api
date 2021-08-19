@@ -200,9 +200,13 @@ struct UserSocialController: RouteCollection {
                 let userRepository = Persistance.UserRepository(db: req.db)
                 return repository.likePost(userId: user.id, postId: input.postId)
                     .and(userRepository.getPost(postId: input.postId))
-                    .flatMap { _, post in
-                        let notification = PushNotification(message: "\(user.name)が投稿にいいねしました")
-                        return notificationService.publish(to: post.author.id, notification: notification)
+                    .flatMap { _, post -> EventLoopFuture<Void> in
+                        if (post.author.id != user.id) {
+                            let notification = PushNotification(message: "\(user.name)がレポートにいいねしました")
+                            return notificationService.publish(to: post.author.id, notification: notification)
+                        }
+                        return req.eventLoop.makeSucceededFuture(())
+                        
                     }.map { Empty() }
             })
         try routes.on(
