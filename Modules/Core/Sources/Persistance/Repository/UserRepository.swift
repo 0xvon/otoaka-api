@@ -428,6 +428,7 @@ public class UserRepository: Domain.UserRepository {
             .with(\.$likes)
             .with(\.$imageUrls)
             .with(\.$tracks)
+            .sort(\.$createdAt, .descending)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
