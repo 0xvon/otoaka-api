@@ -300,6 +300,18 @@ public struct GetPosts: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct GetPost: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = PostSummary
+    
+    public struct URI: CodableURL {
+        @StaticPath("users", "posts") public var prefix: Void
+        @DynamicPath public var postId: Post.ID
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct SearchUser: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>

@@ -73,7 +73,7 @@ class AuthenticationTests: XCTestCase {
             fatalError("unimplemented")
         }
         
-        func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary?> {
+        func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary> {
             fatalError("unimplemented")
         }
         

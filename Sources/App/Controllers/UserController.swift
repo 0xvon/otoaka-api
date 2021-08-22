@@ -117,6 +117,12 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.posts(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: Endpoint.GetPost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.findPostSummary(postId: uri.postId, userId: user.id)
+            })
         try loggedIn.on(
             endpoint: AddPostComment.self,
             use: injectProvider { req, uri, repository in

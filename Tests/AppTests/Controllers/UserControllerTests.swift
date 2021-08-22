@@ -300,6 +300,20 @@ class UserControllerTests: XCTestCase {
             XCTAssertTrue(responseBody.items.first!.live?.id == live.id)
         }
     }
+    
+    func testGetPost() throws {
+        let user = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: user)
+
+        // create 2 posts
+        let post = try appClient.createPost(with: user)
+        
+        try app.test(.GET, "users/posts/\(post.id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetPost.Response.self)
+            XCTAssertEqual(responseBody.post.id, post.id)
+        }
+    }
 
     func testPostCommentOnUserFeed() throws {
         let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))

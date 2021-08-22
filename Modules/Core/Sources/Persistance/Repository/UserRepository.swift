@@ -405,7 +405,7 @@ public class UserRepository: Domain.UserRepository {
             .flatMap { [db] in Domain.Post.translate(fromPersistance: $0, on: db) }
     }
     
-    public func findPostSummary(postId: Domain.Post.ID, userId: Domain.User.ID) -> EventLoopFuture<Domain.PostSummary?> {
+    public func findPostSummary(postId: Domain.Post.ID, userId: Domain.User.ID) -> EventLoopFuture<Domain.PostSummary> {
         Post.query(on: db)
             .filter(\.$id == postId.rawValue)
             .with(\.$comments)
@@ -413,10 +413,16 @@ public class UserRepository: Domain.UserRepository {
             .with(\.$imageUrls)
             .with(\.$tracks)
             .first()
-            .optionalFlatMap { [db] post in
+            .unwrap(orError: Error.postNotFound)
+            .flatMap { [db] post in
                 return Domain.Post.translate(fromPersistance: post, on: db)
                     .map {
-                        return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                        return Domain.PostSummary(
+                            post: $0,
+                            commentCount: post.comments.count,
+                            likeCount: post.likes.count,
+                            isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue)
+                        )
                 }
             }
     }
