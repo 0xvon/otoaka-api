@@ -63,13 +63,34 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     }
 
     public func followings(selfUser: Domain.User.ID, page: Int, per: Int)
-        -> EventLoopFuture<Domain.Page<Domain.Group>>
+        -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
     {
         let followings = Following.query(on: db).filter(\.$user.$id == selfUser.rawValue)
             .with(\.$target)
         return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.Group.translate(fromPersistance: $0.target, on: db)
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
+                let isFollowing = Following.query(on: db)
+                    .filter(\.$user.$id == selfUser.rawValue)
+                    .filter(\.$target.$id == group.id!)
+                    .count().map { $0 > 0 }
+                let followersCount = Following.query(on: db)
+                    .filter(\.$id == group.id!)
+                    .count()
+                return Domain.Group.translate(fromPersistance: group.target, on: db)
+                    .and(isFollowing)
+                    .and(followersCount)
+                    .map { (
+                        $0.0,
+                        $0.1,
+                        $1
+                    )}
+                    .map {
+                        Domain.GroupFeed(
+                            group: $0,
+                            isFollowing: $1,
+                            followersCount: $2
+                        )
+                    }
             }
         }
     }
@@ -689,6 +710,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     
     public func userLikePostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
         PostLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
+    
+    public func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
     }
     
     public func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {

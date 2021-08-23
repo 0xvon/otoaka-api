@@ -4,7 +4,7 @@ import NIO
 public protocol UserSocialRepository {
     func follow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
     func unfollow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
-    func followings(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<Group>>
+    func followings(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
     func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>
@@ -48,5 +48,6 @@ public protocol UserSocialRepository {
     func unlikePost(userId: User.ID, postId: Post.ID) -> EventLoopFuture<Void>
     func userPostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func userLikePostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
+    func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>
 }

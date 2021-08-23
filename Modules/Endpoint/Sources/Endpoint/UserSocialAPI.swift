@@ -45,7 +45,7 @@ public struct GroupFollowers: EndpointProtocol {
 
 public struct FollowingGroups: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Group>
+    public typealias Response = Page<GroupFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "following_groups") public var prefix: Void
         @DynamicPath public var id: User.ID
