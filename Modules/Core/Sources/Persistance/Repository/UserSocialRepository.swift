@@ -62,19 +62,19 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
     }
 
-    public func followings(selfUser: Domain.User.ID, page: Int, per: Int)
+    public func followings(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int)
         -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
     {
-        let followings = Following.query(on: db).filter(\.$user.$id == selfUser.rawValue)
+        let followings = Following.query(on: db).filter(\.$user.$id == userId.rawValue)
             .with(\.$target)
         return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
                 let isFollowing = Following.query(on: db)
                     .filter(\.$user.$id == selfUser.rawValue)
-                    .filter(\.$target.$id == group.id!)
+                    .filter(\.$target.$id == group.target.id!)
                     .count().map { $0 > 0 }
                 let followersCount = Following.query(on: db)
-                    .filter(\.$id == group.id!)
+                    .filter(\.$target.$id == group.target.id!)
                     .count()
                 return Domain.Group.translate(fromPersistance: group.target, on: db)
                     .and(isFollowing)

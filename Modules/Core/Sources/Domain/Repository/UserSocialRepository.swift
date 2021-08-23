@@ -4,7 +4,7 @@ import NIO
 public protocol UserSocialRepository {
     func follow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
     func unfollow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
-    func followings(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
+    func followings(userId: User.ID, selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
     func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>
