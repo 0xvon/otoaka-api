@@ -95,6 +95,7 @@ public struct UserDetail: Codable, Equatable {
     public var likeFeedCount: Int
     public var postCount: Int
     public var likePostCount: Int
+    public var likeLiveCount: Int
     public var followingGroupsCount: Int
     public var isFollowed: Bool
     public var isFollowing: Bool
@@ -105,7 +106,17 @@ public struct UserDetail: Codable, Equatable {
         user[keyPath: keyPath]
     }
 
-    public init(user: User, followersCount: Int, followingUsersCount: Int, feedCount: Int, likeFeedCount: Int, postCount: Int, likePostCount: Int, followingGroupsCount: Int, isFollowed: Bool, isFollowing: Bool, isBlocked: Bool, isBlocking: Bool) {
+    public init(
+        user: User,
+        followersCount: Int,
+        followingUsersCount: Int,
+        feedCount: Int, likeFeedCount: Int,
+        postCount: Int, likePostCount: Int,
+        likeLiveCount: Int,
+        followingGroupsCount: Int,
+        isFollowed: Bool, isFollowing: Bool,
+        isBlocked: Bool, isBlocking: Bool
+    ) {
         self.user = user
         self.followersCount = followersCount
         self.followingUsersCount = followingUsersCount
@@ -113,6 +124,7 @@ public struct UserDetail: Codable, Equatable {
         self.likeFeedCount = likeFeedCount
         self.postCount = postCount
         self.likePostCount = likePostCount
+        self.likeLiveCount = likeLiveCount
         self.followingGroupsCount = followingGroupsCount
         self.isFollowed = isFollowed
         self.isFollowing = isFollowing
@@ -257,6 +269,17 @@ public struct CreatePost: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct EditPost: EndpointProtocol {
+    public typealias Request = CreatePost.Request
+    public typealias Response = Post
+    public struct URI: CodableURL {
+        @StaticPath("users", "edit_post") public var prefix: Void
+        @DynamicPath public var id: Post.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct DeletePost: EndpointProtocol {
     public struct Request: Codable {
         public let postId: Post.ID
@@ -284,6 +307,18 @@ public struct GetPosts: EndpointProtocol {
         @StaticPath("posts") public var suffix: Void
         @Query public var page: Int
         @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetPost: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = PostSummary
+    
+    public struct URI: CodableURL {
+        @StaticPath("users", "posts") public var prefix: Void
+        @DynamicPath public var postId: Post.ID
         public init() {}
     }
     public static var method: HTTPMethod = .get

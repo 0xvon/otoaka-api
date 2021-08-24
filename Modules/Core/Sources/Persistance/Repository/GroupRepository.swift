@@ -150,12 +150,44 @@ public class GroupRepository: Domain.GroupRepository {
             Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
     }
-
+    
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Group>> {
         let groups = Group.query(on: db)
+            .sort(\.$name, .ascending)
         return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.Group.translate(fromPersistance: $0, on: db)
+            }
+        }
+    }
+
+    public func get(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>> {
+        let groups = Group.query(on: db)
+            .sort(\.$name, .ascending)
+        return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
+                let isFollowing = Following.query(on: db)
+                    .filter(\.$user.$id == selfUser.rawValue)
+                    .filter(\.$target.$id == group.id!)
+                    .count().map { $0 > 0 }
+                let followersCount = Following.query(on: db)
+                    .filter(\.$target.$id == group.id!)
+                    .count()
+                return Domain.Group.translate(fromPersistance: group, on: db)
+                    .and(isFollowing)
+                    .and(followersCount)
+                    .map { (
+                        $0.0,
+                        $0.1,
+                        $1
+                    )}
+                    .map {
+                        Domain.GroupFeed(
+                            group: $0,
+                            isFollowing: $1,
+                            followersCount: $2
+                        )
+                    }
             }
         }
     }
@@ -303,13 +335,34 @@ public class GroupRepository: Domain.GroupRepository {
             }
     }
 
-    public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.Group>
+    public func search(query: String, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.GroupFeed>
     > {
         let lives = Group.query(on: db).filter(\.$name, .custom("LIKE"), "%\(query)%")
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.Group.translate(fromPersistance: $0, on: db)
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
+                let isFollowing = Following.query(on: db)
+                    .filter(\.$user.$id == selfUser.rawValue)
+                    .filter(\.$target.$id == group.id!)
+                    .count().map { $0 > 0 }
+                let followersCount = Following.query(on: db)
+                    .filter(\.$target.$id == group.id!)
+                    .count()
+                return Domain.Group.translate(fromPersistance: group, on: db)
+                    .and(isFollowing)
+                    .and(followersCount)
+                    .map { (
+                        $0.0,
+                        $0.1,
+                        $1
+                    )}
+                    .map {
+                        Domain.GroupFeed(
+                            group: $0,
+                            isFollowing: $1,
+                            followersCount: $2
+                        )
+                    }
             }
         }
     }

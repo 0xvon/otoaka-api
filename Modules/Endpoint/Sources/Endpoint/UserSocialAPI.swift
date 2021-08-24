@@ -45,7 +45,7 @@ public struct GroupFollowers: EndpointProtocol {
 
 public struct FollowingGroups: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Group>
+    public typealias Response = Page<GroupFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "following_groups") public var prefix: Void
         @DynamicPath public var id: User.ID
@@ -434,6 +434,18 @@ public struct GetUserFeedComments: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct GetTrendPosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "trend_posts") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
 }
 
 public struct GetFollowingPosts: EndpointProtocol {

@@ -1,4 +1,5 @@
 import Foundation
+import DomainEntity
 
 public struct CreateGroup: EndpointProtocol {
     public struct Request: Codable {
@@ -138,7 +139,7 @@ public struct GetMemberships: EndpointProtocol {
 
 public struct GetAllGroups: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Group>
+    public typealias Response = Page<GroupFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups") public var prefix: Void
         @Query public var page: Int
@@ -243,7 +244,7 @@ public struct GetGroupPosts: EndpointProtocol {
 
 public struct SearchGroup: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<Group>
+    public typealias Response = Page<GroupFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("groups", "search") public var prefix: Void
         @Query public var term: String
@@ -252,4 +253,20 @@ public struct SearchGroup: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct GroupFeed: Codable {
+    public var group: Group
+    public var isFollowing: Bool
+    public var followersCount: Int
+    
+    public subscript<T>(dynamicMember keyPath: KeyPath<Group, T>) -> T {
+        group[keyPath: keyPath]
+    }
+
+    public init(group: Group, isFollowing: Bool, followersCount: Int) {
+        self.group = group
+        self.isFollowing = isFollowing
+        self.followersCount = followersCount
+    }
 }

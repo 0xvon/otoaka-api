@@ -276,6 +276,9 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.first!.groups.count, 2)
             XCTAssertEqual(responseBody.items.first!.imageUrls.count, 2)
         }
+        
+        // edit 1 post
+        _ = try appClient.editPost(with: user, post: post)
 
         // delete 1 post
         _ = try appClient.deletePost(postId: post.id, with: user)
@@ -295,6 +298,20 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetGroupPosts.Response.self)
             XCTAssertEqual(responseBody.items.count, 2)
             XCTAssertTrue(responseBody.items.first!.live?.id == live.id)
+        }
+    }
+    
+    func testGetPost() throws {
+        let user = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: user)
+
+        // create 2 posts
+        let post = try appClient.createPost(with: user)
+        
+        try app.test(.GET, "users/posts/\(post.id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetPost.Response.self)
+            XCTAssertEqual(responseBody.post.id, post.id)
         }
     }
 

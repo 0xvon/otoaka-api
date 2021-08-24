@@ -62,14 +62,35 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
     }
 
-    public func followings(selfUser: Domain.User.ID, page: Int, per: Int)
-        -> EventLoopFuture<Domain.Page<Domain.Group>>
+    public func followings(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
     {
-        let followings = Following.query(on: db).filter(\.$user.$id == selfUser.rawValue)
+        let followings = Following.query(on: db).filter(\.$user.$id == userId.rawValue)
             .with(\.$target)
         return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.Group.translate(fromPersistance: $0.target, on: db)
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
+                let isFollowing = Following.query(on: db)
+                    .filter(\.$user.$id == selfUser.rawValue)
+                    .filter(\.$target.$id == group.target.id!)
+                    .count().map { $0 > 0 }
+                let followersCount = Following.query(on: db)
+                    .filter(\.$target.$id == group.target.id!)
+                    .count()
+                return Domain.Group.translate(fromPersistance: group.target, on: db)
+                    .and(isFollowing)
+                    .and(followersCount)
+                    .map { (
+                        $0.0,
+                        $0.1,
+                        $1
+                    )}
+                    .map {
+                        Domain.GroupFeed(
+                            group: $0,
+                            isFollowing: $1,
+                            followersCount: $2
+                        )
+                    }
             }
         }
     }
@@ -328,9 +349,6 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return dateFormatter
         }()
         return Live.query(on: db)
-            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
-            .join(Following.self, on: \Following.$target.$id == \LivePerformer.$group.$id)
-            .filter(Following.self, \Following.$user.$id == userId.rawValue)
             .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
             .sort(\.$date)
             .unique()
@@ -561,6 +579,25 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         .flatMap { [db] in $0.delete(on: db) }
     }
     
+    public func trendPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+        Post.query(on: db)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .sort(\.$createdAt, .descending)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                    }
+                }
+            }
+    }
+    
     public func followingPosts(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
         Post.query(on: db)
             .join(UserFollowing.self, on: \UserFollowing.$target.$id == \Post.$author.$id, method: .left)
@@ -634,7 +671,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             return like.create(on: db)
                 .flatMap { [db] in
                     let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
-                    return post.flatMapThrowing { post -> UserNotification in
+                    return post.flatMapThrowing { post -> UserNotification? in
+                        if post.$author.id == userId.rawValue {
+                           return nil
+                        }
                         let notification = UserNotification()
                         notification.$likedPost.id = postId.rawValue
                         notification.$likedBy.id = userId.rawValue
@@ -643,7 +683,8 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                         notification.notificationType = .like_post
                         return notification
                     }
-                    .flatMap { [db] in $0.save(on: db) }
+                    .optionalFlatMap { [db] in $0.save(on: db) }
+                    .map { _ in return }
                 }
     }
     
@@ -669,6 +710,10 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     
     public func userLikePostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
         PostLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    }
+    
+    public func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
     }
     
     public func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {

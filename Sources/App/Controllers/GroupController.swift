@@ -43,7 +43,8 @@ struct GroupController: RouteCollection {
         try routes.on(
             endpoint: Endpoint.GetAllGroups.self,
             use: injectProvider { req, uri, repository in
-                return repository.get(page: uri.page, per: uri.per)
+                let user = try req.auth.require(User.self)
+                return repository.get(selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetMemberships.self,
@@ -115,7 +116,8 @@ struct GroupController: RouteCollection {
         try routes.on(
             endpoint: Endpoint.SearchGroup.self,
             use: injectProvider { req, uri, repository in
-                repository.search(query: uri.term, page: uri.page, per: uri.per)
+                let user = try req.auth.require(User.self)
+                return repository.search(query: uri.term, selfUser: user.id, page: uri.page, per: uri.per)
             })
     }
 

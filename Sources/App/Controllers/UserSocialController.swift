@@ -40,7 +40,8 @@ struct UserSocialController: RouteCollection {
         try routes.on(
             endpoint: FollowingGroups.self,
             use: injectProvider { req, uri, repository in
-                repository.followings(selfUser: uri.id, page: uri.page, per: uri.per)
+                let user = try req.auth.require(Domain.User.self)
+                return repository.followings(userId: uri.id, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: FollowUser.self,
@@ -180,6 +181,12 @@ struct UserSocialController: RouteCollection {
                 return repository.likedPosts(userId: uri.userId, page: uri.page, per: uri.per)
             })
         try routes.on(
+            endpoint: GetTrendPosts.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.trendPosts(userId: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
             endpoint: GetFollowingPosts.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
@@ -194,9 +201,13 @@ struct UserSocialController: RouteCollection {
                 let userRepository = Persistance.UserRepository(db: req.db)
                 return repository.likePost(userId: user.id, postId: input.postId)
                     .and(userRepository.getPost(postId: input.postId))
-                    .flatMap { _, post in
-                        let notification = PushNotification(message: "\(user.name)が投稿にいいねしました")
-                        return notificationService.publish(to: post.author.id, notification: notification)
+                    .flatMap { _, post -> EventLoopFuture<Void> in
+                        if (post.author.id != user.id) {
+                            let notification = PushNotification(message: "\(user.name)がレポートにいいねしました")
+                            return notificationService.publish(to: post.author.id, notification: notification)
+                        }
+                        return req.eventLoop.makeSucceededFuture(())
+                        
                     }.map { Empty() }
             })
         try routes.on(

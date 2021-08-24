@@ -99,6 +99,11 @@ struct UserController: RouteCollection {
                 let input = try req.content.decode(CreatePost.Request.self)
                 return repository.createPost(for: input, authorId: user.id)
             })
+        try loggedIn.on(endpoint: Endpoint.EditPost.self,
+            use: injectProvider { req, uri, repository in
+                let input = try req.content.decode(EditPost.Request.self)
+                return repository.editPost(for: input, postId: uri.id)
+            })
         try routes.on(
             endpoint: Endpoint.DeletePost.self,
             use: injectProvider { req, uri, repository in
@@ -112,6 +117,12 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.posts(userId: uri.userId, page: uri.page, per: uri.per)
             })
+        try routes.on(
+            endpoint: Endpoint.GetPost.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.findPostSummary(postId: uri.postId, userId: user.id)
+            })
         try loggedIn.on(
             endpoint: AddPostComment.self,
             use: injectProvider { req, uri, repository in
@@ -121,13 +132,15 @@ struct UserController: RouteCollection {
                 // FIXME: Move to use case
                 return repository.addPostComment(userId: user.id, input: input)
                     .and(repository.getPost(postId: input.postId))
-                    .flatMap { (comment, post) in
-                        let notification = PushNotification(
-                            message: "\(user.name) さんがあなたの投稿にコメントしました")
-                        return notificationService.publish(
-                            to: post.author.id, notification: notification
-                        )
-                        .map { comment }
+                    .flatMap { (comment, post) -> EventLoopFuture<PostComment> in
+                        if comment.author.id != post.author.id {
+                            let notification = PushNotification(
+                                message: "\(user.name)があなたのレポートにコメントしました")
+                            return notificationService.publish(
+                                to: post.author.id, notification: notification
+                            ).map { comment }
+                        }
+                        return req.eventLoop.makeSucceededFuture(comment)
                     }
             })
         try routes.on(
@@ -214,6 +227,7 @@ struct UserController: RouteCollection {
         let postCount = userSocialRepository.userPostCount(selfUser: uri.userId)
         let likePostCount = userSocialRepository.userLikePostCount(selfUser: uri.userId)
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
+        let likeLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId)
         let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
         let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
         let isBlocked = userSocialRepository.isBlocking(selfUser: uri.userId, target: selfUser.id)
@@ -225,6 +239,7 @@ struct UserController: RouteCollection {
             .and(likeFeedCount)
             .and(postCount)
             .and(likePostCount)
+            .and(likeLiveCount)
             .and(followingGroupsCount)
             .and(isFollowed)
             .and(isFollowing)
@@ -232,7 +247,8 @@ struct UserController: RouteCollection {
             .and(isBlocking)
             .map {
                 (
-                    $0.0.0.0.0.0.0.0.0.0.0,
+                    $0.0.0.0.0.0.0.0.0.0.0.0,
+                    $0.0.0.0.0.0.0.0.0.0.0.1,
                     $0.0.0.0.0.0.0.0.0.0.1,
                     $0.0.0.0.0.0.0.0.0.1,
                     $0.0.0.0.0.0.0.0.1,
@@ -254,11 +270,12 @@ struct UserController: RouteCollection {
                 likeFeedCount: $4,
                 postCount: $5,
                 likePostCount: $6,
-                followingGroupsCount: $7,
-                isFollowed: $8,
-                isFollowing: $9,
-                isBlocked: $10,
-                isBlocking: $11
+                likeLiveCount: $7,
+                followingGroupsCount: $8,
+                isFollowed: $9,
+                isFollowing: $10,
+                isBlocked: $11,
+                isBlocking: $12
             )
         }
     }

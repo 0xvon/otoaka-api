@@ -127,6 +127,7 @@ class AppClient {
         let host = try createGroup(with: user)
         let battleStyle: LiveStyleInput = .battle(performers: [host.id, hostGroup.id])
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.title, value: "DEAD POP FESTiVAL 2021")
             $0.set(\.hostGroupId, value: (style != nil) ? hostGroup.id : host.id)
             $0.set(\.date, value: date)
             $0.set(\.style, value: style ?? battleStyle)
@@ -353,6 +354,22 @@ class AppClient {
 
         var created: Endpoint.Post!
         try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) { res in
+            created = try res.content.decode(Endpoint.CreatePost.Response.self)
+        }
+        return created
+    }
+    
+    func editPost(with user: AppUser, post: Post) throws -> Post {
+        let body = try! Stub.make(Endpoint.EditPost.Request.self) {
+            $0.set(\.text, value: "Edited Post")
+            $0.set(\.imageUrls, value: ["something3", "something4"])
+            $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
+            $0.set(\.live, value: post.live!)
+        }
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+
+        var created: Endpoint.Post!
+        try app.test(.POST, "users/edit_post/\(post.id)", headers: makeHeaders(for: user), body: bodyData) { res in
             created = try res.content.decode(Endpoint.CreatePost.Response.self)
         }
         return created
