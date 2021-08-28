@@ -6,6 +6,7 @@ import Persistance
 import Vapor
 
 func routes(_ app: Application) throws {
+    app.routes.defaultMaxBodySize = "500kb"
     app.get { _ in
         "It works!"
     }
