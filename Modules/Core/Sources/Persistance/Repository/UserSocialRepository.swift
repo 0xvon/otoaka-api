@@ -511,6 +511,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         Live.query(on: db)
             .join(LiveLike.self, on: \LiveLike.$live.$id == \Live.$id)
             .filter(LiveLike.self, \.$user.$id == userId.rawValue)
+            .sort(\.$date, .descending)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
