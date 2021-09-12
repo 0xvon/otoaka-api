@@ -57,6 +57,7 @@ public func setupMigration(
         AddMessageRoomToLatestMessageAt(),
         
         UpdateLiveForPia(), AssociatePostWithLive(),
+        UpdateLiveForDateTerm(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

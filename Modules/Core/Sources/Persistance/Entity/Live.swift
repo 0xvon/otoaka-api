@@ -41,6 +41,8 @@ final class Live: Model {
     
     @OptionalField(key: "date")
     var date: String?
+    @OptionalField(key: "end_date")
+    var endDate: String?
     @OptionalField(key: "open_at_v2")
     var openAtV2: String?
     @OptionalField(key: "start_at_v2")
@@ -67,7 +69,7 @@ final class Live: Model {
         price: Int, artworkURL: URL?,
         hostGroupId: Domain.Group.ID,
         authorId: Domain.User.ID? = nil, liveHouse: String?,
-        date: String?, openAt: String?, startAt: String?,
+        date: String?, endDate: String?, openAt: String?, startAt: String?,
         piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
     ) {
         self.id = id
@@ -82,6 +84,7 @@ final class Live: Model {
         self.startAt = nil
         self.endAt = nil
         self.date = date
+        self.endDate = endDate
         self.openAtV2 = openAt
         self.startAtV2 = startAt
         self.piaEventCode = piaEventCode
@@ -177,7 +180,7 @@ extension Endpoint.Live {
                     style: style, price: entity.price,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,
-                    date: entity.date, openAt: entity.openAtV2, startAt: entity.startAtV2,
+                    date: entity.date, endDate: entity.endDate, openAt: entity.openAtV2, startAt: entity.startAtV2,
                     piaEventCode: entity.piaEventCode,
                     piaReleaseUrl: entity.piaReleaseUrl.map { URL(string: $0)! },
                     piaEventUrl: entity.piaEventUrl.map { URL(string: $0)! },

@@ -9,6 +9,7 @@ public struct CreateLive: EndpointProtocol {
         public var hostGroupId: Group.ID
         public var liveHouse: String?
         public var date: String?
+        public var endDate: String?
         public var openAt: String?
         public var startAt: String?
         public var piaEventCode: String?
@@ -18,7 +19,7 @@ public struct CreateLive: EndpointProtocol {
         public init(
             title: String, style: LiveStyleInput, price: Int, artworkURL: URL?,
             hostGroupId: Group.ID, liveHouse: String?,
-            date: String?, openAt: String?, startAt: String?,
+            date: String?, endDate: String?, openAt: String?, startAt: String?,
             piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?
         ) {
             self.title = title
@@ -28,6 +29,7 @@ public struct CreateLive: EndpointProtocol {
             self.hostGroupId = hostGroupId
             self.liveHouse = liveHouse
             self.date = date
+            self.endDate = endDate
             self.openAt = openAt
             self.startAt = startAt
             self.piaEventCode = piaEventCode
