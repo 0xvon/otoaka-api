@@ -380,20 +380,35 @@ public class LiveRepository: Domain.LiveRepository {
             .count()
     }
 
-    public func search(selfUser: Domain.User.ID, query: String, page: Int, per: Int) -> EventLoopFuture<
+    public func search(selfUser: Domain.User.ID, query: String?, groupId: Domain.Group.ID?, fromDate: String?, toDate: String?, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
-        let lives = Live.query(on: db)
+        var lives = Live.query(on: db)
             .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
             .join(Group.self, on: \Group.$id == \LivePerformer.$group.$id)
-            .group(.or) {
-                $0.filter(Live.self, \.$title, .custom("LIKE"), "%\(query)%")
-                    .filter(Group.self, \.$name, .custom("LIKE"), "%\(query)%")
-            }
+        
+        if let query = query {
+            lives = lives
+                .group(.or) {
+                    $0.filter(Live.self, \.$title, .custom("LIKE"), "%\(query)%")
+                        .filter(Group.self, \.$name, .custom("LIKE"), "%\(query)%")
+                }
+        }
+        if let groupId = groupId {
+            lives = lives
+                .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
+        }
+        if let fromDate = fromDate, let toDate = toDate {
+            lives = lives
+                .filter(Live.self, \.$date >= fromDate)
+                .filter(Live.self, \.$date <= toDate)
+        }
+            
+        return lives
             .unique()
             .fields(for: Live.self)
             .sort(\.$date, .descending)
-        return lives.paginate(PageRequest(page: page, per: per))
+            .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
                     let isLiked = LiveLike.query(on: db)

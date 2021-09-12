@@ -211,7 +211,10 @@ public struct SearchLive: EndpointProtocol {
     public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("lives", "search") public var prefix: Void
-        @Query public var term: String
+        @Query public var term: String?
+        @Query public var groupId: Group.ID?
+        @Query public var fromDate: String?
+        @Query public var toDate: String?
         @Query public var page: Int
         @Query public var per: Int
         public init() {}

@@ -210,6 +210,26 @@ class LiveControllerTests: XCTestCase {
             guard let item = body.items.first else { return }
             XCTAssertEqual(item.live.title, live.title)
         }
+        
+        let group2 = try appClient.createGroup(with: user)
+        _ = try appClient.createLive(hostGroup: group2, with: user)
+        _ = try appClient.createLive(hostGroup: group2, with: user)
+        
+        try app.test(
+            .GET, "lives/search?groupId=\(group.id)&page=1&per=1", headers: headers
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let body = try res.content.decode(Endpoint.SearchLive.Response.self)
+            XCTAssertGreaterThanOrEqual(body.items.count, 1)
+            guard let item = body.items.first else { return }
+            XCTAssertEqual(item.live.title, live.title)
+            switch live.style {
+            case .battle(let performers):
+                XCTAssertTrue(performers.map { $0.id }.contains(group.id))
+                XCTAssertFalse(performers.map { $0.id }.contains(group2.id))
+            default: break
+            }
+        }
     }
 
 //    func testReplyRequestAccept() throws {
