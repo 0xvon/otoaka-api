@@ -74,6 +74,8 @@ public class LiveRepository: Domain.LiveRepository {
             live.artworkURL = input.artworkURL?.absoluteString
             live.$hostGroup.id = input.hostGroupId.rawValue
             live.liveHouse = input.liveHouse
+            live.date = input.date
+            live.endDate = input.endDate
             live.openAtV2 = input.openAt
             live.startAtV2 = input.startAt
             live.piaEventCode = input.piaEventCode
