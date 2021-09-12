@@ -34,7 +34,7 @@ public class LiveRepository: Domain.LiveRepository {
             artworkURL: input.artworkURL,
             hostGroupId: input.hostGroupId,
             liveHouse: input.liveHouse,
-            date: input.date, openAt: input.openAt, startAt: input.startAt,
+            date: input.date, endDate: input.endDate, openAt: input.openAt, startAt: input.startAt,
             piaEventCode: input.piaEventCode, piaReleaseUrl: input.piaReleaseUrl, piaEventUrl: input.piaEventUrl
         )
         return db.transaction { (db) -> EventLoopFuture<Void> in

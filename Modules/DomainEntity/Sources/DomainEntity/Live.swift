@@ -68,6 +68,7 @@ public struct Live: Codable, Identifiable, Equatable {
     public var hostGroup: Group
     public var liveHouse: String?
     public var date: String?
+    public var endDate: String?
     public var openAt: String?
     public var startAt: String?
     public var piaEventCode: String?
@@ -79,7 +80,7 @@ public struct Live: Codable, Identifiable, Equatable {
         id: ID, title: String,
         style: LiveStyleOutput,price: Int, artworkURL: URL?,
         hostGroup: Group, liveHouse: String?,
-        date: String?, openAt: String?, startAt: String?,
+        date: String?, endDate: String?, openAt: String?, startAt: String?,
         piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?,
         createdAt: Date
     ) {
@@ -91,6 +92,7 @@ public struct Live: Codable, Identifiable, Equatable {
         self.hostGroup = hostGroup
         self.liveHouse = liveHouse
         self.date = date
+        self.endDate = endDate
         self.openAt = openAt
         self.startAt = startAt
         self.piaEventCode = piaEventCode

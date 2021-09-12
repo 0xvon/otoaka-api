@@ -122,3 +122,17 @@ struct UpdateLiveForPia: Migration {
             .update()
     }
 }
+
+struct UpdateLiveForDateTerm: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Live.schema)
+            .field("end_date", .string)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Live.schema)
+            .deleteField("end_date")
+            .update()
+    }
+}
