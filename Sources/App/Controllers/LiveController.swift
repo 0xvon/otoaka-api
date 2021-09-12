@@ -56,7 +56,7 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.SearchLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.search(selfUser: user.id, query: uri.term, page: uri.page, per: uri.per)
+                return repository.search(selfUser: user.id, query: uri.term, groupId: uri.groupId, fromDate: uri.fromDate, toDate: uri.toDate, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetMyTickets.self,
