@@ -264,8 +264,8 @@ public class UserRepository: Domain.UserRepository {
     
     public func createPost(for input: Domain.CreatePost.Request, authorId: Domain.User.ID) -> EventLoopFuture<Domain.Post> {
         let post = Post()
-        post.$author.id = input.author.id.rawValue
-        post.$live.id = input.live.id.rawValue
+        post.$author.id = input.author.rawValue
+        post.$live.id = input.live.rawValue
         post.text = input.text
         
         let created = post.create(on: db)
@@ -309,7 +309,7 @@ public class UserRepository: Domain.UserRepository {
     public func editPost(for input: Domain.CreatePost.Request, postId: Domain.Post.ID) -> EventLoopFuture<Domain.Post> {
         let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.postNotFound)
         let modified = post.map { (post) -> Post in
-            post.$live.id = input.live.id.rawValue
+            post.$live.id = input.live.rawValue
             post.text = input.text
             return post
         }
