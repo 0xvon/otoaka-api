@@ -88,8 +88,8 @@ class AppClient {
     func createGroupAsMaster(body: CreateGroup.Request = try! Stub.make()) throws
         -> Endpoint.Group
     {
-        var headers = HTTPHeaders()
-        headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
+        let user = try createUser()
+        let headers = makeHeaders(for: user)
         
         let bodyData = try ByteBuffer(data: encoder.encode(body))
         var createdGroup: Endpoint.Group!
@@ -326,11 +326,11 @@ class AppClient {
         let groupY = try self.createGroup(with: user)
         let dummyLive = try self.createLive(hostGroup: groupX, with: user)
         let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
-            $0.set(\.author, value: user.user)
+            $0.set(\.author, value: user.user.id)
             $0.set(\.groups, value: [groupX, groupY])
             $0.set(\.imageUrls, value: ["something", "something2"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
-            $0.set(\.live, value: live ?? dummyLive)
+            $0.set(\.live, value: live?.id ?? dummyLive.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
@@ -344,11 +344,11 @@ class AppClient {
     func createPost(with user: AppUser, groups: [Group], live: Live? = nil) throws -> Post {
         let dummyLive = try self.createLive(hostGroup: groups.first!, with: user)
         let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
-            $0.set(\.author, value: user.user)
+            $0.set(\.author, value: user.user.id)
             $0.set(\.groups, value: groups)
             $0.set(\.imageUrls, value: ["something", "something2"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
-            $0.set(\.live, value: live ?? dummyLive)
+            $0.set(\.live, value: live?.id ?? dummyLive.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
@@ -364,7 +364,7 @@ class AppClient {
             $0.set(\.text, value: "Edited Post")
             $0.set(\.imageUrls, value: ["something3", "something4"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
-            $0.set(\.live, value: post.live!)
+            $0.set(\.live, value: post.live!.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
