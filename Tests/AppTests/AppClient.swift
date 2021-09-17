@@ -88,8 +88,8 @@ class AppClient {
     func createGroupAsMaster(body: CreateGroup.Request = try! Stub.make()) throws
         -> Endpoint.Group
     {
-        var headers = HTTPHeaders()
-        headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
+        let user = try createUser(name: "test", role: .fan(Fan()))
+        let headers = makeHeaders(for: user)
         
         let bodyData = try ByteBuffer(data: encoder.encode(body))
         var createdGroup: Endpoint.Group!

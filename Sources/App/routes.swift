@@ -15,8 +15,6 @@ func routes(_ app: Application) throws {
         "Hello, world!"
     }
     
-    try app.register(collection: ExternalController())
-
     let secrets = app.secrets
     let loginTried = try app.routes
         .grouped(
@@ -29,4 +27,5 @@ func routes(_ app: Application) throws {
     try signedUp.register(collection: LiveController())
     try signedUp.register(collection: UserSocialController())
     try signedUp.register(collection: MessageController())
+    try signedUp.register(collection: ExternalController())
 }

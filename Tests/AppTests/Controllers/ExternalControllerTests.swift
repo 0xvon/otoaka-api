@@ -20,8 +20,9 @@ class ExternalControllerTests: XCTestCase {
     }
 
     func testCheckGlobalIP() throws {
+        let user = try appClient.createUser()
         try app.test(
-            .GET, "external/global_ip") { res in
+        .GET, "external/global_ip", headers: appClient.makeHeaders(for: user)) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
