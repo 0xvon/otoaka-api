@@ -79,7 +79,7 @@ struct ExternalController: RouteCollection {
             var reqUri = PiaSearchEventReleasesBriefly.URI()
             reqUri.apikey = uri.piaApiKey
             reqUri.keyword = uri.keyword
-            reqUri.get_count = 10
+            reqUri.get_count = 100
             let path = try! reqUri.encode(baseURL: URL(string:"http://search-api.pia.jp")!).absoluteString
             var headers = HTTPHeaders()
             headers.add(name: .contentType, value: HTTPMediaType.xml.serialize())
