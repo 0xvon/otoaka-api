@@ -97,7 +97,9 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreatePost.Request.self)
-                return repository.createPost(for: input, authorId: user.id)
+                let notificationService = makePushNotificationService(request: req)
+                let useCase = CreatePostUserCase(userRepository: repository, notificationService: notificationService, eventLoop: req.eventLoop)
+                return try useCase((user: user, input: input))
             })
         try loggedIn.on(endpoint: Endpoint.EditPost.self,
             use: injectProvider { req, uri, repository in
@@ -129,19 +131,8 @@ struct UserController: RouteCollection {
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(AddPostComment.Request.self)
                 let notificationService = makePushNotificationService(request: req)
-                // FIXME: Move to use case
-                return repository.addPostComment(userId: user.id, input: input)
-                    .and(repository.getPost(postId: input.postId))
-                    .flatMap { (comment, post) -> EventLoopFuture<PostComment> in
-                        if comment.author.id != post.author.id {
-                            let notification = PushNotification(
-                                message: "\(user.name)があなたのレポートにコメントしました")
-                            return notificationService.publish(
-                                to: post.author.id, notification: notification
-                            ).map { comment }
-                        }
-                        return req.eventLoop.makeSucceededFuture(comment)
-                    }
+                let useCase = AddPostCommentUseCase(userRepository: repository, notificationService: notificationService, eventLoop: req.eventLoop)
+                return try useCase((user: user, input: input))
             })
         try routes.on(
             endpoint: GetPostComments.self,

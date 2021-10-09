@@ -66,32 +66,32 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.title, newTitle)
         }
 
-        try app.test(
-            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userB),
-            body: bodyData
-        ) {
-            res in
-            XCTAssertEqual(res.status, .forbidden, res.body.string)
-        }
+//        try app.test(
+//            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userB),
+//            body: bodyData
+//        ) {
+//            res in
+//            XCTAssertEqual(res.status, .forbidden, res.body.string)
+//        }
     }
 
-    func testCreateLiveAsNonHostMember() throws {
-        let user = try appClient.createUser(role: .artist(Artist(part: "important")))
-        let createdGroup = try appClient.createGroup(with: user)
-
-        let nonMemberUser = try appClient.createUser()
-
-        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
-            $0.set(\.hostGroupId, value: createdGroup.id)
-            $0.set(\.style, value: .oneman(performer: createdGroup.id))
-        }
-        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-        let headers = appClient.makeHeaders(for: nonMemberUser)
-
-        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
-            XCTAssertNotEqual(res.status, .ok)
-        }
-    }
+//    func testCreateLiveAsNonHostMember() throws {
+//        let user = try appClient.createUser(role: .artist(Artist(part: "important")))
+//        let createdGroup = try appClient.createGroup(with: user)
+//
+//        let nonMemberUser = try appClient.createUser()
+//
+//        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+//            $0.set(\.hostGroupId, value: createdGroup.id)
+//            $0.set(\.style, value: .oneman(performer: createdGroup.id))
+//        }
+//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+//        let headers = appClient.makeHeaders(for: nonMemberUser)
+//
+//        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
+//            XCTAssertNotEqual(res.status, .ok)
+//        }
+//    }
 
     func testCreateLiveWithDuplicatedPerformers() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))

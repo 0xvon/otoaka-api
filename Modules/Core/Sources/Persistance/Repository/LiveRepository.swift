@@ -105,17 +105,6 @@ public class LiveRepository: Domain.LiveRepository {
         return modified.and(performers)
             .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
     }
-    
-    public func fetch(input: Domain.CreateLive.Request) -> EventLoopFuture<Domain.Live> {
-        let live = self.getLive(by: input.piaEventCode!)
-        return live.flatMap { live -> EventLoopFuture<Domain.Live> in
-            if let live = live {
-                return self.update(id: live.id, input: input)
-            } else {
-                return self.create(input: input)
-            }
-        }
-    }
 
     public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
         Domain.LiveDetail?

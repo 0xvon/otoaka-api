@@ -8,6 +8,35 @@
 import Foundation
 import NIO
 
+public struct CreatePostUserCase: UseCase {
+    public typealias Request = (
+        user: User, input: CreatePost.Request
+    )
+    public typealias Response = Post
+    public let userRepository: UserRepository
+    public let notificationService: PushNotificationService
+    public let eventLoop: EventLoop
+    
+    public init(
+        userRepository: UserRepository,
+        notificationService: PushNotificationService,
+        eventLoop: EventLoop
+    ) {
+        self.userRepository = userRepository
+        self.notificationService = notificationService
+        self.eventLoop = eventLoop
+    }
+    
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        let post = userRepository.createPost(for: request.input, authorId: request.user.id)
+        return post.flatMap { post in
+            let notification = PushNotification(message: "\(request.user.name)がライブレポートを投稿しました")
+            return notificationService.publish(toUserFollowers: request.user.id, notification: notification)
+                .map { post }
+        }
+    }
+}
+
 public struct DeletePostUseCase: UseCase {
     public typealias Request = (
         postId: Post.ID,
@@ -35,5 +64,41 @@ public struct DeletePostUseCase: UseCase {
             return
         }
         return precondition.flatMap { userRepository.deletePost(postId: request.postId) }
+    }
+}
+
+
+public struct AddPostCommentUseCase: UseCase {
+    public typealias Request = (
+        user: User, input: AddPostComment.Request
+    )
+    public typealias Response = PostComment
+    public let userRepository: UserRepository
+    public let notificationService: PushNotificationService
+    public let eventLoop: EventLoop
+    
+    public init(
+        userRepository: UserRepository,
+        notificationService: PushNotificationService,
+        eventLoop: EventLoop
+    ) {
+        self.userRepository = userRepository
+        self.notificationService = notificationService
+        self.eventLoop = eventLoop
+    }
+    
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        let postComment = userRepository.addPostComment(userId: request.user.id, input: request.input)
+        let post = userRepository.getPost(postId: request.input.postId)
+        return postComment
+            .and(post)
+            .flatMap { (comment, post) in
+                if comment.author.id != post.author.id {
+                    let notification = PushNotification(message: "\(comment.author.name)があなたのレポートにコメントしました")
+                    return notificationService.publish(to: post.author.id, notification: notification)
+                        .map { comment }
+                }
+                return eventLoop.makeSucceededFuture(comment)
+        }
     }
 }

@@ -5,7 +5,6 @@ import NIO
 public protocol LiveRepository {
     func create(input: CreateLive.Request) -> EventLoopFuture<Live>
     func update(id: Live.ID, input: EditLive.Request) -> EventLoopFuture<Live>
-    func fetch(input: Domain.CreateLive.Request) -> EventLoopFuture<Domain.Live>
     func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
         Domain.LiveDetail?
     >

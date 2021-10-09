@@ -51,7 +51,9 @@ struct ExternalController: RouteCollection {
         try routes.on(endpoint: FetchLive.self, use: injectProvider { req, uri, repository in
             let input = try req.content.decode(CreateLive.Request.self)
             let liveRepository = LiveRepository(db: req.db)
-            return liveRepository.fetch(input: input)
+            let notificationService = makePushNotificationService(request: req)
+            let useCase = FetchLiveUseCase(liveRepository: liveRepository, notificationService: notificationService, eventLoop: req.eventLoop)
+            return try useCase(input)
         })
         try routes.on(endpoint: ExtCreateLive.self, use: injectProvider { req, uri, repository in
             let input = try req.content.decode(CreateLive.Request.self)
