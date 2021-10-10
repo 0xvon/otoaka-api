@@ -212,6 +212,16 @@ public struct PiaSearchEventReleasesBriefly: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct NotifyUpcomingLives: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = String
+    public struct URI: CodableURL {
+        @StaticPath("external", "notify_upcoming_lives") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct PiaApiGetResponseHeader: Codable, Equatable {
     public var getCount: Int
     public var startCount: Int

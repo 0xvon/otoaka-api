@@ -17,6 +17,7 @@ public protocol PushNotificationService {
         -> EventLoopFuture<Void>
     func publish(toGroupFollowers: Group.ID, notification: PushNotification)
         -> EventLoopFuture<Void>
+    func publish(toLiveLikedUsers: Live.ID, notification: PushNotification) -> EventLoopFuture<Void>
     func register(deviceToken: String, for user: User.ID)
         -> EventLoopFuture<Void>
 }

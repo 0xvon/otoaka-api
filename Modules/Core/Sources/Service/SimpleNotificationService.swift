@@ -118,6 +118,13 @@ public class SimpleNotificationService: PushNotificationService {
                 on: self.eventLoop)
         }
     }
+    
+    public func publish(toLiveLikedUsers: Live.ID, notification: PushNotification) -> EventLoopFuture<Void> {
+        let liveLikedUsers = userSocialRepository.getLiveLikedUsers(live: toLiveLikedUsers)
+        return liveLikedUsers.flatMap { users in
+            EventLoopFuture.andAllSucceed(users.map { self.publish(to: $0, notification: notification) }, on: self.eventLoop)
+        }
+    }
 
     public func register(deviceToken: String, for user: User.ID) -> EventLoopFuture<Void> {
         let input = SNS.CreatePlatformEndpointInput(

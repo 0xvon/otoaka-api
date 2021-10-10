@@ -54,21 +54,21 @@ public struct CreateLiveUseCase: UseCase {
                 )
                 .map { live }
             case .battle(let performers):
-                performers.forEach { performer in
+                return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
                     let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                    notificationService.publish(
+                    return notificationService.publish(
                         toGroupFollowers: performer.id, notification: notification
                     )
-                }
-                return eventLoop.makeSucceededFuture(live)
+                }, on: eventLoop)
+                .map { live }
             case .festival(let performers):
-                performers.forEach { performer in
+                return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
                     let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                    notificationService.publish(
+                    return notificationService.publish(
                         toGroupFollowers: performer.id, notification: notification
                     )
-                }
-                return eventLoop.makeSucceededFuture(live)
+                }, on: eventLoop)
+                .map { live }
             }
         }
     }
@@ -171,21 +171,21 @@ public struct FetchLiveUseCase: UseCase {
                             )
                             .map { live }
                         case .battle(let performers):
-                            performers.forEach { performer in
+                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
                                 let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                notificationService.publish(
+                                return notificationService.publish(
                                     toGroupFollowers: performer.id, notification: notification
                                 )
-                            }
-                            return eventLoop.makeSucceededFuture(live)
+                            }, on: eventLoop)
+                            .map { live }
                         case .festival(let performers):
-                            performers.forEach { performer in
+                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
                                 let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                notificationService.publish(
+                                return notificationService.publish(
                                     toGroupFollowers: performer.id, notification: notification
                                 )
-                            }
-                            return eventLoop.makeSucceededFuture(live)
+                            }, on: eventLoop)
+                            .map { live }
                         }
                     }
             }

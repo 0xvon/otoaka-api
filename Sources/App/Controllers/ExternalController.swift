@@ -41,6 +41,12 @@ struct ExternalController: RouteCollection {
                     try $0.content.decode(CheckGlobalIP.Response.self)
                 }
         })
+        try routes.on(endpoint: Endpoint.NotifyUpcomingLives.self, use: injectProvider { req, uri, repository in
+            let liveRepository = Persistance.LiveRepository(db: req.db)
+            let notificationService = makePushNotificationService(request: req)
+            let useCase = NotifyUpcomingLivesUseCase(liveRepository: liveRepository, notificationService: notificationService, eventLoop: req.eventLoop)
+            return try useCase(Empty())
+        })
         try routes.on(endpoint: ScanGroups.self, use: injectProvider { req, uri, repository in
             repository.get(page: 1, per: 1000).map { $0.items }
         })

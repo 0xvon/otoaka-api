@@ -370,6 +370,15 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(\.$status == .pending)
             .count()
     }
+    
+    public func search(date: String) -> EventLoopFuture<[Domain.Live]> {
+        return Live.query(on: db)
+            .filter(Live.self, \.$date == date)
+            .all()
+            .flatMapEach(on: db.eventLoop) {
+                Domain.Live.translate(fromPersistance: $0, on: self.db)
+            }
+    }
 
     public func search(selfUser: Domain.User.ID, query: String?, groupId: Domain.Group.ID?, fromDate: String?, toDate: String?, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
