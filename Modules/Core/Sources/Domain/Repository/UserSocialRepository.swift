@@ -50,4 +50,5 @@ public protocol UserSocialRepository {
     func userLikePostCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>
+    func getLiveLikedUsers(live: Domain.Live.ID) -> EventLoopFuture<[Domain.User.ID]>
 }

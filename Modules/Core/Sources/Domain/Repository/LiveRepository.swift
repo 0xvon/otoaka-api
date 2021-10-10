@@ -5,7 +5,6 @@ import NIO
 public protocol LiveRepository {
     func create(input: CreateLive.Request) -> EventLoopFuture<Live>
     func update(id: Live.ID, input: EditLive.Request) -> EventLoopFuture<Live>
-    func fetch(input: Domain.CreateLive.Request) -> EventLoopFuture<Domain.Live>
     func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
         Domain.LiveDetail?
     >
@@ -35,5 +34,6 @@ public protocol LiveRepository {
     >
     func getPendingRequestCount(for user: Domain.User.ID) -> EventLoopFuture<Int>
     func search(selfUser: Domain.User.ID, query: String?, groupId: Group.ID?, fromDate: String?, toDate: String?, page: Int, per: Int) -> EventLoopFuture<Page<LiveFeed>>
+    func search(date: String) -> EventLoopFuture<[Domain.Live]>
     func getLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>
 }

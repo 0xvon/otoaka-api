@@ -114,6 +114,13 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 Domain.User.ID($0.$user.id)
             }
     }
+    
+    public func getLiveLikedUsers(live: Domain.Live.ID) -> EventLoopFuture<[Domain.User.ID]> {
+        LiveLike.query(on: db)
+            .filter(\.$live.$id == live.rawValue)
+            .all()
+            .mapEach { Domain.User.ID($0.$user.id) }
+    }
 
     public func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
         Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue).count()

@@ -168,9 +168,9 @@ extension Endpoint.GetPendingRequestCount.Response: Content {}
 extension EditLiveUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {
         switch self {
-        case .fanCannotEditLive: return .forbidden
+//        case .fanCannotEditLive: return .forbidden
         case .liveNotFound: return .notFound
-        case .isNotMemberOfHostGroup: return .forbidden
+//        case .isNotMemberOfHostGroup: return .forbidden
         }
     }
 }

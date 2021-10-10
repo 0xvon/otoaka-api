@@ -26,4 +26,22 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
+    
+    func testNotifyUpcomingLives() throws {
+        let user = try appClient.createUser()
+        try app.test(
+            .GET, "external/notify_upcoming_lives", headers: appClient.makeHeaders(for: user)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+    
+    func testNotifyPastLives() throws {
+        let user = try appClient.createUser()
+        try app.test(
+            .GET, "external/notify_past_lives", headers: appClient.makeHeaders(for: user)
+        ) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
 }
