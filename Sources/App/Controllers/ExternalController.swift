@@ -47,6 +47,12 @@ struct ExternalController: RouteCollection {
             let useCase = NotifyUpcomingLivesUseCase(liveRepository: liveRepository, notificationService: notificationService, eventLoop: req.eventLoop)
             return try useCase(Empty())
         })
+        try routes.on(endpoint: Endpoint.NotifyPastLives.self, use: injectProvider { req, uri, repository in
+            let liveRepository = Persistance.LiveRepository(db: req.db)
+            let notificationService = makePushNotificationService(request: req)
+            let useCase = NotifyPastLivesUseCase(liveRepository: liveRepository, notificationService: notificationService, eventLoop: req.eventLoop)
+            return try useCase(Empty())
+        })
         try routes.on(endpoint: ScanGroups.self, use: injectProvider { req, uri, repository in
             repository.get(page: 1, per: 1000).map { $0.items }
         })
