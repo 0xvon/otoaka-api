@@ -128,18 +128,21 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$status == .reserved)
             .count()
+        let postCount = Post.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .count()
         return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
             let live = Domain.Live.translate(fromPersistance: $0, on: db)
-            return live.and(isLiked).and(participants).and(likeCount).and(ticket)
-                .map { ($0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1) }
+            return live.and(isLiked).and(participants).and(likeCount).and(ticket).and(postCount)
+                .map { ($0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1) }
                 .map {
                     (
                         live: Domain.Live, isLiked: Bool, participants: Int, likeCount: Int,
-                        ticket: Domain.Ticket?
+                        ticket: Domain.Ticket?, postCount: Int
                     ) -> Domain.LiveDetail in
                     return Domain.LiveDetail(
                         live: live, isLiked: isLiked, participants: participants,
-                        likeCount: likeCount, ticket: ticket)
+                        likeCount: likeCount, ticket: ticket, postCount: postCount)
                 }
         }
     }
