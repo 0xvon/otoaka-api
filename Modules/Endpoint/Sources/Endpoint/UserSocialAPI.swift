@@ -175,14 +175,16 @@ public struct LiveFeed: Codable {
     public var likeCount: Int
     public var participantCount: Int
     public var postCount: Int
+    public var participatingFriends: [User]
 
-    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int, participatingFriends: [User]) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
         self.likeCount = likeCount
         self.participantCount = participantCount
         self.postCount = postCount
+        self.participatingFriends = participatingFriends
     }
 }
 

@@ -213,12 +213,11 @@ struct UserController: RouteCollection {
         
         let followersCount = userSocialRepository.userFollowersCount(selfUser: uri.userId)
         let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
-        let feedCount = userSocialRepository.usersFeedCount(selfUser: uri.userId)
-        let likeFeedCount = userSocialRepository.userLikeFeedCount(selfUser: uri.userId)
         let postCount = userSocialRepository.userPostCount(selfUser: uri.userId)
         let likePostCount = userSocialRepository.userLikePostCount(selfUser: uri.userId)
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
-        let likeLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId)
+        let likeFutureLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId, type: .future)
+        let likePastLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId, type: .past)
         let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
         let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
         let isBlocked = userSocialRepository.isBlocking(selfUser: uri.userId, target: selfUser.id)
@@ -226,11 +225,10 @@ struct UserController: RouteCollection {
         
         return user.and(followersCount)
             .and(followingUsersCount)
-            .and(feedCount)
-            .and(likeFeedCount)
             .and(postCount)
             .and(likePostCount)
-            .and(likeLiveCount)
+            .and(likeFutureLiveCount)
+            .and(likePastLiveCount)
             .and(followingGroupsCount)
             .and(isFollowed)
             .and(isFollowing)
@@ -238,8 +236,7 @@ struct UserController: RouteCollection {
             .and(isBlocking)
             .map {
                 (
-                    $0.0.0.0.0.0.0.0.0.0.0.0,
-                    $0.0.0.0.0.0.0.0.0.0.0.1,
+                    $0.0.0.0.0.0.0.0.0.0.0,
                     $0.0.0.0.0.0.0.0.0.0.1,
                     $0.0.0.0.0.0.0.0.0.1,
                     $0.0.0.0.0.0.0.0.1,
@@ -257,16 +254,15 @@ struct UserController: RouteCollection {
                 user: $0,
                 followersCount: $1,
                 followingUsersCount: $2,
-                feedCount: $3,
-                likeFeedCount: $4,
-                postCount: $5,
-                likePostCount: $6,
-                likeLiveCount: $7,
-                followingGroupsCount: $8,
-                isFollowed: $9,
-                isFollowing: $10,
-                isBlocked: $11,
-                isBlocking: $12
+                postCount: $3,
+                likePostCount: $4,
+                likeFutureLiveCount: $5,
+                likePastLiveCount: $6,
+                followingGroupsCount: $7,
+                isFollowed: $8,
+                isFollowing: $9,
+                isBlocked: $10,
+                isBlocking: $11
             )
         }
     }

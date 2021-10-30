@@ -379,25 +379,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                     let postCount = Post.query(on: db)
                         .filter(\.$live.$id == live.id!)
                         .count()
+                    let participatingFriends = LiveLike.query(on: db)
+                        .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
+                        .fields(for: LiveLike.self)
+                        .all()
+                        .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).map { (
-                            $0.0.0.0.0,
-                            $0.0.0.0.1,
-                            $0.0.0.1,
-                            $0.0.1,
-                            $0.1,
-                            $1
-                        ) }
+                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
                         .map {
-                            Domain.LiveFeed(
-                                live: $0,
-                                isLiked: $1,
-                                hasTicket: $2,
-                                likeCount: $3,
-                                participantCount: $4,
-                                postCount: $5
-                            )
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4, postCount: $5, participatingFriends: $6)
                         }
                 }
             }
@@ -539,11 +532,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                     let postCount = Post.query(on: db)
                         .filter(\.$live.$id == live.id!)
                         .count()
+                    let participatingFriends = LiveLike.query(on: db)
+                        .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
+                        .filter(\.$live.$id == live.id!)
+                        .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
+                        .fields(for: LiveLike.self)
+                        .all()
+                        .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).map { ( $0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
+                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
                         .map {
-                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4, postCount: $5)
+                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4, postCount: $5, participatingFriends: $6)
                         }
                 }
             }
@@ -720,8 +720,27 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         PostLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
     }
     
-    public func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
-        LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    public func userLikeLiveCount(selfUser: Domain.User.ID, type: Domain.LiveSeries = .all) -> EventLoopFuture<Int> {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        let like = LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue)
+        
+        switch type {
+        case .all: return like.count()
+        case .future:
+            return like
+                .join(Live.self, on: \Live.$id == \LiveLike.$live.$id)
+                .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
+                .count()
+        case .past:
+            return like
+                .join(Live.self, on: \Live.$id == \LiveLike.$live.$id)
+                .filter(Live.self, \.$date < dateFormatter.string(from: Date()))
+                .count()
+        }
     }
     
     public func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {
