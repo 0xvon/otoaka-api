@@ -323,4 +323,25 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 2)
         }
     }
+    
+    func testGetGroupLives() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let live = try appClient.createLive(hostGroup: group, with: user)
+        let headers = appClient.makeHeaders(for: user)
+        _ = try appClient.followUser(target: userB, with: user)
+        _ = try appClient.like(live: live, with: userB)
+        
+        try app.test(.GET, "groups/\(group.id)/lives?page=1&per=100", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetGroupLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            guard let liveFeed = responseBody.items.first else { return }
+            XCTAssertEqual(liveFeed.live.id, live.id)
+            XCTAssertFalse(liveFeed.isLiked)
+            XCTAssertEqual(liveFeed.participatingFriends.count, 1)
+            XCTAssertEqual(liveFeed.participatingFriends.first?.id, userB.user.id)
+        }
+    }
 }

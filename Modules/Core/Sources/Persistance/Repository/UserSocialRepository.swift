@@ -385,7 +385,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                         .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
                         .fields(for: LiveLike.self)
                         .all()
-                        .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
+                        .flatMapEach(on: db.eventLoop) { [db] in $0.$user.get(on: db).flatMap { [db] in Domain.User.translate(fromPersistance: $0, on: db) } }
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
                         .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
@@ -538,7 +538,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                         .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
                         .fields(for: LiveLike.self)
                         .all()
-                        .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
+                        .flatMapEach(on: db.eventLoop) { [db] in $0.$user.get(on: db).flatMap { [db] in Domain.User.translate(fromPersistance: $0, on: db) } }
 
                     return Domain.Live.translate(fromPersistance: live, on: db)
                         .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
