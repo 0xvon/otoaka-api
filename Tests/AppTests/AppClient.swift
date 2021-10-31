@@ -177,6 +177,13 @@ class AppClient {
             .POST, "user_social/follow_group", headers: makeHeaders(for: user), body: bodyData)
     }
     
+    func updateRecentlyFollowing(groups: [Group.ID], with user: AppUser) throws {
+        let body = Endpoint.UpdateRecentlyFollowing.Request(groups: groups)
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(.POST, "user_social/update_recently_following", headers: makeHeaders(for: user), body: bodyData)
+    }
+    
     func followUser(target: AppUser, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.FollowUser.Request.self) {
             $0.set(\.id, value: target.user.id)

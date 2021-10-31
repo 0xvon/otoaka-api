@@ -4,7 +4,10 @@ import NIO
 public protocol UserSocialRepository {
     func follow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
     func unfollow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
+    func updateRecentlyFollowing(selfUser: Domain.User.ID, groups: [Domain.Group.ID]) -> EventLoopFuture<Void>
+    func resetRecentlyFollowing(selfUser: Domain.User.ID) -> EventLoopFuture<Void>
     func followings(userId: User.ID, selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
+    func recentlyFollowingGroups(userId: User.ID, selfUser: User.ID) -> EventLoopFuture<[GroupFeed]>
     func frequentlyWatchingGroups(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
     func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
@@ -39,7 +42,7 @@ public protocol UserSocialRepository {
     func userLikeFeedCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
-    func likedLive(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>>
+    func likedLive(userId: Domain.User.ID, selfUser: Domain.User.ID, series: Domain.LiveSeries, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>>
     func likeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
     func unlikeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>
     func trendPosts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>

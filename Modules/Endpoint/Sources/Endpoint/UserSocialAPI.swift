@@ -30,6 +30,21 @@ public struct UnfollowGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct UpdateRecentlyFollowing: EndpointProtocol {
+    public struct Request: Codable {
+        public var groups: [Group.ID]
+        public init(groups: [Group.ID]) {
+            self.groups = groups
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "update_recently_following") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct GroupFollowers: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>
@@ -51,6 +66,17 @@ public struct FollowingGroups: EndpointProtocol {
         @DynamicPath public var id: User.ID
         @Query public var page: Int
         @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct RecentlyFollowingGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = [GroupFeed]
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "recently_following_groups") public var prefix: Void
+        @DynamicPath public var id: User.ID
         public init() {}
     }
     public static let method: HTTPMethod = .get
@@ -404,6 +430,19 @@ public struct GetLikedLive: EndpointProtocol {
     public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "liked_live") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct GetLikedFutureLive: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<LiveFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "liked_future_live") public var prefix: Void
         @DynamicPath public var userId: User.ID
         @Query public var page: Int
         @Query public var per: Int

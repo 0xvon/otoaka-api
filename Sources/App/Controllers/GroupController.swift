@@ -200,7 +200,8 @@ extension Endpoint.ArtistFeed: Content {}
 
 extension Endpoint.ArtistFeedComment: Content {}
 
-extension Endpoint.GetGroup.Response: Content {}
+extension Endpoint.GroupFeed: Content {}
+extension Endpoint.GroupDetail: Content {}
 
 extension Domain.JoinGroupUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {

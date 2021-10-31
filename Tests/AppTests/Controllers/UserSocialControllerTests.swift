@@ -573,4 +573,27 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items[1].watchingCount, 2)
         }
     }
+    
+    func testGetRecentlyFollowingGroups() throws {
+        let user = try appClient.createUser()
+        let groupA = try appClient.createGroup(with: user)
+        let groupB = try appClient.createGroup(with: user)
+        let groupC = try appClient.createGroup(with: user)
+        _ = try appClient.updateRecentlyFollowing(groups: [groupA.id, groupB.id, groupC.id], with: user)
+        
+        try app.test(.GET, "user_social/recently_following_groups/\(user.user.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode([GroupFeed].self)
+            XCTAssertEqual(responseBody.count, 3)
+        }
+        
+        _ = try appClient.updateRecentlyFollowing(groups: [groupA.id, groupB.id], with: user)
+        
+        try app.test(.GET, "user_social/recently_following_groups/\(user.user.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode([GroupFeed].self)
+            XCTAssertEqual(responseBody.count, 2)
+            XCTAssertFalse(responseBody.map { $0.group.id }.contains(groupC.id))
+        }
+    }
 }
