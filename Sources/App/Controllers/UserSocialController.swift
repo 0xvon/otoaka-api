@@ -220,5 +220,14 @@ struct UserSocialController: RouteCollection {
         try routes.on(endpoint: GetLiveLikedUsers.self, use: injectProvider { req, uri, repository in
             return repository.getLiveLikedUsers(liveId: uri.liveId, page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: GetLikedLiveTransition.self, use: injectProvider { req, uri, repository in
+            return repository.getLikedLiveTransition(userId: uri.userId)
+        })
+        try routes.on(endpoint: FrequentlyWatchingGroups.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return repository.frequentlyWatchingGroups(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+        })
     }
 }
+
+extension LiveTransition: Content {}

@@ -5,10 +5,12 @@ public protocol UserSocialRepository {
     func follow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
     func unfollow(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Void>
     func followings(userId: User.ID, selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
+    func frequentlyWatchingGroups(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
     func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>
     func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int>
+    func watchingCount(selfGroup: Domain.Group.ID, selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func followingGroupsCount(userId: User.ID) -> EventLoopFuture<Int>
     func followUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
     func unfollowUser(selfUser: User.ID, targetUser: User.ID) -> EventLoopFuture<Void>
@@ -51,4 +53,5 @@ public protocol UserSocialRepository {
     func userLikeLiveCount(selfUser: Domain.User.ID, type: Domain.LiveSeries) -> EventLoopFuture<Int>
     func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>>
     func getLiveLikedUsers(live: Domain.Live.ID) -> EventLoopFuture<[Domain.User.ID]>
+    func getLikedLiveTransition(userId: Domain.User.ID) -> EventLoopFuture<Domain.LiveTransition>
 }

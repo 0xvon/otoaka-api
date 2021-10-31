@@ -56,6 +56,19 @@ public struct FollowingGroups: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct FrequentlyWatchingGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "frequently_watching_groups") public var prefix: Void
+        @Query public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct FollowUser: EndpointProtocol {
     public struct Request: Codable {
         public var id: User.ID
@@ -201,6 +214,17 @@ public struct GetUpcomingLives: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetLikedLiveTransition: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = LiveTransition
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "liked_live_transition") public var prefix: Void
+        @Query public var userId: User.ID
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 @dynamicMemberLookup
 public struct ArtistFeedSummary: Codable, Equatable {
     public var feed: ArtistFeed
@@ -274,6 +298,16 @@ public struct UserFeedSummary: Codable, Equatable {
         self.commentCount = commentCount
         self.likeCount = likeCount
         self.isLiked = isLiked
+    }
+}
+
+public struct LiveTransition: Codable, Equatable {
+    public var yearLabel: [String]
+    public var liveParticipatingCount: [Int]
+    
+    public init(yearLabel: [String], liveParticipatingCount: [Int]) {
+        self.yearLabel = yearLabel
+        self.liveParticipatingCount = liveParticipatingCount
     }
 }
 
