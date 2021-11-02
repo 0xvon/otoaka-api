@@ -125,16 +125,18 @@ class UserControllerTests: XCTestCase {
         let userB = try appClient.createUser()
         let header = appClient.makeHeaders(for: userB)
         let groupX = try appClient.createGroup(with: userA)
-        _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
+        _ = try appClient.createPost(with: userA)
         _ = try appClient.followUser(target: userA, with: userB)
+        _ = try appClient.follow(group: groupX, with: userA)
 
         try app.test(.GET, "users/\(userA.user.id)", headers: header) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetUserDetail.Response.self)
             XCTAssertTrue(response.isFollowing)
             XCTAssertFalse(response.isFollowed)
-            XCTAssertEqual(response.feedCount, 1)
+            XCTAssertEqual(response.postCount, 1)
             XCTAssertEqual(response.followersCount, 1)
+            XCTAssertEqual(response.followingGroupsCount, 1)
         }
         
         try app.test(.GET, "users/\(userB.user.id)", headers: header) { res in
@@ -142,7 +144,7 @@ class UserControllerTests: XCTestCase {
             let response = try res.content.decode(GetUserDetail.Response.self)
             XCTAssertFalse(response.isFollowing)
             XCTAssertFalse(response.isFollowed)
-            XCTAssertEqual(response.feedCount, 0)
+            XCTAssertEqual(response.postCount, 0)
             XCTAssertEqual(response.followingUsersCount, 1)
         }
     }

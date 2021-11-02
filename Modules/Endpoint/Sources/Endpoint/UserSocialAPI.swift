@@ -30,6 +30,21 @@ public struct UnfollowGroup: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct UpdateRecentlyFollowing: EndpointProtocol {
+    public struct Request: Codable {
+        public var groups: [Group.ID]
+        public init(groups: [Group.ID]) {
+            self.groups = groups
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "update_recently_following") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct GroupFollowers: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>
@@ -54,6 +69,30 @@ public struct FollowingGroups: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct RecentlyFollowingGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = [GroupFeed]
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "recently_following_groups") public var prefix: Void
+        @DynamicPath public var id: User.ID
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct FrequentlyWatchingGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "frequently_watching_groups") public var prefix: Void
+        @Query public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
 }
 
 public struct FollowUser: EndpointProtocol {
@@ -175,14 +214,16 @@ public struct LiveFeed: Codable {
     public var likeCount: Int
     public var participantCount: Int
     public var postCount: Int
+    public var participatingFriends: [User]
 
-    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int) {
+    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int, participatingFriends: [User]) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
         self.likeCount = likeCount
         self.participantCount = participantCount
         self.postCount = postCount
+        self.participatingFriends = participatingFriends
     }
 }
 
@@ -197,6 +238,17 @@ public struct GetUpcomingLives: EndpointProtocol {
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public struct GetLikedLiveTransition: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = LiveTransition
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "liked_live_transition") public var prefix: Void
+        @Query public var userId: User.ID
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
 }
 
 @dynamicMemberLookup
@@ -272,6 +324,16 @@ public struct UserFeedSummary: Codable, Equatable {
         self.commentCount = commentCount
         self.likeCount = likeCount
         self.isLiked = isLiked
+    }
+}
+
+public struct LiveTransition: Codable, Equatable {
+    public var yearLabel: [String]
+    public var liveParticipatingCount: [Int]
+    
+    public init(yearLabel: [String], liveParticipatingCount: [Int]) {
+        self.yearLabel = yearLabel
+        self.liveParticipatingCount = liveParticipatingCount
     }
 }
 
@@ -368,6 +430,19 @@ public struct GetLikedLive: EndpointProtocol {
     public typealias Response = Page<LiveFeed>
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("user_social", "liked_live") public var prefix: Void
+        @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
+public struct GetLikedFutureLive: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<LiveFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "liked_future_live") public var prefix: Void
         @DynamicPath public var userId: User.ID
         @Query public var page: Int
         @Query public var per: Int

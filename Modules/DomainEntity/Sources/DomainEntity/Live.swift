@@ -124,6 +124,10 @@ public struct PerformanceRequest: Codable, Identifiable {
     }
 }
 
+public enum LiveSeries {
+    case all, future, past
+}
+
 public struct Ticket: Codable {
     public typealias ID = Identifier<Self>
 

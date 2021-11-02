@@ -101,11 +101,14 @@ class GroupControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         let createdGroup = try appClient.createGroup(with: user)
         let createdGroupAsMaster = try appClient.createGroupAsMaster()
+        let live = try appClient.createLive(hostGroup: createdGroup, style: .oneman(performer: createdGroup.id), with: user, date: "20010101")
+        _ = try appClient.like(live: live, with: user)
 
         try app.test(.GET, "groups/\(createdGroup.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetGroup.Response.self)
             XCTAssertTrue(response.isMember)
+            XCTAssertEqual(response.watchingCount, 1)
         }
         
         try app.test(.GET, "groups/\(createdGroupAsMaster.id)", headers: headers) { res in
@@ -126,6 +129,7 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetAllGroups.Response.self)
             XCTAssertGreaterThanOrEqual(response.items.count, 3)
+            XCTAssertGreaterThanOrEqual(response.items.first!.watchingCount, 0)
         }
         
         try app.test(.GET, "groups/search?term=wall+of+death&page=1&per=10", headers: headers) { res in
@@ -321,6 +325,27 @@ class GroupControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
             
             XCTAssertEqual(responseBody.items.count, 2)
+        }
+    }
+    
+    func testGetGroupLives() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let live = try appClient.createLive(hostGroup: group, with: user)
+        let headers = appClient.makeHeaders(for: user)
+        _ = try appClient.followUser(target: userB, with: user)
+        _ = try appClient.like(live: live, with: userB)
+        
+        try app.test(.GET, "groups/\(group.id)/lives?page=1&per=100", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetGroupLives.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+            guard let liveFeed = responseBody.items.first else { return }
+            XCTAssertEqual(liveFeed.live.id, live.id)
+            XCTAssertFalse(liveFeed.isLiked)
+            XCTAssertEqual(liveFeed.participatingFriends.count, 1)
+            XCTAssertEqual(liveFeed.participatingFriends.first?.id, userB.user.id)
         }
     }
 }

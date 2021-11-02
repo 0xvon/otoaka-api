@@ -25,6 +25,14 @@ struct UserSocialController: RouteCollection {
                     .map { Empty() }
             })
         try routes.on(
+            endpoint: UpdateRecentlyFollowing.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let input = try req.content.decode(UpdateRecentlyFollowing.Request.self)
+                return repository.updateRecentlyFollowing(selfUser: user.id, groups: input.groups)
+                    .map { Empty() }
+            })
+        try routes.on(
             endpoint: UnfollowGroup.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
@@ -42,6 +50,12 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.followings(userId: uri.id, selfUser: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: RecentlyFollowingGroups.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.recentlyFollowingGroups(userId: uri.id, selfUser: user.id)
             })
         try routes.on(
             endpoint: FollowUser.self,
@@ -144,7 +158,13 @@ struct UserSocialController: RouteCollection {
             endpoint: Endpoint.GetLikedLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.likedLive(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+                return repository.likedLive(userId: uri.userId, selfUser: user.id, series: .past, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.GetLikedFutureLive.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return repository.likedLive(userId: uri.userId, selfUser: user.id, series: .future, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: LikeUserFeed.self,
@@ -220,5 +240,14 @@ struct UserSocialController: RouteCollection {
         try routes.on(endpoint: GetLiveLikedUsers.self, use: injectProvider { req, uri, repository in
             return repository.getLiveLikedUsers(liveId: uri.liveId, page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: GetLikedLiveTransition.self, use: injectProvider { req, uri, repository in
+            return repository.getLikedLiveTransition(userId: uri.userId)
+        })
+        try routes.on(endpoint: FrequentlyWatchingGroups.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return repository.frequentlyWatchingGroups(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+        })
     }
 }
+
+extension LiveTransition: Content {}

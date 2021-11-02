@@ -2,6 +2,7 @@ import Domain
 import FluentKit
 import FluentSQL
 import Foundation
+import FluentMySQLDriver
 
 public class UserSocialRepository: Domain.UserSocialRepository {
     private let db: Database
@@ -10,6 +11,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     }
 
     enum Error: Swift.Error {
+        case groupNotFound
         case alreadyFollowing
         case notFollowing
         case alreadyBlocking
@@ -61,6 +63,37 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             following.delete(force: true, on: db)
         }
     }
+    
+    public func updateRecentlyFollowing(
+        selfUser: Domain.User.ID,
+        groups: [Domain.Group.ID]
+    ) -> EventLoopFuture<Void> {
+        let reset = self.resetRecentlyFollowing(selfUser: selfUser)
+        return reset.flatMap { [db] _ in
+            let futures =
+                groups
+                .map { groupId -> EventLoopFuture<Void> in
+                    let request = RecentlyFollowing()
+                    request.$target.id = groupId.rawValue
+                    request.$user.id = selfUser.rawValue
+                    return request.save(on: db)
+                }
+            return db.eventLoop.flatten(futures)
+        }
+    }
+
+    public func resetRecentlyFollowing(selfUser: Domain.User.ID) -> EventLoopFuture<
+        Void
+    > {
+        RecentlyFollowing.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .all()
+            .flatMapEach(on: db.eventLoop) { [db] following in
+                following.delete(force: true, on: db)
+            }
+            .map { _ in }
+            
+    }
 
     public func followings(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int)
         -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
@@ -68,30 +101,19 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         let followings = Following.query(on: db).filter(\.$user.$id == userId.rawValue)
             .with(\.$target)
         return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
-                let isFollowing = Following.query(on: db)
-                    .filter(\.$user.$id == selfUser.rawValue)
-                    .filter(\.$target.$id == group.target.id!)
-                    .count().map { $0 > 0 }
-                let followersCount = Following.query(on: db)
-                    .filter(\.$target.$id == group.target.id!)
-                    .count()
-                return Domain.Group.translate(fromPersistance: group.target, on: db)
-                    .and(isFollowing)
-                    .and(followersCount)
-                    .map { (
-                        $0.0,
-                        $0.1,
-                        $1
-                    )}
-                    .map {
-                        Domain.GroupFeed(
-                            group: $0,
-                            isFollowing: $1,
-                            followersCount: $2
-                        )
-                    }
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.GroupFeed.translate(fromPersistance: $0.target, selfUser: selfUser, on: db)
             }
+        }
+    }
+    
+    public func recentlyFollowingGroups(userId: Domain.User.ID, selfUser: Domain.User.ID)
+        -> EventLoopFuture<[Domain.GroupFeed]>
+    {
+        let followings = RecentlyFollowing.query(on: db).filter(\.$user.$id == userId.rawValue)
+            .with(\.$target)
+        return followings.all().flatMapEach(on: db.eventLoop) { [db] in
+            Domain.GroupFeed.translate(fromPersistance: $0.target, selfUser: selfUser, on: db)
         }
     }
 
@@ -121,9 +143,55 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .all()
             .mapEach { Domain.User.ID($0.$user.id) }
     }
+    
+    public func frequentlyWatchingGroups(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>> {
+        // ここだけGroupFeedの情報がselfUserじゃなくてuserIdに紐付いている
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        struct WatchingCount: Codable {
+            let group_id: UUID
+            let watching_count: Int
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            return mysql.raw("select live_performers.group_id as group_id, count(*) as watching_count from live_performers inner join live_likes on live_performers.live_id = live_likes.live_id and live_likes.user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) inner join lives on lives.id = live_likes.live_id and lives.date < \"\(dateFormatter.string(from: Date()))\" group by live_performers.group_id order by watching_count desc limit \(String(per)) offset \(String((page - 1) * per))")
+                .all(decoding: WatchingCount.self)
+                .flatMapEach(on: db.eventLoop) { [db] in
+                    Group.find($0.group_id, on: db).unwrap(orError: Error.groupNotFound).flatMap { group in
+                        GroupFeed.translate(fromPersistance: group, selfUser: userId, on: db)
+                    }
+                }
+                .flatMapThrowing {
+                    Domain.Page<GroupFeed>(items: $0, metadata: Domain.PageMetadata(page: page, per: per, total: $0.count))
+                }
+               
+        } else {
+            return db.eventLoop.makeSucceededFuture(Domain.Page(items: [], metadata: Domain.PageMetadata(page: page, per: per, total: 0)))
+        }
+            
+            
+    }
 
     public func followersCount(selfGroup: Domain.Group.ID) -> EventLoopFuture<Int> {
         Following.query(on: db).filter(\.$target.$id == selfGroup.rawValue).count()
+    }
+    
+    public func watchingCount(selfGroup: Domain.Group.ID, selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        return LivePerformer.query(on: db)
+            .filter(\.$group.$id == selfGroup.rawValue)
+            .join(LiveLike.self, on: \LiveLike.$live.$id == \LivePerformer.$live.$id)
+            .join(Live.self, on: \Live.$id == \LivePerformer.$live.$id)
+            .filter(Live.self, \.$date < dateFormatter.string(from: Date()))
+            .filter(LiveLike.self, \.$user.$id == selfUser.rawValue)
+            .count()
     }
     
     public func followingGroupsCount(userId: Domain.User.ID) -> EventLoopFuture<Int> {
@@ -362,43 +430,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
                 Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    let isLiked = LiveLike.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == selfUser.rawValue)
-                        .count().map { $0 > 0 }
-                    let hasTicket = Ticket.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == selfUser.rawValue)
-                        .count().map { $0 > 0 }
-                    let likeCount = LiveLike.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-                    let participantCount = Ticket.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-                    let postCount = Post.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-
-                    return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).map { (
-                            $0.0.0.0.0,
-                            $0.0.0.0.1,
-                            $0.0.0.1,
-                            $0.0.1,
-                            $0.1,
-                            $1
-                        ) }
-                        .map {
-                            Domain.LiveFeed(
-                                live: $0,
-                                isLiked: $1,
-                                hasTicket: $2,
-                                likeCount: $3,
-                                participantCount: $4,
-                                postCount: $5
-                            )
-                        }
+                    Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
                 }
             }
     }
@@ -511,42 +543,49 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     }
     
     public func likedLive(
-        userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int
+        userId: Domain.User.ID, selfUser: Domain.User.ID, series: Domain.LiveSeries = .all, page: Int, per: Int
     ) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
     > {
-        Live.query(on: db)
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        let live = Live.query(on: db)
             .join(LiveLike.self, on: \LiveLike.$live.$id == \Live.$id)
             .filter(LiveLike.self, \.$user.$id == userId.rawValue)
-            .sort(\.$date, .descending)
-            .paginate(PageRequest(page: page, per: per))
-            .flatMap { [db] in
-                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    let isLiked = LiveLike.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == selfUser.rawValue)
-                        .count().map { $0 > 0 }
-                    let hasTicket = Ticket.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .filter(\.$user.$id == selfUser.rawValue)
-                        .count().map { $0 > 0 }
-                    let likeCount = LiveLike.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-                    let participantCount = Ticket.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-                    let postCount = Post.query(on: db)
-                        .filter(\.$live.$id == live.id!)
-                        .count()
-
-                    return Domain.Live.translate(fromPersistance: live, on: db)
-                        .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).map { ( $0.0.0.0.0, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
-                        .map {
-                            Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4, postCount: $5)
-                        }
+        switch series {
+        case .all:
+            return live
+                .sort(\.$date, .descending)
+                .paginate(PageRequest(page: page, per: per))
+                .flatMap { [db] in
+                    Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
+                        Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
+                    }
                 }
-            }
+        case .future:
+            return live
+                .filter(\.$date >= dateFormatter.string(from: Date()))
+                .sort(\.$date, .ascending)
+                .paginate(PageRequest(page: page, per: per))
+                .flatMap { [db] in
+                    Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
+                        Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
+                    }
+                }
+        case .past:
+            return live
+                .filter(\.$date < dateFormatter.string(from: Date()))
+                .sort(\.$date, .descending)
+                .paginate(PageRequest(page: page, per: per))
+                .flatMap { [db] in
+                    Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
+                        Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
+                    }
+                }
+        }
     }
     
     public func likeUserFeed(userId: Domain.User.ID, feedId: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
@@ -720,8 +759,27 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         PostLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
     }
     
-    public func userLikeLiveCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int> {
-        LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue).count()
+    public func userLikeLiveCount(selfUser: Domain.User.ID, type: Domain.LiveSeries = .all) -> EventLoopFuture<Int> {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        let like = LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue)
+        
+        switch type {
+        case .all: return like.count()
+        case .future:
+            return like
+                .join(Live.self, on: \Live.$id == \LiveLike.$live.$id)
+                .filter(Live.self, \.$date >= dateFormatter.string(from: Date()))
+                .count()
+        case .past:
+            return like
+                .join(Live.self, on: \Live.$id == \LiveLike.$live.$id)
+                .filter(Live.self, \.$date < dateFormatter.string(from: Date()))
+                .count()
+        }
     }
     
     public func getLiveLikedUsers(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.User>> {
@@ -737,5 +795,29 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                     Domain.User.translate(fromPersistance: $0.user, on: db)
                 }
             }
+    }
+    
+    public func getLikedLiveTransition(userId: Domain.User.ID) -> EventLoopFuture<Domain.LiveTransition> {
+        struct LikeCount: Codable {
+            let year: String
+            let uid: UUID
+            let like_count: Int
+        }
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYY"
+            return dateFormatter
+        }()
+        if let mysql = db as? SQLDatabase {
+            return mysql.raw("select substring(lives.date, 1, 4) as year, live_likes.user_id as uid, count(*) as like_count from live_likes inner join lives on live_likes.live_id = lives.id group by substring(lives.date, 1, 4), live_likes.user_id having year <= \"\(dateFormatter.string(from: Date()))\" and uid=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) order by year asc")
+                .all(decoding: LikeCount.self)
+                .flatMap { [db] (count: [LikeCount]) -> EventLoopFuture<LiveTransition> in
+                    let year = count.map { $0.year }
+                    let like_count = count.map { $0.like_count }
+                    return db.eventLoop.makeSucceededFuture(Domain.LiveTransition(yearLabel: year, liveParticipatingCount: like_count))
+                }
+        } else {
+            return db.eventLoop.makeSucceededFuture(Domain.LiveTransition(yearLabel: [], liveParticipatingCount: []))
+        }
     }
 }

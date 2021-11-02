@@ -58,6 +58,8 @@ public func setupMigration(
         
         UpdateLiveForPia(), AssociatePostWithLive(),
         UpdateLiveForDateTerm(),
+        
+        CreateRecentlyFollowing(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

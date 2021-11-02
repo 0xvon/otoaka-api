@@ -165,29 +165,8 @@ public class GroupRepository: Domain.GroupRepository {
         let groups = Group.query(on: db)
             .sort(\.$name, .ascending)
         return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
-                let isFollowing = Following.query(on: db)
-                    .filter(\.$user.$id == selfUser.rawValue)
-                    .filter(\.$target.$id == group.id!)
-                    .count().map { $0 > 0 }
-                let followersCount = Following.query(on: db)
-                    .filter(\.$target.$id == group.id!)
-                    .count()
-                return Domain.Group.translate(fromPersistance: group, on: db)
-                    .and(isFollowing)
-                    .and(followersCount)
-                    .map { (
-                        $0.0,
-                        $0.1,
-                        $1
-                    )}
-                    .map {
-                        Domain.GroupFeed(
-                            group: $0,
-                            isFollowing: $1,
-                            followersCount: $2
-                        )
-                    }
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.GroupFeed.translate(fromPersistance: $0, selfUser: selfUser, on: db)
             }
         }
     }
@@ -340,29 +319,8 @@ public class GroupRepository: Domain.GroupRepository {
     > {
         let lives = Group.query(on: db).filter(\.$name, .custom("LIKE"), "%\(query)%")
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { group in
-                let isFollowing = Following.query(on: db)
-                    .filter(\.$user.$id == selfUser.rawValue)
-                    .filter(\.$target.$id == group.id!)
-                    .count().map { $0 > 0 }
-                let followersCount = Following.query(on: db)
-                    .filter(\.$target.$id == group.id!)
-                    .count()
-                return Domain.Group.translate(fromPersistance: group, on: db)
-                    .and(isFollowing)
-                    .and(followersCount)
-                    .map { (
-                        $0.0,
-                        $0.1,
-                        $1
-                    )}
-                    .map {
-                        Domain.GroupFeed(
-                            group: $0,
-                            isFollowing: $1,
-                            followersCount: $2
-                        )
-                    }
+            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                Domain.GroupFeed.translate(fromPersistance: $0, selfUser: selfUser, on: db)
             }
         }
     }

@@ -108,13 +108,14 @@ public struct GetPendingRequestCount: EndpointProtocol {
 }
 
 public struct LiveDetail: Codable {
-    public init(live: Live, isLiked: Bool, participants: Int, likeCount: Int, ticket: Ticket?, postCount: Int) {
+    public init(live: Live, isLiked: Bool, participants: Int, likeCount: Int, ticket: Ticket?, postCount: Int, participatingFriends: [User]) {
         self.live = live
         self.isLiked = isLiked
         self.participants = participants
         self.likeCount = likeCount
         self.ticket = ticket
         self.postCount = postCount
+        self.participatingFriends = participatingFriends
     }
 
     public var live: Live
@@ -126,6 +127,7 @@ public struct LiveDetail: Codable {
     public var likeCount: Int
     public var ticket: Ticket?
     public var postCount: Int
+    public var participatingFriends: [User]
 }
 
 public struct GetLive: EndpointProtocol {

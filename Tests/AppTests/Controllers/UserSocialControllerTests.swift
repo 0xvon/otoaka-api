@@ -90,6 +90,7 @@ class UserSocialControllerTests: XCTestCase {
             let groupFeed = try XCTUnwrap(body.items.first)
             XCTAssertFalse(groupFeed.isFollowing)
             XCTAssertEqual(groupFeed.followersCount, 4)
+            XCTAssertGreaterThanOrEqual(groupFeed.watchingCount, 0)
         }
         
         try app.test(
@@ -516,6 +517,83 @@ class UserSocialControllerTests: XCTestCase {
         try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: headers) { res in
             let responseBody = try res.content.decode(GetLivePosts.Response.self)
             XCTAssertGreaterThanOrEqual(responseBody.items.count, 3)
+        }
+    }
+    
+    func testGetLikedLiveTransition() throws {
+        let user = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        let liveA = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: Date()))
+        let liveB = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: Date()))
+        let liveC = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: Date()))
+        let liveD = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: Date()))
+        for l in [liveA, liveB, liveC, liveD] { try appClient.like(live: l, with: user) }
+        
+        try app.test(.GET, "user_social/liked_live_transition?userId=\(user.user.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetLikedLiveTransition.Response.self)
+            XCTAssertEqual(responseBody.liveParticipatingCount.count, 1)
+            guard let liveParticipatingCount = responseBody.liveParticipatingCount.first else { return }
+            XCTAssertEqual(liveParticipatingCount, 4)
+        }
+    }
+    
+    func testFrequentlyWatchingGroups() throws {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        let date = Date()
+        let yesterday = date.addingTimeInterval(-60 * 60 * 24)
+        
+        let user = try appClient.createUser()
+        let userB = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let groupY = try appClient.createGroup(with: user)
+        let liveA = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: yesterday))
+        let liveB = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: yesterday))
+        let liveC = try appClient.createLive(hostGroup: group, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: yesterday))
+        let liveD = try appClient.createLive(hostGroup: groupY, style: .oneman(performer: group.id), with: user, date: dateFormatter.string(from: yesterday))
+        let liveE = try appClient.createLive(hostGroup: groupY, style: .oneman(performer: groupY.id), with: user, date: dateFormatter.string(from: yesterday))
+        let liveF = try appClient.createLive(hostGroup: groupY, style: .oneman(performer: groupY.id), with: user, date: dateFormatter.string(from: yesterday))
+        for l in [liveA, liveB, liveC, liveD, liveE, liveF] { try appClient.like(live: l, with: userB)}
+        
+        try app.test(.GET, "user_social/frequently_watching_groups?userId=\(userB.user.id)&per=100&page=1", headers: appClient.makeHeaders(for: user)) { res in
+            print(userB.user.id)
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.FrequentlyWatchingGroups.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+            XCTAssertEqual(responseBody.items[0].watchingCount, 4)
+            XCTAssertEqual(responseBody.items[1].watchingCount, 2)
+        }
+    }
+    
+    func testGetRecentlyFollowingGroups() throws {
+        let user = try appClient.createUser()
+        let groupA = try appClient.createGroup(with: user)
+        let groupB = try appClient.createGroup(with: user)
+        let groupC = try appClient.createGroup(with: user)
+        _ = try appClient.updateRecentlyFollowing(groups: [groupA.id, groupB.id, groupC.id], with: user)
+        
+        try app.test(.GET, "user_social/recently_following_groups/\(user.user.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode([GroupFeed].self)
+            XCTAssertEqual(responseBody.count, 3)
+        }
+        
+        _ = try appClient.updateRecentlyFollowing(groups: [groupA.id, groupB.id], with: user)
+        
+        try app.test(.GET, "user_social/recently_following_groups/\(user.user.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode([GroupFeed].self)
+            XCTAssertEqual(responseBody.count, 2)
+            XCTAssertFalse(responseBody.map { $0.group.id }.contains(groupC.id))
         }
     }
 }

@@ -105,19 +105,7 @@ public struct JoinGroup: EndpointProtocol {
 
 public struct GetGroup: EndpointProtocol {
     public typealias Request = Empty
-    public struct Response: Codable {
-        public init(group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int) {
-            self.group = group
-            self.isMember = isMember
-            self.isFollowing = isFollowing
-            self.followersCount = followersCount
-        }
-
-        public var group: Group
-        public var isMember: Bool
-        public var isFollowing: Bool
-        public var followersCount: Int
-    }
+    public typealias Response = GroupDetail
     public struct URI: CodableURL {
         @StaticPath("groups") public var prefix: Void
         @DynamicPath public var groupId: Group.ID
@@ -259,14 +247,32 @@ public struct GroupFeed: Codable {
     public var group: Group
     public var isFollowing: Bool
     public var followersCount: Int
+    public var watchingCount: Int
     
     public subscript<T>(dynamicMember keyPath: KeyPath<Group, T>) -> T {
         group[keyPath: keyPath]
     }
 
-    public init(group: Group, isFollowing: Bool, followersCount: Int) {
+    public init(group: Group, isFollowing: Bool, followersCount: Int, watchingCount: Int) {
         self.group = group
         self.isFollowing = isFollowing
         self.followersCount = followersCount
+        self.watchingCount = watchingCount
+    }
+}
+
+public struct GroupDetail: Codable {
+    public var group: Group
+    public var isMember: Bool
+    public var isFollowing: Bool
+    public var followersCount: Int
+    public var watchingCount: Int
+    
+    public init(group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int, watchingCount: Int) {
+        self.group = group
+        self.isMember = isMember
+        self.isFollowing = isFollowing
+        self.followersCount = followersCount
+        self.watchingCount = watchingCount
     }
 }

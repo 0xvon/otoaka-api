@@ -452,3 +452,19 @@ struct AssociatePostWithLive: Migration {
             .update()
     }
 }
+
+struct CreateRecentlyFollowing: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(RecentlyFollowing.schema)
+            .id()
+            .field("self_user_id", .uuid, .required)
+            .foreignKey("self_user_id", references: User.schema, .id)
+            .field("target_group_id", .uuid, .required)
+            .foreignKey("target_group_id", references: Group.schema, .id)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(RecentlyFollowing.schema).delete()
+    }
+}

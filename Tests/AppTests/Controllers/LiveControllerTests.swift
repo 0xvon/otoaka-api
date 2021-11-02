@@ -118,6 +118,8 @@ class LiveControllerTests: XCTestCase {
 
     func testGetLive() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        _ = try appClient.followUser(target: userB, with: user)
         let headers = appClient.makeHeaders(for: user)
         let hostGroup = try appClient.createGroup(with: user)
         var performers: [Endpoint.Group] = []
@@ -136,11 +138,15 @@ class LiveControllerTests: XCTestCase {
         
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: performers.map(\.id)), with: user)
+        _ = try appClient.like(live: live, with: userB)
 
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
             XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
+            XCTAssertEqual(responseBody.participatingFriends.count, 1)
+            guard let friend = responseBody.participatingFriends.first else { return }
+            XCTAssertEqual(friend.id, userB.user.id)
         }
     }
 
@@ -196,6 +202,7 @@ class LiveControllerTests: XCTestCase {
     
     func testSearchLive() throws {
         let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
+        let userB = try appClient.createUser()
         let group = try appClient.createGroup(with: user)
         let live = try appClient.createLive(hostGroup: group, with: user)
         

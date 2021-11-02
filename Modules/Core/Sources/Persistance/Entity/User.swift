@@ -134,6 +134,21 @@ final class Following: Model {
     init() {}
 }
 
+final class RecentlyFollowing: Model {
+    static let schema = "recently_followings"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Parent(key: "self_user_id")
+    var user: User
+
+    @Parent(key: "target_group_id")
+    var target: Group
+
+    init() {}
+}
+
 final class UserFollowing: Model {
     static let schema = "user_followings"
     

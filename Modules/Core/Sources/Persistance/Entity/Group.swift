@@ -239,3 +239,46 @@ extension Endpoint.ArtistFeedComment {
             }
     }
 }
+
+extension Endpoint.GroupFeed {
+    static func translate(fromPersistance entity: Group, selfUser: Domain.User.ID, on db: Database)-> EventLoopFuture<Endpoint.GroupFeed> {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "YYYYMMdd"
+            return dateFormatter
+        }()
+        
+        let isFollowing = Following.query(on: db)
+            .filter(\.$user.$id == selfUser.rawValue)
+            .filter(\.$target.$id == entity.id!)
+            .count().map { $0 > 0 }
+        let followersCount = Following.query(on: db)
+            .filter(\.$target.$id == entity.id!)
+            .count()
+        let watchingCount = LivePerformer.query(on: db)
+            .filter(\.$group.$id == entity.id!)
+            .join(LiveLike.self, on: \LiveLike.$live.$id == \LivePerformer.$live.$id)
+            .join(Live.self, on: \Live.$id == \LivePerformer.$live.$id)
+            .filter(Live.self, \.$date < dateFormatter.string(from: Date()))
+            .filter(LiveLike.self, \.$user.$id == selfUser.rawValue)
+            .count()
+        return Domain.Group.translate(fromPersistance: entity, on: db)
+            .and(isFollowing)
+            .and(followersCount)
+            .and(watchingCount)
+            .map { (
+                $0.0.0,
+                $0.0.1,
+                $0.1,
+                $1
+            )}
+            .map {
+                Domain.GroupFeed(
+                    group: $0,
+                    isFollowing: $1,
+                    followersCount: $2,
+                    watchingCount: $3
+                )
+            }
+    }
+}
