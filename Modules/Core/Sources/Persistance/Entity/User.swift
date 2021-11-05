@@ -83,6 +83,18 @@ final class User: Model {
     }
 }
 
+final class Username: Model {
+    static var schema: String = "usernames"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "username")
+    var username: String
+    
+    @Parent(key: "user_id")
+    var user: User
+}
+
 extension Endpoint.User {
     static func translate(fromPersistance entity: User, on db: Database) -> EventLoopFuture<Self> {
         let roleProperties: Endpoint.RoleProperties

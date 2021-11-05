@@ -247,7 +247,16 @@ struct UserSocialController: RouteCollection {
             let user = try req.auth.require(User.self)
             return repository.frequentlyWatchingGroups(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: IsUsernameExists.self, use: injectProvider { req, uri, repository in
+            return repository.isUsernameExists(username: uri.username)
+        })
+        try routes.on(endpoint: RegisterUsername.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(Domain.User.self)
+            let request = try req.content.decode(RegisterUsername.Request.self)
+            return repository.registerUsername(userId: user.id, username: request.username).map { Empty() }
+        })
     }
 }
 
 extension LiveTransition: Content {}
+extension IsUsernameExists.Response: Content {}

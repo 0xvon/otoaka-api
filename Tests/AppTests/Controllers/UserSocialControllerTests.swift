@@ -596,4 +596,37 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertFalse(responseBody.map { $0.group.id }.contains(groupC.id))
         }
     }
+    
+    func testUsername() throws {
+        let user = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: user
+        )
+        
+        // return false
+        try app.test(.GET, "user_social/username/hagehage", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let isExists = try res.content.decode(Bool.self)
+            XCTAssertFalse(isExists)
+        }
+        
+        let body = RegisterUsername.Request(username: "hagehage")
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(.POST, "user_social/username", headers: headers, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+        
+        try app.test(.GET, "user_social/username/hagehage", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let isExists = try res.content.decode(Bool.self)
+            XCTAssertTrue(isExists)
+        }
+        
+        let body2 = RegisterUsername.Request(username: "hagehage\(UUID.init().uuidString)")
+        let bodyData2 = try ByteBuffer(data: appClient.encoder.encode(body2))
+        
+        try app.test(.POST, "user_social/username", headers: headers, body: bodyData2) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
 }

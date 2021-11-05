@@ -20,6 +20,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case feedNotFound
         case notHavingLiveLike
         case notHavingUserFeedLike
+        case usernameAlreadyExists
     }
 
     public func follow(
@@ -818,6 +819,32 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 }
         } else {
             return db.eventLoop.makeSucceededFuture(Domain.LiveTransition(yearLabel: [], liveParticipatingCount: []))
+        }
+    }
+    
+    public func isUsernameExists(username: String) -> EventLoopFuture<Bool> {
+        Username.query(on: db)
+            .filter(\.$username == username)
+            .count()
+            .map { $0 > 0 }
+    }
+    
+    public func registerUsername(userId: Domain.User.ID, username: String) -> EventLoopFuture<Void> {
+        let precondition = self.isUsernameExists(username: username)
+            .flatMapThrowing {
+                guard !$0 else { throw Error.usernameAlreadyExists }
+                return
+            }
+        
+        return precondition.flatMap { [db] in
+            _ = Username.query(on: db)
+                .filter(\.$user.$id == userId.rawValue)
+                .delete()
+            
+            let new = Username()
+            new.$user.id = userId.rawValue
+            new.username = username
+            return new.create(on: db)
         }
     }
 }

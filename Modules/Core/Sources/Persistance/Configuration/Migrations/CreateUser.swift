@@ -468,3 +468,19 @@ struct CreateRecentlyFollowing: Migration {
         database.schema(RecentlyFollowing.schema).delete()
     }
 }
+
+struct CreateUsername: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Username.schema)
+            .id()
+            .field("username", .string, .required)
+            .field("user_id", .uuid, .required)
+            .foreignKey("user_id", references: User.schema, .id)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Username.schema)
+            .delete()
+    }
+}

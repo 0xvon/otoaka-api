@@ -619,3 +619,30 @@ public struct UnlikePost: EndpointProtocol {
     }
     public static let method: HTTPMethod = .post
 }
+
+public struct IsUsernameExists: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Bool
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "username") public var prefix: Void
+        @DynamicPath public var username: String
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+    
+}
+
+public struct RegisterUsername: EndpointProtocol {
+    public struct Request: Codable {
+        public let username: String
+        public init(username: String) {
+            self.username = username
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "username") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}

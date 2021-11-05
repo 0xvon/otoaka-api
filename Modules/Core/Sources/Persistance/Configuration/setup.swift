@@ -60,6 +60,8 @@ public func setupMigration(
         UpdateLiveForDateTerm(),
         
         CreateRecentlyFollowing(),
+        
+        CreateUsername(),
     ])
 
     try migrator.setupIfNeeded().flatMap {
