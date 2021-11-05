@@ -44,4 +44,22 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
+    
+    func testGetUserProfile() throws {
+        let user = try appClient.createUser()
+        let username = "userhoge\(UUID.init().uuidString)"
+        
+        let body = RegisterUsername.Request(username: username)
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(.POST, "user_social/username", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+        
+        try app.test(.GET, "public/user_profile/\(username)") { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetUserProfile.Response.self)
+            XCTAssertEqual(responseBody.user.id, user.user.id)
+        }
+    }
 }

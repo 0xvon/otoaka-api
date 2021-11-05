@@ -59,4 +59,5 @@ public protocol UserSocialRepository {
     func getLikedLiveTransition(userId: Domain.User.ID) -> EventLoopFuture<Domain.LiveTransition>
     func isUsernameExists(username: String) -> EventLoopFuture<Bool>
     func registerUsername(userId: Domain.User.ID, username: String) -> EventLoopFuture<Void>
+    func getUserByUsername(username: String) -> EventLoopFuture<Domain.User>
 }

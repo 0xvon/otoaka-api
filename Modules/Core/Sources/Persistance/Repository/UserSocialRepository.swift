@@ -21,6 +21,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         case notHavingLiveLike
         case notHavingUserFeedLike
         case usernameAlreadyExists
+        case userNotFound
     }
 
     public func follow(
@@ -846,5 +847,15 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             new.username = username
             return new.create(on: db)
         }
+    }
+    
+    public func getUserByUsername(username: String) -> EventLoopFuture<Domain.User> {
+        User.query(on: db)
+            .join(Username.self, on: \Username.$user.$id == \User.$id)
+            .filter(Username.self, \.$username == username)
+            .fields(for: User.self)
+            .first()
+            .unwrap(orError: Error.userNotFound)
+            .flatMap { [db] in  Domain.User.translate(fromPersistance: $0, on: db) }
     }
 }

@@ -1,10 +1,3 @@
-//
-//  OpenAPI.swift
-//  App
-//
-//  Created by Masato TSUTSUMI on 2021/11/05.
-//
-
 import Foundation
 
 public struct GetUserProfile: EndpointProtocol {
@@ -34,7 +27,7 @@ public struct GetUserProfile: EndpointProtocol {
         }
     }
     public struct URI: CodableURL {
-        @StaticPath("open", "user_profile") public var prefix: Void
+        @StaticPath("public", "user_profile") public var prefix: Void
         @DynamicPath public var username: String
         public init() {}
     }
