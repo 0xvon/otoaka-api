@@ -298,7 +298,7 @@ class UserControllerTests: XCTestCase {
         try app.test(.GET, "groups/\(group.id)/posts?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetGroupPosts.Response.self)
-            XCTAssertEqual(responseBody.items.count, 2)
+            XCTAssertGreaterThanOrEqual(responseBody.items.count, 2)
             XCTAssertTrue(responseBody.items.first!.live?.id == live.id)
         }
     }

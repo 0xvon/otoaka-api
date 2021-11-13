@@ -122,7 +122,8 @@ class AppClient {
     func createLive(
         hostGroup: Endpoint.Group, style: LiveStyleInput? = nil,
         with user: AppUser,
-        date: String = "20330101"
+        date: String = "20330101",
+        liveHouse: String = "somewhere_\(UUID.init().uuidString)"
     ) throws -> Endpoint.Live {
         let host = try createGroup(with: user)
         let battleStyle: LiveStyleInput = .battle(performers: [host.id, hostGroup.id])
@@ -130,6 +131,7 @@ class AppClient {
             $0.set(\.title, value: "DEAD POP FESTiVAL 2021")
             $0.set(\.hostGroupId, value: (style != nil) ? hostGroup.id : host.id)
             $0.set(\.date, value: date)
+            $0.set(\.liveHouse, value: liveHouse)
             $0.set(\.style, value: style ?? battleStyle)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))

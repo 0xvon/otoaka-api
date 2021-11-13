@@ -32,9 +32,6 @@ public struct CreateLiveUseCase: UseCase {
     }
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-//        guard case .artist = request.user.role else {
-//            return eventLoop.makeFailedFuture(Error.fanCannotCreateLive)
-//        }
         try validateInput(request: request)
         let input = request.input
 //        let precondition = groupRepository.isMember(
@@ -44,31 +41,42 @@ public struct CreateLiveUseCase: UseCase {
 //            guard $0 else { throw Error.isNotMemberOfHostGroup }
 //            return
 //        }
-        return liveRepository.create(input: input)
-        .flatMap { live in
-            switch live.style {
-            case .oneman(let performer):
-                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                return notificationService.publish(
-                    toGroupFollowers: performer.id, notification: notification
-                )
-                .map { live }
-            case .battle(let performers):
-                return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                    let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                    return notificationService.publish(
-                        toGroupFollowers: performer.id, notification: notification
-                    )
-                }, on: eventLoop)
-                .map { live }
-            case .festival(let performers):
-                return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                    let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                    return notificationService.publish(
-                        toGroupFollowers: performer.id, notification: notification
-                    )
-                }, on: eventLoop)
-                .map { live }
+        let live = liveRepository.getLive(date: input.date, liveHouse: input.liveHouse)
+        return live.flatMap { live in
+            if let live = live {
+                // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
+                return liveRepository.update(id: live.id, input: input)
+                    .flatMap { editted in
+                        liveRepository.updateStyle(id: live.id).map { editted }
+                    }
+            } else {
+                return liveRepository.create(input: input)
+                    .flatMap { live in
+                        switch live.style {
+                        case .oneman(let performer):
+                            let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
+                            return notificationService.publish(
+                                toGroupFollowers: performer.id, notification: notification
+                            )
+                            .map { live }
+                        case .battle(let performers):
+                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
+                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
+                                return notificationService.publish(
+                                    toGroupFollowers: performer.id, notification: notification
+                                )
+                            }, on: eventLoop)
+                            .map { live }
+                        case .festival(let performers):
+                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
+                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
+                                return notificationService.publish(
+                                    toGroupFollowers: performer.id, notification: notification
+                                )
+                            }, on: eventLoop)
+                            .map { live }
+                        }
+                    }
             }
         }
     }

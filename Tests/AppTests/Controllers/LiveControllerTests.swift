@@ -29,17 +29,41 @@ class LiveControllerTests: XCTestCase {
     func testCreateLive() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let createdGroup = try appClient.createGroup(with: user)
+        let liveHouse = "livehouse_\(UUID.init().uuidString)"
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: createdGroup.id)
             $0.set(\.style, value: .oneman(performer: createdGroup.id))
+            $0.set(\.liveHouse, value: liveHouse)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-
+        var created: Live!
         try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: bodyData) {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
             XCTAssertEqual(responseBody.title, body.title)
+            created = responseBody
+        }
+        
+        let anotherGroup = try appClient.createGroup(with: user)
+        let anotherBody = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.hostGroupId, value: anotherGroup.id)
+            $0.set(\.style, value: .oneman(performer: anotherGroup.id))
+            $0.set(\.liveHouse, value: liveHouse)
+        }
+        let anotherBodyData = try ByteBuffer(data: appClient.encoder.encode(anotherBody))
+        
+        try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: anotherBodyData) {
+            res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
+            XCTAssertEqual(responseBody.id, created.id)
+        }
+        
+        try app.test(.GET, "lives/\(created.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
+            XCTAssertEqual(Set([createdGroup.id, anotherGroup.id]), Set(responseBody.live.style.performers.map(\.id)))
         }
     }
 
@@ -108,6 +132,7 @@ class LiveControllerTests: XCTestCase {
             $0.set(\.hostGroupId, value: hostGroup.id)
             $0.set(
                 \.style, value: .battle(performers: [participatingGroup.id, participatingGroup.id]))
+            $0.set(\.liveHouse, value: "livehouse_\(UUID.init().uuidString)")
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 

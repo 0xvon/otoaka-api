@@ -54,6 +54,20 @@ public class LiveRepository: Domain.LiveRepository {
         }
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
     }
+    
+    public func updateStyle(id: Domain.Live.ID) -> EventLoopFuture<Void> {
+        let live = Live.find(id.rawValue, on: db)
+            .unwrap(orError: Error.liveNotFound)
+        let performerCount = LivePerformer.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .count()
+            .map { $0 > 1 }
+        
+        return live.and(performerCount).flatMap { [db] (live, isPlural) -> EventLoopFuture<Void> in
+            live.style = isPlural ? .festival : .oneman
+            return live.save(on: db)
+        }
+    }
 
     public func update(id: Domain.Live.ID, input: EditLive.Request)
         -> EventLoopFuture<Domain.Live>
@@ -178,6 +192,16 @@ public class LiveRepository: Domain.LiveRepository {
     public func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?> {
         Live.query(on: db)
             .filter(\.$piaEventCode == piaEventCode)
+            .first()
+            .optionalFlatMap { [db] in
+                Domain.Live.translate(fromPersistance: $0, on: db)
+            }
+    }
+    
+    public func getLive(date: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?> {
+        Live.query(on: db)
+            .filter(\.$date, .custom("LIKE"), "\(date ?? "hogehogehogehoge")")
+            .filter(\.$liveHouse, .custom("LIKE"), "%\(liveHouse ?? "hogehogehogehoge")%")
             .first()
             .optionalFlatMap { [db] in
                 Domain.Live.translate(fromPersistance: $0, on: db)
