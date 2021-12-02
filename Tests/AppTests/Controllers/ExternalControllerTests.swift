@@ -45,6 +45,16 @@ class ExternalControllerTests: XCTestCase {
         }
     }
     
+    func testSendNotification() throws {
+        let user = try appClient.createUser()
+        let body = Endpoint.SendNotification.Request(message: "こんにちは", segment: .all)
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(.POST, "external/notification", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+    }
+    
     func testGetUserProfile() throws {
         let user = try appClient.createUser()
         let username = "userhoge\(UUID.init().uuidString)"

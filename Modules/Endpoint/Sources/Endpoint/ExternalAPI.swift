@@ -232,6 +232,28 @@ public struct NotifyPastLives: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct SendNotification: EndpointProtocol {
+    public struct Request: Codable {
+        public let message: String
+        public let segment: Segment
+        
+        public init(message: String, segment: Segment? = .all) {
+            self.message = message
+            self.segment = segment ?? .all
+        }
+    }
+    public typealias Response = String
+    public struct URI: CodableURL {
+        @StaticPath("external", "notification") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
+}
+
+public enum Segment: String, Codable {
+    case all
+}
+
 public struct PiaApiGetResponseHeader: Codable, Equatable {
     public var getCount: Int
     public var startCount: Int

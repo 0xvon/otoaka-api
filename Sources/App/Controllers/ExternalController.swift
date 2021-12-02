@@ -47,6 +47,13 @@ struct ExternalController: RouteCollection {
             let useCase = NotifyUpcomingLivesUseCase(liveRepository: liveRepository, notificationService: notificationService, eventLoop: req.eventLoop)
             return try useCase(Empty())
         })
+        try routes.on(endpoint: Endpoint.SendNotification.self, use: injectProvider { req, uri, repository in
+            let userRepository = Persistance.UserRepository(db: req.db)
+            let notificationService = makePushNotificationService(request: req)
+            let input = try req.content.decode(Endpoint.SendNotification.Request.self)
+            let useCase = SendNotificationUseCase(repository: userRepository, notificationService: notificationService, eventLoop: req.eventLoop)
+            return try useCase(input)
+        })
         try routes.on(endpoint: Endpoint.NotifyPastLives.self, use: injectProvider { req, uri, repository in
             let liveRepository = Persistance.LiveRepository(db: req.db)
             let notificationService = makePushNotificationService(request: req)

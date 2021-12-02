@@ -74,3 +74,33 @@ public struct NotifyPastLivesUseCase: UseCase {
         .map { "ok" }
     }
 }
+
+public struct SendNotificationUseCase: UseCase {
+    public typealias Request = SendNotification.Request
+    public typealias Response = SendNotification.Response
+    
+    public let repository: UserRepository
+    public let notificationService: PushNotificationService
+    public let eventLoop: EventLoop
+    
+    public init(repository: UserRepository, notificationService: PushNotificationService, eventLoop: EventLoop) {
+        self.repository = repository
+        self.notificationService = notificationService
+        self.eventLoop = eventLoop
+    }
+    
+    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+        var users: EventLoopFuture<[User]>
+        switch request.segment {
+        case .all:
+            users = repository.all()
+        }
+        
+        return users.flatMap { users -> EventLoopFuture<Void> in
+            return EventLoopFuture<Void>.andAllSucceed(users.map {
+                notificationService.publish(to: $0.id, notification: PushNotification(message: request.message))
+            }, on: eventLoop)
+        }
+        .map { "ok" }
+    }
+}
