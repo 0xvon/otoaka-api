@@ -98,15 +98,37 @@ final class Username: Model {
 extension Endpoint.User {
     static func translate(fromPersistance entity: User, on db: Database) -> EventLoopFuture<Self> {
         let roleProperties: Endpoint.RoleProperties
+        let id = db.eventLoop.submit { try entity.requireID() }
+        let username = id.flatMap {
+            Username
+                .query(on: db)
+                .filter(\.$user.$id == $0)
+                .first()
+                .optionalMap { $0.username }
+        }
+        
         switch entity.role {
         case .artist:
             roleProperties = .artist(Endpoint.Artist(part: entity.part!))
         case .fan:
             roleProperties = .fan(Endpoint.Fan())
         }
-        return db.eventLoop.submit {
-            try Self.init(
-                id: ID(entity.requireID()), name: entity.name, biography: entity.biography, sex: entity.sex, age: entity.age, liveStyle: entity.liveStyle, residence: entity.residence, thumbnailURL: entity.thumbnailURL, role: roleProperties, twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)), instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)))
+        
+        return id.and(username).map { (id, username) -> Domain.User in
+            Domain.User(
+                id: ID(id),
+                name: entity.name,
+                username: username,
+                biography: entity.biography,
+                sex: entity.sex,
+                age: entity.age,
+                liveStyle: entity.liveStyle,
+                residence: entity.residence,
+                thumbnailURL: entity.thumbnailURL,
+                role: roleProperties,
+                twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)),
+                instagramUrl: entity.instagramUrl.flatMap(URL.init(string:))
+            )
         }
     }
 }

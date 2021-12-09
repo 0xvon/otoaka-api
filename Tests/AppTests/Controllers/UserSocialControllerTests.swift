@@ -258,9 +258,9 @@ class UserSocialControllerTests: XCTestCase {
         let userD = try appClient.createUser()
         _ = try appClient.createUser()
         _ = try appClient.createUser()
-        
+
         _ = try appClient.followUser(target: userB, with: userA)
-        
+
         try app.test(
             .GET,
             "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
@@ -275,9 +275,9 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertTrue(uids.contains(userC.user.id))
             XCTAssertTrue(uids.contains(userD.user.id))
         }
-        
+
         _ = try appClient.blockUser(target: userD, with: userA)
-        
+
         try app.test(
             .GET,
             "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
@@ -291,9 +291,9 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertFalse(uids.contains(userD.user.id))
             XCTAssertTrue(uids.contains(userC.user.id))
         }
-        
+
         _ = try appClient.blockUser(target: userA, with: userC)
-        
+
         try app.test(
             .GET,
             "user_social/recommended_users/\(userA.user.id)?page=1&per=10000000",
@@ -626,6 +626,7 @@ class UserSocialControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
             let decoded = try res.content.decode(User.self)
             XCTAssertEqual(user.user.id, decoded.id)
+            XCTAssertEqual(id, decoded.username)
         }
         
         let body2 = RegisterUsername.Request(username: "hagehage\(UUID.init().uuidString)")

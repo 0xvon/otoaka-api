@@ -154,6 +154,7 @@ class AuthenticationTests: XCTestCase {
             let newUser = Endpoint.User(
                 id: .init(UUID()),
                 name: input.name,
+                username: nil,
                 biography: input.biography,
                 sex: try! Stub.make(),
                 age: try! Stub.make(),

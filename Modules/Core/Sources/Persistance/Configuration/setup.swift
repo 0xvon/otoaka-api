@@ -22,7 +22,8 @@ public func setup(
     else {
         fatalError("Invalid database url: \(secrets.databaseURL)")
     }
-    databases.use(.mysql(configuration: config), as: .mysql, isDefault: true)
+    databases.use(.mysql(configuration: config, connectionPoolTimeout: .minutes(1)), as: .mysql, isDefault: true)
+    
 }
 
 public func setupMigration(

@@ -51,6 +51,7 @@ public struct User: Codable, Identifiable, Equatable {
     public typealias ID = Identifier<Self>
     public var id: ID
     public var name: String
+    public var username: String?
     public var biography: String?
     public var sex: String?
     public var age: Int?
@@ -62,10 +63,11 @@ public struct User: Codable, Identifiable, Equatable {
     public var instagramUrl: URL?
 
     public init(
-        id: ID, name: String, biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        id: ID, name: String, username: String?, biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.id = id
         self.name = name
+        self.username = username
         self.biography = biography
         self.sex = sex
         self.age = age
