@@ -599,27 +599,33 @@ class UserSocialControllerTests: XCTestCase {
     
     func testUsername() throws {
         let user = try appClient.createUser()
-        let headers = appClient.makeHeaders(for: user
-        )
+        let headers = appClient.makeHeaders(for: user)
+        let id = "hagehage_\(UUID.init().uuidString)"
         
         // return false
-        try app.test(.GET, "user_social/username/hagehage", headers: headers) { res in
+        try app.test(.GET, "user_social/username/\(id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let isExists = try res.content.decode(Bool.self)
             XCTAssertFalse(isExists)
         }
         
-        let body = RegisterUsername.Request(username: "hagehage")
+        let body = RegisterUsername.Request(username: id)
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         
         try app.test(.POST, "user_social/username", headers: headers, body: bodyData) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
         
-        try app.test(.GET, "user_social/username/hagehage", headers: headers) { res in
+        try app.test(.GET, "user_social/username/\(id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let isExists = try res.content.decode(Bool.self)
             XCTAssertTrue(isExists)
+        }
+        
+        try app.test(.GET, "user_social/username/get/\(id)", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let decoded = try res.content.decode(User.self)
+            XCTAssertEqual(user.user.id, decoded.id)
         }
         
         let body2 = RegisterUsername.Request(username: "hagehage\(UUID.init().uuidString)")

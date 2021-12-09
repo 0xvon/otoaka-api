@@ -255,6 +255,9 @@ struct UserSocialController: RouteCollection {
             let request = try req.content.decode(RegisterUsername.Request.self)
             return repository.registerUsername(userId: user.id, username: request.username).map { Empty() }
         })
+        try routes.on(endpoint: Endpoint.GetUserByUsername.self, use: injectProvider { req, uri, repository in
+            return repository.getUserByUsername(username: uri.username)
+        })
     }
 }
 

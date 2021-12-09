@@ -646,3 +646,14 @@ public struct RegisterUsername: EndpointProtocol {
     }
     public static var method: HTTPMethod = .post
 }
+
+public struct GetUserByUsername: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = User
+    public struct URI: CodableURL {
+        @StaticPath("user_social", "username", "get") public var prefix: Void
+        @DynamicPath public var username: String
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
