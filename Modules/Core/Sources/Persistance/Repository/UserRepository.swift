@@ -487,12 +487,14 @@ public class UserRepository: Domain.UserRepository {
     public func search(query: String, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
     > {
-        let lives = User.query(on: db)
+        let users = User.query(on: db)
+            .join(Username.self, on: \User.$id == \Username.$user.$id, method: .left)
             .group(.or) {
                 $0.filter(\.$name, .custom("LIKE"), "%\(query)%")
                     .filter(\.$biography, .custom("LIKE"), "%\(query)%")
+                    .filter(Username.self, \.$username, .custom("LIKE"), "%\(query)%")
             }
-        return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+        return users.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.User.translate(fromPersistance: $0, on: db)
             }
