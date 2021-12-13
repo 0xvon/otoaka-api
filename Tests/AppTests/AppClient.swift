@@ -84,25 +84,6 @@ class AppClient {
         }
         return createdGroup
     }
-    
-    func createGroupAsMaster(body: CreateGroup.Request = try! Stub.make()) throws
-        -> Endpoint.Group
-    {
-        let user = try createUser()
-        let headers = makeHeaders(for: user)
-        
-        let bodyData = try ByteBuffer(data: encoder.encode(body))
-        var createdGroup: Endpoint.Group!
-        try app.test(
-            .POST,
-            "external/create_group",
-            headers: headers,
-            body: bodyData
-        ) { res in
-            createdGroup = try res.content.decode(CreateGroupAsMaster.Response.self)
-        }
-        return createdGroup
-    }
 
     func createInvitation(group: Endpoint.Group, with user: AppUser) throws
         -> Endpoint.InviteGroup.Invitation

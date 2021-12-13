@@ -145,62 +145,6 @@ public struct EditLiveUseCase: UseCase {
     }
 }
 
-public struct FetchLiveUseCase: UseCase {
-    public typealias Request = CreateLive.Request
-    public typealias Response = Live
-
-    public let liveRepository: LiveRepository
-    public let notificationService: PushNotificationService
-    public let eventLoop: EventLoop
-
-    public init(
-        liveRepository: LiveRepository,
-        notificationService: PushNotificationService,
-        eventLoop: EventLoop
-    ) {
-        self.liveRepository = liveRepository
-        self.notificationService = notificationService
-        self.eventLoop = eventLoop
-    }
-
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        let live = liveRepository.getLive(by: request.piaEventCode!)
-        return live.flatMap { live -> EventLoopFuture<Response> in
-            if let live = live {
-                return liveRepository.update(id: live.id, input: request)
-            } else {
-                return liveRepository.create(input: request)
-                    .flatMap { live in
-                        switch live.style {
-                        case .oneman(let performer):
-                            let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                            return notificationService.publish(
-                                toGroupFollowers: performer.id, notification: notification
-                            )
-                            .map { live }
-                        case .battle(let performers):
-                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                return notificationService.publish(
-                                    toGroupFollowers: performer.id, notification: notification
-                                )
-                            }, on: eventLoop)
-                            .map { live }
-                        case .festival(let performers):
-                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                return notificationService.publish(
-                                    toGroupFollowers: performer.id, notification: notification
-                                )
-                            }, on: eventLoop)
-                            .map { live }
-                        }
-                    }
-            }
-        }
-    }
-}
-
 public struct ReserveLiveTicketUseCase: UseCase {
     public typealias Request = (
         liveId: Live.ID,

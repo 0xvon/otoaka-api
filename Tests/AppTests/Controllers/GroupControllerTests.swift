@@ -100,7 +100,6 @@ class GroupControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let createdGroup = try appClient.createGroup(with: user)
-        let createdGroupAsMaster = try appClient.createGroupAsMaster()
         let live = try appClient.createLive(hostGroup: createdGroup, style: .oneman(performer: createdGroup.id), with: user, date: "20010101")
         _ = try appClient.like(live: live, with: user)
 
@@ -109,12 +108,6 @@ class GroupControllerTests: XCTestCase {
             let response = try res.content.decode(GetGroup.Response.self)
             XCTAssertTrue(response.isMember)
             XCTAssertEqual(response.watchingCount, 1)
-        }
-        
-        try app.test(.GET, "groups/\(createdGroupAsMaster.id)", headers: headers) { res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let response = try res.content.decode(GetGroup.Response.self)
-            XCTAssertFalse(response.isMember)
         }
     }
 
