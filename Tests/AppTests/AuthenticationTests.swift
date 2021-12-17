@@ -181,7 +181,7 @@ class AuthenticationTests: XCTestCase {
     func testIntegratedHTTPRequests() throws {
         let client = Auth0Client(app)
         let dummyUserName = UUID().uuidString
-        let dummyEmail = "dummy@example.com"
+        let dummyEmail = "\(dummyUserName)@example.com"
         let dummyUser = try client.createToken(userName: dummyUserName)
         defer { try! client.destroyUser(id: dummyUser.sub).wait() }
 
