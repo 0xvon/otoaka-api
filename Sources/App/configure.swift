@@ -10,7 +10,6 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsSecretAccessKey: String { get }
     var awsRegion: String { get }
     var snsPlatformApplicationArn: String { get }
-    var cognitoUserPoolId: String { get }
     var auth0Domain: String { get }
 }
 
@@ -26,7 +25,6 @@ struct EnvironmentSecrets: Secrets {
         self.awsSecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
-        self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
         self.auth0Domain = require("AUTH0_DOMAIN")
         self.databaseURL = require("DATABASE_URL")
     }
@@ -34,7 +32,6 @@ struct EnvironmentSecrets: Secrets {
     let awsSecretAccessKey: String
     let awsRegion: String
     let snsPlatformApplicationArn: String
-    let cognitoUserPoolId: String
     var auth0Domain: String
     let databaseURL: String
 }
