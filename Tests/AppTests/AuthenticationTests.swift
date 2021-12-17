@@ -37,20 +37,14 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testVerifyJWT() throws {
-        let client = Auth0Client()
-//        let client = CognitoClient()
+        let client = Auth0Client(app)
         let authenticator = try JWTAuthenticator()
         let dummyUserName = UUID().uuidString
-        let dummyEmail = "\(dummyUserName)@example.com"
-        
-        client.createToken(userName: dummyUserName, callback: { user in
-            let payload = try! authenticator.verifyJWT(token: user.token)
-            XCTAssertEqual(payload.email, dummyEmail)
-
-        })
-//        defer { try! client.destroyUser(userName: dummyUserName).wait() }
-        
-            }
+        let dummyUser = try client.createToken(userName: dummyUserName)
+        defer { try! client.destroyUser(id: dummyUser.sub).wait() }
+        let payload = try authenticator.verifyJWT(token: dummyUser.token)
+        XCTAssertEqual(payload.sub.value, dummyUser.sub)
+    }
 
     class InMemoryUserRepository: Domain.UserRepository {
         func all() -> EventLoopFuture<[User]> {
@@ -185,16 +179,16 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testIntegratedHTTPRequests() throws {
-        let client = CognitoClient()
+        let client = Auth0Client(app)
         let dummyUserName = UUID().uuidString
-        let dummyEmail = "\(dummyUserName)@example.com"
-        let dummyUser = try client.createToken(userName: dummyUserName).wait()
-        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+        let dummyEmail = "dummy@example.com"
+        let dummyUser = try client.createToken(userName: dummyUserName)
+        defer { try! client.destroyUser(id: dummyUser.sub).wait() }
 
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
             _ = try! repo.create(
-                cognitoId: dummyUser.sub, cognitoUsername: dummyUserName,
+                cognitoId: dummyUser.sub, cognitoUsername: dummyUser.sub,
                 email: dummyEmail, input: Stub.make()
             )
             .wait()

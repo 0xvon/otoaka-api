@@ -13,7 +13,7 @@ class UserControllerTests: XCTestCase {
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))
-        appClient = AppClient(application: app, cognito: CognitoClient())
+        appClient = AppClient(application: app, authClient: Auth0Client(app))
     }
 
     override func tearDown() {
@@ -24,10 +24,10 @@ class UserControllerTests: XCTestCase {
         try app.test(.POST, "users/signup") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
-        let client = CognitoClient()
+        let client = Auth0Client(app)
         let dummyCognitoUserName = UUID().uuidString
-        let dummyUser = try client.createToken(userName: dummyCognitoUserName).wait()
-        defer { try! client.destroyUser(userName: dummyCognitoUserName).wait() }
+        let dummyUser = try client.createToken(userName: dummyCognitoUserName)
+        defer { try! client.destroyUser(id: dummyUser.sub).wait() }
 
         var headers = HTTPHeaders()
         headers.add(name: .authorization, value: "Bearer \(dummyUser.token)")

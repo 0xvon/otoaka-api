@@ -23,8 +23,8 @@ class JWTAuthenticator: BearerAuthenticator {
     ) throws {
         self.userRepositoryFactory = userRepositoryFactory
 //        issuer = "https://cognito-idp.\(awsRegion).amazonaws.com/\(cognitoUserPoolId)"
-        self.issuer = auth0Domain
-        let jwkURL = URL(string: "\(issuer)/.well-known/jwks.json")!
+        self.issuer = "\(auth0Domain)/"
+        let jwkURL = URL(string: "\(issuer).well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
         signer = JWTSigners()
         try signer.use(jwks: jwks)
@@ -34,12 +34,12 @@ class JWTAuthenticator: BearerAuthenticator {
         enum CodingKeys: String, CodingKey {
             case sub
             case iss
-            case email
+//            case email
             case exp
         }
         let sub: SubjectClaim
         let iss: IssuerClaim
-        let email: String
+//        let email: String
         let exp: ExpirationClaim
         func verify(using _: JWTSigner) throws {
             try exp.verifyNotExpired()
@@ -68,7 +68,7 @@ class JWTAuthenticator: BearerAuthenticator {
         let payload = try signer.verify(token, as: Payload.self)
         guard payload.iss.value == issuer else {
             throw JWTError.claimVerificationFailure(
-                name: "iss", reason: "Token not provided by Cognito")
+                name: "iss", reason: "Token not provided by Auth0")
         }
         return payload
     }

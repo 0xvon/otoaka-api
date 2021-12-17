@@ -3,19 +3,19 @@ import StubKit
 import Vapor
 
 class AppUser {
-    private let cognito: CognitoClient
+    private let authClient: Auth0Client
     private let userName: String
     let token: String
     let user: User
 
-    init(userName: String, cognito: CognitoClient, token: String, user: User) {
+    init(userName: String, authClient: Auth0Client, token: String, user: User) {
         self.userName = userName
-        self.cognito = cognito
+        self.authClient = authClient
         self.token = token
         self.user = user
     }
     deinit {
-        try! cognito.destroyUser(userName: userName).wait()
+        try! authClient.destroyUser(id: "auth0|\(userName)").wait()
     }
 }
 
@@ -27,10 +27,10 @@ class AppClient {
     }()
 
     private let app: Application
-    private let cognito: CognitoClient
-    init(application: Application, cognito: CognitoClient) {
+    private let authClient: Auth0Client
+    init(application: Application, authClient: Auth0Client) {
         self.app = application
-        self.cognito = cognito
+        self.authClient = authClient
     }
 
     func makeHeaders(for user: AppUser) -> HTTPHeaders {
@@ -48,7 +48,7 @@ class AppClient {
         name: String = UUID().uuidString,
         role: RoleProperties = .artist(Artist(part: "vocal"))
     ) throws -> AppUser {
-        let user = try! cognito.createToken(userName: name).wait()
+        let user = try! authClient.createToken(userName: name)
         let headers = makeHeaders(for: user.token)
         let body = Endpoint.Signup.Request(
             name: name,
@@ -67,7 +67,7 @@ class AppClient {
         try app.test(.POST, "users/signup", headers: headers, body: bodyData) { res in
             let response = try res.content.decode(Signup.Response.self)
             appUser = AppUser(
-                userName: name, cognito: cognito,
+                userName: name, authClient: authClient,
                 token: user.token, user: response
             )
         }
