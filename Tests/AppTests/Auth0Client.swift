@@ -49,6 +49,7 @@ class Auth0Client {
             grant_type: "password",
             username: userName,
             password: tempPassword,
+            scope: "openid profile email",
             client_id: clientId,
             client_secret: clientSecret,
             audience: "\(domain)/api/v2/"
@@ -91,7 +92,7 @@ struct LoginRequest: Codable {
     let grant_type: String
     let username: String
     let password: String
-//    let scope: String
+    let scope: String
     let client_id: String
     let client_secret: String
     let audience: String

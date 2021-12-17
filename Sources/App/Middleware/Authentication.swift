@@ -32,12 +32,12 @@ class JWTAuthenticator: BearerAuthenticator {
         enum CodingKeys: String, CodingKey {
             case sub
             case iss
-//            case email
+            case email
             case exp
         }
         var sub: SubjectClaim
         let iss: IssuerClaim
-//        let email: String
+        let email: String?
         let exp: ExpirationClaim
         
         func verify(using _: JWTSigner) throws {
