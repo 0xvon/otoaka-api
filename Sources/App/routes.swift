@@ -27,10 +27,7 @@ func routes(_ app: Application) throws {
     
     let secrets = app.secrets
     let loginTried = try app.routes
-        .grouped(
-            JWTAuthenticator(
-                awsRegion: secrets.awsRegion,
-                cognitoUserPoolId: secrets.cognitoUserPoolId))
+        .grouped(JWTAuthenticator(auth0Domain: secrets.auth0Domain))
     try loginTried.register(collection: UserController())
     let signedUp = loginTried.grouped(User.guardMiddleware())
     try signedUp.register(collection: GroupController())

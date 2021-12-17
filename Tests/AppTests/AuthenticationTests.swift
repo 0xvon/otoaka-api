@@ -14,8 +14,7 @@ extension JWTAuthenticator {
     ) throws {
         let secrets = EnvironmentSecrets()
         try self.init(
-            awsRegion: secrets.awsRegion,
-            cognitoUserPoolId: secrets.cognitoUserPoolId,
+            auth0Domain: secrets.auth0Domain,
             userRepositoryFactory: userRepositoryFactory
         )
     }
@@ -38,15 +37,20 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testVerifyJWT() throws {
-        let client = CognitoClient()
+        let client = Auth0Client()
+//        let client = CognitoClient()
         let authenticator = try JWTAuthenticator()
         let dummyUserName = UUID().uuidString
         let dummyEmail = "\(dummyUserName)@example.com"
-        let dummyUser = try client.createToken(userName: dummyUserName).wait()
-        defer { try! client.destroyUser(userName: dummyUserName).wait() }
-        let payload = try authenticator.verifyJWT(token: dummyUser.token)
-        XCTAssertEqual(payload.email, dummyEmail)
-    }
+        
+        client.createToken(userName: dummyUserName, callback: { user in
+            let payload = try! authenticator.verifyJWT(token: user.token)
+            XCTAssertEqual(payload.email, dummyEmail)
+
+        })
+//        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+        
+            }
 
     class InMemoryUserRepository: Domain.UserRepository {
         func all() -> EventLoopFuture<[User]> {

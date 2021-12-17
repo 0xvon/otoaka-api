@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "1.38.0"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
@@ -34,6 +35,7 @@ let package = Package(
                 .product(name: "Endpoint", package: "Endpoint"),
                 .product(name: "LoggingDiscord", package: "LoggingDiscord"),
                 .product(name: "SotoCognitoIdentityProvider", package: "soto"),
+                .product(name: "Auth0", package: "Auth0.swift")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -48,6 +50,7 @@ let package = Package(
             .product(name: "XCTVapor", package: "vapor"),
             .product(name: "SotoCognitoIdentityProvider", package: "soto"),
             .product(name: "StubKit", package: "StubKit"),
+            .product(name: "Auth0", package: "Auth0.swift")
         ]),
     ]
 )
