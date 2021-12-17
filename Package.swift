@@ -23,7 +23,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.4.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.3.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
+<<<<<<< HEAD
         .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
+=======
+>>>>>>> c569d8f... Auth0Client test
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),

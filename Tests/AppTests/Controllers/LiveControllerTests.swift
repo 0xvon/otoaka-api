@@ -13,7 +13,7 @@ class LiveControllerTests: XCTestCase {
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
         XCTAssertNoThrow(try configure(app))
-        appClient = AppClient(application: app, cognito: CognitoClient())
+        appClient = AppClient(application: app, authClient: Auth0Client(app))
     }
 
     override func tearDown() {

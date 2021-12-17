@@ -22,7 +22,7 @@ func provideDiscordLoggerFactory() -> ((_ label: String) -> DiscordLogHandler)? 
         )
     }
 }
-
+//
 //LoggingSystem.bootstrap { label in
 //    var logHandler = StreamLogHandler.standardOutput(label: label)
 //    logHandler.logLevel = .debug
