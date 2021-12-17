@@ -11,6 +11,7 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsRegion: String { get }
     var snsPlatformApplicationArn: String { get }
     var cognitoUserPoolId: String { get }
+    var auth0Domain: String { get }
 }
 
 struct EnvironmentSecrets: Secrets {
@@ -26,6 +27,7 @@ struct EnvironmentSecrets: Secrets {
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
         self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
+        self.auth0Domain = require("AUTH0_DOMAIN")
         self.databaseURL = require("DATABASE_URL")
     }
     let awsAccessKeyId: String
@@ -33,6 +35,7 @@ struct EnvironmentSecrets: Secrets {
     let awsRegion: String
     let snsPlatformApplicationArn: String
     let cognitoUserPoolId: String
+    var auth0Domain: String
     let databaseURL: String
 }
 
@@ -72,10 +75,7 @@ public func configure(_ app: Application) throws {
     )
     try Persistance.setupMigration(
         migrator: app.migrator,
-        migrations: app.migrations,
-        cognitoUserMigrator: {
-            UserPoolMigrator_20210213(awsClient: app.awsClient, userPoolId: secrets.cognitoUserPoolId).migrateUsers(users: $0)
-        }
+        migrations: app.migrations
     )
     try routes(app)
 }
