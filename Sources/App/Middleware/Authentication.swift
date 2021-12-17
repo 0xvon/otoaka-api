@@ -79,7 +79,7 @@ public func convertToCognitoUsername(_ sub: String) -> String {
         .replacingOccurrences(of: "|", with: "_")
         .replacingOccurrences(of: "apple", with: "SignInWithApple")
         .replacingOccurrences(of: "facebook", with: "Facebook")
-        .replacingOccurrences(of: "google-oauth2", with: "google")
+        .replacingOccurrences(of: "google-oauth2", with: "Google")
         .replacingOccurrences(of: "auth0_", with: "")
 }
 
