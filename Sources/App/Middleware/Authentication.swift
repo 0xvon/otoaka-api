@@ -15,14 +15,12 @@ class JWTAuthenticator: BearerAuthenticator {
     private let userRepositoryFactory: (Request) -> Domain.UserRepository
 
     init(
-//        awsRegion: String, cognitoUserPoolId: String,
         auth0Domain: String,
         userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
             Persistance.UserRepository(db: $0.db)
         }
     ) throws {
         self.userRepositoryFactory = userRepositoryFactory
-//        issuer = "https://cognito-idp.\(awsRegion).amazonaws.com/\(cognitoUserPoolId)"
         self.issuer = "\(auth0Domain)/"
         let jwkURL = URL(string: "\(issuer).well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
@@ -37,10 +35,11 @@ class JWTAuthenticator: BearerAuthenticator {
 //            case email
             case exp
         }
-        let sub: SubjectClaim
+        var sub: SubjectClaim
         let iss: IssuerClaim
 //        let email: String
         let exp: ExpirationClaim
+        
         func verify(using _: JWTSigner) throws {
             try exp.verifyNotExpired()
         }
@@ -65,13 +64,23 @@ class JWTAuthenticator: BearerAuthenticator {
     }
 
     func verifyJWT(token: String) throws -> Payload {
-        let payload = try signer.verify(token, as: Payload.self)
+        var payload = try signer.verify(token, as: Payload.self)
+        payload.sub.value = convertToCognitoUsername(payload.sub.value)
         guard payload.iss.value == issuer else {
             throw JWTError.claimVerificationFailure(
                 name: "iss", reason: "Token not provided by Auth0")
         }
         return payload
     }
+}
+
+public func convertToCognitoUsername(_ sub: String) -> String {
+    return sub
+        .replacingOccurrences(of: "|", with: "_")
+        .replacingOccurrences(of: "apple", with: "SignInWithApple")
+        .replacingOccurrences(of: "facebook", with: "Facebook")
+        .replacingOccurrences(of: "google-oauth2", with: "google")
+        .replacingOccurrences(of: "auth0_", with: "")
 }
 
 extension Domain.User: Authenticatable {}

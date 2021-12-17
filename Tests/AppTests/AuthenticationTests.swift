@@ -44,7 +44,7 @@ class AuthenticationTests: XCTestCase {
         let dummyUser = try client.createToken(userName: dummyUserName)
         defer { try! client.destroyUser(id: dummyUser.sub).wait() }
         let payload = try authenticator.verifyJWT(token: dummyUser.token)
-        XCTAssertEqual(payload.sub.value, dummyUser.sub)
+        XCTAssertEqual(payload.sub.value, convertToCognitoUsername(dummyUser.sub))
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
@@ -189,7 +189,7 @@ class AuthenticationTests: XCTestCase {
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
             _ = try! repo.create(
-                cognitoId: dummyUser.sub, cognitoUsername: dummyUser.sub,
+                cognitoId: convertToCognitoUsername(dummyUser.sub), cognitoUsername: convertToCognitoUsername(dummyUser.sub),
                 email: dummyEmail, input: Stub.make()
             )
             .wait()
