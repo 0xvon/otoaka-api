@@ -250,11 +250,6 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .filter(\.$user.$id == selfUser.rawValue)
             .filter(\.$target.$id == targetUser.rawValue)
             .first()
-        _ = UserNotification.query(on: db)
-            .filter(\.$followedBy.$id == selfUser.rawValue)
-            .filter(\.$user.$id == targetUser.rawValue)
-            .all()
-            .flatMap { [db] in $0.delete(force: true, on: db) }
         let precondition = following.flatMapThrowing { following -> UserFollowing in
             guard let following = following else {
                 throw Error.notFollowing
@@ -263,6 +258,13 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
         return precondition.flatMap { [db] following in
             following.delete(force: true, on: db)
+        }
+        .flatMap { [db] in
+            UserNotification.query(on: db)
+                .filter(\.$followedBy.$id == selfUser.rawValue)
+                .filter(\.$user.$id == targetUser.rawValue)
+                .all()
+                .flatMap { [db] in $0.delete(force: true, on: db) }
         }
     }
 
@@ -299,14 +301,20 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             .filter(\.$target.$id == target.rawValue)
             .count().map { $0 > 0 }
         
-        _ = isFollowing.flatMapThrowing { isFollowing in
-                if isFollowing { _ = self.unfollowUser(selfUser: selfUser, targetUser: target) }
+        let unfollow = isFollowing.flatMap { isFollowing -> EventLoopFuture<Void> in
+                if isFollowing {
+                    return self.unfollowUser(selfUser: selfUser, targetUser: target)
+                } else {
+                    return self.db.eventLoop.makeSucceededFuture(())
+                }
             }
-        return precondition.flatMap { [db] _ in
-            let blocking = UserBlocking()
-            blocking.$user.id = selfUser.rawValue
-            blocking.$target.id = target.rawValue
-            return blocking.save(on: db)
+        return unfollow.flatMap { [db] _ in
+            precondition.flatMap { [db] _ in
+                let blocking = UserBlocking()
+                blocking.$user.id = selfUser.rawValue
+                blocking.$target.id = target.rawValue
+                return blocking.save(on: db)
+            }
         }
     }
 
