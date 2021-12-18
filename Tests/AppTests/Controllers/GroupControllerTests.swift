@@ -17,6 +17,8 @@ class GroupControllerTests: XCTestCase {
 
     override func tearDown() {
         app.shutdown()
+        app = nil
+        appClient = nil
     }
 
     func testUpdateGroup() throws {
