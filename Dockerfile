@@ -31,7 +31,7 @@ COPY . .
 
 # Build everything, with optimizations and test discovery
 RUN --mount=type=cache,target=/build/.build \
-  swift build --enable-test-discovery -c release -Xswiftc -g
+  swift build -c release -Xswiftc -g
 
 # Switch to the staging area
 WORKDIR /staging
