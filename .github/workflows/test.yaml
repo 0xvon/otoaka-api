@@ -18,9 +18,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: .build
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          key: ${{ runner.os }}-spm-v2-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-
+            ${{ runner.os }}-spm-v2
       - name: Install swiftenv
         run: |
           git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
