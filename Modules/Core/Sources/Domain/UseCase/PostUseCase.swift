@@ -8,7 +8,7 @@
 import Foundation
 import NIO
 
-public struct CreatePostUserCase: UseCase {
+public struct CreatePostUserCase: LegacyUseCase {
     public typealias Request = (
         user: User, input: CreatePost.Request
     )
@@ -37,7 +37,7 @@ public struct CreatePostUserCase: UseCase {
     }
 }
 
-public struct DeletePostUseCase: UseCase {
+public struct DeletePostUseCase: LegacyUseCase {
     public typealias Request = (
         postId: Post.ID,
         userId: User.ID
@@ -68,7 +68,7 @@ public struct DeletePostUseCase: UseCase {
 }
 
 
-public struct AddPostCommentUseCase: UseCase {
+public struct AddPostCommentUseCase: LegacyUseCase {
     public typealias Request = (
         user: User, input: AddPostComment.Request
     )

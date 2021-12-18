@@ -22,7 +22,7 @@ public struct NotifyUpcomingLivesUseCase: UseCase {
         self.eventLoop = eventLoop
     }
     
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func callAsFunction(_ request: Request) async throws -> Response {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "YYYYMMdd"
@@ -31,14 +31,17 @@ public struct NotifyUpcomingLivesUseCase: UseCase {
         let date = Date()
         let tomorrow = date.addingTimeInterval(60 * 60 * 24)
         
-        let lives = liveRepository.search(date: dateFormatter.string(from: tomorrow))
-        return lives.flatMap { lives -> EventLoopFuture<Void> in
-            return EventLoopFuture<Void>.andAllSucceed(lives.map {
-                notificationService.publish(toLiveLikedUsers: $0.id, notification: PushNotification(message: "\($0.title)の前日です")
-                )
-            }, on: eventLoop)
+        let lives = try await liveRepository.search(date: dateFormatter.string(from: tomorrow)).get()
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for live in lives {
+                group.addTask {
+                    let notification = PushNotification(message: "\(live.title)の前日です")
+                    try await notificationService.publish(toLiveLikedUsers: live.id, notification: notification).get()
+                }
+            }
+            try await group.waitForAll()
         }
-        .map { "ok" }
+        return "ok"
     }
 }
 
@@ -56,7 +59,7 @@ public struct NotifyPastLivesUseCase: UseCase {
         self.eventLoop = eventLoop
     }
     
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func callAsFunction(_ request: Request) async throws -> Response {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "YYYYMMdd"
@@ -64,14 +67,17 @@ public struct NotifyPastLivesUseCase: UseCase {
         }()
         let date = Date()
         
-        let lives = liveRepository.search(date: dateFormatter.string(from: date))
-        return lives.flatMap { lives -> EventLoopFuture<Void> in
-            return EventLoopFuture<Void>.andAllSucceed(lives.map {
-                notificationService.publish(toLiveLikedUsers: $0.id, notification: PushNotification(message: "\($0.title)の感想を書こう！行けなかった人はみんなの感想を見て一緒に余韻に浸ろう！")
-                )
-            }, on: eventLoop)
+        let lives = try await liveRepository.search(date: dateFormatter.string(from: date)).get()
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for live in lives {
+                group.addTask {
+                    let notification = PushNotification(message: "\(live.title)の感想を書こう！行けなかった人はみんなの感想を見て一緒に余韻に浸ろう！")
+                    try await notificationService.publish(toLiveLikedUsers: live.id, notification: notification).get()
+                }
+            }
+            try await group.waitForAll()
         }
-        .map { "ok" }
+        return "ok"
     }
 }
 
@@ -89,18 +95,21 @@ public struct SendNotificationUseCase: UseCase {
         self.eventLoop = eventLoop
     }
     
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        var users: EventLoopFuture<[User]>
+    public func callAsFunction(_ request: Request) async throws -> Response {
+        var users: [User]
         switch request.segment {
         case .all:
-            users = repository.all()
+            users = try await repository.all().get()
         }
-        
-        return users.flatMap { users -> EventLoopFuture<Void> in
-            return EventLoopFuture<Void>.andAllSucceed(users.map {
-                notificationService.publish(to: $0.id, notification: PushNotification(message: request.message))
-            }, on: eventLoop)
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for user in users {
+                group.addTask {
+                    try await notificationService.publish(to: user.id, notification: PushNotification(message: request.message)).get()
+                }
+            }
+            try await group.waitForAll()
         }
-        .map { "ok" }
+        return "ok"
     }
 }

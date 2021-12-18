@@ -1,7 +1,7 @@
 import Foundation
 import NIO
 
-public struct DeleteUserFeedUseCase: UseCase {
+public struct DeleteUserFeedUseCase: LegacyUseCase {
     public typealias Request = (id: UserFeed.ID, user: User.ID)
     public typealias Response = Void
 
@@ -33,7 +33,7 @@ public struct DeleteUserFeedUseCase: UseCase {
     }
 }
 
-public struct CreateUserFeedUseCase: UseCase {
+public struct CreateUserFeedUseCase: LegacyUseCase {
     public typealias Request = (
         user: User, input: CreateUserFeed.Request
     )
