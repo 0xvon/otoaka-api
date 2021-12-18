@@ -1,6 +1,14 @@
 // swift-tools-version:5.2
 import PackageDescription
 
+// Disable availability checking to use concurrency API on macOS for development purpose
+// SwiftNIO exposes concurrency API with availability for deployment environment,
+// but in our use case, the deployment target is Linux, and we only use macOS while development,
+// so it's always safe to disable the checking in this situation.
+let swiftSettings: [SwiftSetting] = [
+    .unsafeFlags(["-Xfrontend", "-disable-availability-checking"])
+]
+
 let package = Package(
     name: "rocket-api",
     platforms: [
@@ -40,7 +48,7 @@ let package = Package(
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
-            ]
+            ] + swiftSettings
         ),
         .target(name: "Run", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [
@@ -48,6 +56,6 @@ let package = Package(
             .product(name: "XCTVapor", package: "vapor"),
             .product(name: "SotoCognitoIdentityProvider", package: "soto"),
             .product(name: "StubKit", package: "StubKit"),
-        ]),
+        ], swiftSettings: swiftSettings),
     ]
 )

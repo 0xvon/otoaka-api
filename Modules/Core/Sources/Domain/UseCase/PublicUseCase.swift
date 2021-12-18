@@ -9,7 +9,7 @@ import Foundation
 import Endpoint
 import NIO
 
-public struct GetUserProfileUseCase: UseCase {
+public struct GetUserProfileUseCase: LegacyUseCase {
     public typealias Request = String
     public typealias Response = GetUserProfile.Response
     public let eventLoop: EventLoop

@@ -24,6 +24,18 @@ extension RoutesBuilder {
                 try closure(req, Endpoint.URI.decode(from: req))
             })
     }
+
+    func on<Endpoint: EndpointProtocol>(
+        endpoint _: Endpoint.Type,
+        use closure: @escaping (Request, Endpoint.URI) async throws -> Endpoint.Response
+    ) throws where Endpoint.Response: AsyncResponseEncodable {
+        let (pathComponents, _) = try Endpoint.URI.placeholder()
+        self.on(
+            Endpoint.method.vaporize, pathComponents.map(PathComponent.init(stringLiteral:)),
+            use: { req in
+                try await closure(req, Endpoint.URI.decode(from: req))
+            })
+    }
 }
 
 extension CodableURL {

@@ -1,6 +1,10 @@
 // swift-tools-version:5.2
 import PackageDescription
 
+let swiftSettings: [SwiftSetting] = [
+    .unsafeFlags(["-Xfrontend", "-disable-availability-checking"])
+]
+
 let package = Package(
     name: "Core",
     platforms: [
@@ -24,20 +28,20 @@ let package = Package(
             .product(name: "NIO", package: "swift-nio"),
             .target(name: "Domain"),
             .product(name: "SotoSNS", package: "soto"),
-        ]),
+        ], swiftSettings: swiftSettings),
         .target(name: "Persistance", dependencies: [
             .product(name: "FluentKit", package: "fluent-kit"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "FluentMySQLDriver", package: "fluent-mysql-driver"),
             .target(name: "Domain"),
-        ]),
+        ], swiftSettings: swiftSettings),
         .target(name: "Domain", dependencies: [
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "Endpoint", package: "Endpoint"),
-        ]),
+        ], swiftSettings: swiftSettings),
         .testTarget(name: "DomainTests", dependencies: [
             .target(name: "Domain"),
             .product(name: "StubKit", package: "StubKit"),
-        ]),
+        ], swiftSettings: swiftSettings),
     ]
 )

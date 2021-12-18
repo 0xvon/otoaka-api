@@ -1,7 +1,7 @@
 import Foundation
 import NIO
 
-public struct CreateLiveUseCase: UseCase {
+public struct CreateLiveUseCase: LegacyUseCase {
     public typealias Request = (
         user: User, input: Endpoint.CreateLive.Request
     )
@@ -96,7 +96,7 @@ public struct CreateLiveUseCase: UseCase {
     }
 }
 
-public struct EditLiveUseCase: UseCase {
+public struct EditLiveUseCase: LegacyUseCase {
     public typealias Request = (
         id: Live.ID, user: User, input: EditLive.Request
     )
@@ -145,7 +145,7 @@ public struct EditLiveUseCase: UseCase {
     }
 }
 
-public struct ReserveLiveTicketUseCase: UseCase {
+public struct ReserveLiveTicketUseCase: LegacyUseCase {
     public typealias Request = (
         liveId: Live.ID,
         user: User
