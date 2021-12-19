@@ -114,11 +114,19 @@ public struct LiveDetail: Codable {
         self.likeCount = likeCount
         self.postCount = postCount
         self.participatingFriends = participatingFriends
+        
+        self.participants = 0
+        self.ticket = nil
     }
 
     public var live: Live
     public var isLiked: Bool
+    public var hasTicket: Bool {
+        ticket != nil
+    }
+    public var participants: Int
     public var likeCount: Int
+    public var ticket: Ticket?
     public var postCount: Int
     public var participatingFriends: [User]
 }
