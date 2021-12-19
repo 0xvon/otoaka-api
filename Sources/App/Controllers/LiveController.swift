@@ -95,7 +95,7 @@ struct LiveController: RouteCollection {
             notificationService: notificationService,
             eventLoop: req.eventLoop
         )
-        return try await useCase((user: user, input: input)).get()
+        return try await useCase((user: user, input: input))
     }
 
     func edit(req: Request, uri: EditLive.URI, repository: Domain.LiveRepository) async throws
@@ -109,7 +109,7 @@ struct LiveController: RouteCollection {
             groupRepository: groupRepository,
             liveRepository: repository, eventLoop: req.eventLoop
         )
-        return try await useCase((id: uri.id, user: user, input: input)).get()
+        return try await useCase((id: uri.id, user: user, input: input))
     }
 
     func reserveTicket(req: Request, uri: ReserveTicket.URI, repository: Domain.LiveRepository)
@@ -119,7 +119,7 @@ struct LiveController: RouteCollection {
         let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.ReserveTicket.Request.self)
         let useCase = ReserveLiveTicketUseCase(liveRepository: repository, eventLoop: req.eventLoop)
-        try await useCase((liveId: input.liveId, user: user)).get()
+        try await useCase((liveId: input.liveId, user: user))
         return Empty()
     }
 
