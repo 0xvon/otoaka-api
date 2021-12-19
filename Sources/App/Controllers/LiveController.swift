@@ -23,7 +23,7 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                guard let liveDetail = try await repository.getLiveDetail(by: uri.liveId, selfUserId: user.id).get() else { throw Abort(.notFound, stackTrace: nil) }
+                let liveDetail = try await repository.getLiveDetail(by: uri.liveId, selfUserId: user.id)
                 return liveDetail
             })
         try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(reserveTicket))
@@ -32,7 +32,7 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(Endpoint.RefundTicket.Request.self)
-                try await repository.refundTicket(liveId: input.liveId, user: user.id).get()
+                try await repository.refundTicket(liveId: input.liveId, user: user.id)
                 return Empty()
             })
         try routes.on(
@@ -44,26 +44,26 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetPendingRequestCount.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                let pendingCount = try await repository.getPendingRequestCount(for: user.id).get()
+                let pendingCount = try await repository.getPendingRequestCount(for: user.id)
                 return GetPendingRequestCount.Response(pendingRequestCount: pendingCount)
             })
         try routes.on(
             endpoint: Endpoint.GetGroupLives.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.get(selfUser: user.id, page: uri.page, per: uri.per, group: uri.groupId).get()
+                return try await repository.get(selfUser: user.id, page: uri.page, per: uri.per, group: uri.groupId)
             })
         try routes.on(
             endpoint: Endpoint.SearchLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.search(selfUser: user.id, query: uri.term, groupId: uri.groupId, fromDate: uri.fromDate, toDate: uri.toDate, page: uri.page, per: uri.per).get()
+                return try await repository.search(selfUser: user.id, query: uri.term, groupId: uri.groupId, fromDate: uri.fromDate, toDate: uri.toDate, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetMyTickets.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.getUserTickets(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per).get()
+                return try await repository.getUserTickets(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetLiveParticipants.self,
@@ -139,7 +139,7 @@ struct LiveController: RouteCollection {
         req: Request, uri: GetPerformanceRequests.URI, repository: Domain.LiveRepository
     ) async throws -> GetPerformanceRequests.Response {
         let user = try req.auth.require(Domain.User.self)
-        return try await repository.getRequests(for: user.id, page: uri.page, per: uri.per).get()
+        return try await repository.getRequests(for: user.id, page: uri.page, per: uri.per)
     }
 }
 
