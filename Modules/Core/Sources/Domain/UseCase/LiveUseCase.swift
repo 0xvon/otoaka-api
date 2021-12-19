@@ -1,7 +1,7 @@
 import Foundation
 import NIO
 
-public struct CreateLiveUseCase: LegacyUseCase {
+public struct CreateLiveUseCase: UseCase {
     public typealias Request = (
         user: User, input: Endpoint.CreateLive.Request
     )
@@ -31,53 +31,36 @@ public struct CreateLiveUseCase: LegacyUseCase {
         self.eventLoop = eventLoop
     }
 
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func callAsFunction(_ request: Request) async throws -> Response {
         try validateInput(request: request)
         let input = request.input
-//        let precondition = groupRepository.isMember(
-//            of: input.hostGroupId, member: request.user.id
-//        )
-//        .flatMapThrowing {
-//            guard $0 else { throw Error.isNotMemberOfHostGroup }
-//            return
-//        }
-        let live = liveRepository.getLive(date: input.date, liveHouse: input.liveHouse)
-        return live.flatMap { live in
-            if let live = live {
-                // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
-                return liveRepository.update(id: live.id, input: input)
-                    .flatMap { editted in
-                        liveRepository.updateStyle(id: live.id).map { editted }
-                    }
-            } else {
-                return liveRepository.create(input: input)
-                    .flatMap { live in
-                        switch live.style {
-                        case .oneman(let performer):
+        if let live = try await liveRepository.getLive(date: input.date, liveHouse: input.liveHouse).get() {
+            // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
+            let editted = try await liveRepository.update(id: live.id, input: input).get()
+            try await liveRepository.updateStyle(id: live.id).get()
+            return editted
+        } else {
+            let created = try await liveRepository.create(input: input).get()
+            switch created.style {
+            case .oneman(let performer):
+                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
+                try await notificationService.publish(
+                    toGroupFollowers: performer.id, notification: notification
+                ).get()
+            case .battle(let performers), .festival(let performers):
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    for performer in performers {
+                        group.addTask {
                             let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                            return notificationService.publish(
+                            try await notificationService.publish(
                                 toGroupFollowers: performer.id, notification: notification
-                            )
-                            .map { live }
-                        case .battle(let performers):
-                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                return notificationService.publish(
-                                    toGroupFollowers: performer.id, notification: notification
-                                )
-                            }, on: eventLoop)
-                            .map { live }
-                        case .festival(let performers):
-                            return EventLoopFuture<Void>.andAllSucceed(performers.map { performer in
-                                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                                return notificationService.publish(
-                                    toGroupFollowers: performer.id, notification: notification
-                                )
-                            }, on: eventLoop)
-                            .map { live }
+                            ).get()
                         }
                     }
+                    try await group.waitForAll()
+                }
             }
+            return created
         }
     }
 
@@ -96,7 +79,7 @@ public struct CreateLiveUseCase: LegacyUseCase {
     }
 }
 
-public struct EditLiveUseCase: LegacyUseCase {
+public struct EditLiveUseCase: UseCase {
     public typealias Request = (
         id: Live.ID, user: User, input: EditLive.Request
     )
@@ -122,12 +105,10 @@ public struct EditLiveUseCase: LegacyUseCase {
         self.eventLoop = eventLoop
     }
 
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func callAsFunction(_ request: Request) async throws -> Response {
 //        guard case .artist = request.user.role else {
 //            return eventLoop.makeFailedFuture(Error.fanCannotEditLive)
 //        }
-        let live = liveRepository.getLiveDetail(by: request.id, selfUserId: request.user.id)
-            .unwrap(orError: Error.liveNotFound)
 //        let precondition = live.map(\.live.hostGroup).flatMap { hostGroup in
 //            groupRepository.isMember(
 //                of: hostGroup.id, member: request.user.id
@@ -138,14 +119,11 @@ public struct EditLiveUseCase: LegacyUseCase {
 //            return
 //        }
 
-        return live.flatMap { _ in
-            liveRepository.update(
-                id: request.id, input: request.input)
-        }
+        return try await liveRepository.update(id: request.id, input: request.input).get()
     }
 }
 
-public struct ReserveLiveTicketUseCase: LegacyUseCase {
+public struct ReserveLiveTicketUseCase: UseCase {
     public typealias Request = (
         liveId: Live.ID,
         user: User
@@ -168,7 +146,7 @@ public struct ReserveLiveTicketUseCase: LegacyUseCase {
         self.eventLoop = eventLoop
     }
 
-    public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        return liveRepository.reserveTicket(liveId: request.liveId, user: request.user.id)
+    public func callAsFunction(_ request: Request) async throws -> Response {
+        return try await liveRepository.reserveTicket(liveId: request.liveId, user: request.user.id).get()
     }
 }

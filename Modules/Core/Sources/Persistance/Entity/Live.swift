@@ -260,8 +260,9 @@ extension Domain.LiveFeed {
             .filter(\.$live.$id == entity.id!)
             .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
             .fields(for: LiveLike.self)
+            .with(\LiveLike.$user)
             .all()
-            .flatMapEach(on: db.eventLoop) { [db] in $0.$user.get(on: db).flatMap { [db] in Domain.User.translate(fromPersistance: $0, on: db) } }
+            .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
 
         return Domain.Live.translate(fromPersistance: entity, on: db)
             .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
