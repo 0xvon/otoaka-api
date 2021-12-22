@@ -1,0 +1,16 @@
+#!/bin/bash
+
+project_dir="$(cd "$(dirname $0)"/.. && pwd)"
+
+packages=(
+  $project_dir
+  $project_dir/Modules/Core
+  $project_dir/Modules/DomainEntity
+  $project_dir/Modules/Endpoint
+  $project_dir/Modules/LoggingDiscord
+)
+
+for package in ${packages[@]}
+do
+  swift package --package-path $package _format
+done
