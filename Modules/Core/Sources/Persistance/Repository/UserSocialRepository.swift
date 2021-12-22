@@ -148,7 +148,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
 
     public func frequentlyWatchingGroups(
         userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int
-    ) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>> {
+    ) async throws -> Domain.Page<Domain.GroupFeed> {
         // ここだけGroupFeedの情報がselfUserじゃなくてuserIdに紐付いている
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
@@ -161,25 +161,40 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
 
         if let mysql = db as? SQLDatabase {
-            return mysql.raw(
+            let watchingCounts = try await mysql.raw(
                 "select live_performers.group_id as group_id, count(*) as watching_count from live_performers inner join live_likes on live_performers.live_id = live_likes.live_id and live_likes.user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) inner join lives on lives.id = live_likes.live_id and lives.date < \"\(dateFormatter.string(from: Date()))\" group by live_performers.group_id order by watching_count desc limit \(String(per)) offset \(String((page - 1) * per))"
             )
-            .all(decoding: WatchingCount.self)
-            .flatMapEach(on: db.eventLoop) { [db] in
-                Group.find($0.group_id, on: db).unwrap(orError: Error.groupNotFound).flatMap {
-                    group in
-                    GroupFeed.translate(fromPersistance: group, selfUser: userId, on: db)
+            .all(decoding: WatchingCount.self).get()
+
+            let items = try await withOrderedTaskGroup(
+                of: (Domain.GroupFeed).self, returning: [Domain.GroupFeed].self
+            ) { [db] group in
+                var items: [Domain.GroupFeed] = []
+                for watchingCount in watchingCounts {
+                    group.addTask {
+                        guard let group = try await Group.find(watchingCount.group_id, on: db).get()
+                        else {
+                            throw Error.groupNotFound
+                        }
+                        let feed = try await GroupFeed.translate(
+                            fromPersistance: group, selfUser: userId, on: db
+                        ).get()
+                        return feed
+                    }
                 }
+                for try await feed in group {
+                    items.append(feed)
+                }
+                return items
             }
-            .flatMapThrowing {
-                Domain.Page<GroupFeed>(
-                    items: $0, metadata: Domain.PageMetadata(page: page, per: per, total: $0.count))
-            }
+            return Domain.Page<GroupFeed>(
+                items: items,
+                metadata: Domain.PageMetadata(page: page, per: per, total: items.count))
 
         } else {
-            return db.eventLoop.makeSucceededFuture(
-                Domain.Page(
-                    items: [], metadata: Domain.PageMetadata(page: page, per: per, total: 0)))
+            // FIXME: Should be unreachable and proven by type system
+            return Domain.Page(
+                items: [], metadata: Domain.PageMetadata(page: page, per: per, total: 0))
         }
 
     }

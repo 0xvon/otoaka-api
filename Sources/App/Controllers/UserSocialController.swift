@@ -3,7 +3,7 @@ import Foundation
 import Persistance
 import Vapor
 
-private func injectProvider<T, URI>(
+private func legacyInjectProvider<T, URI>(
     _ handler: @escaping (Request, URI, Domain.UserSocialRepository) throws -> T
 )
     -> ((Request, URI) throws -> T)
@@ -14,11 +14,22 @@ private func injectProvider<T, URI>(
     }
 }
 
+private func injectProvider<T, URI>(
+    _ handler: @escaping (Request, URI, Domain.UserSocialRepository) async throws -> T
+)
+    -> ((Request, URI) async throws -> T)
+{
+    return { req, uri in
+        let repository = Persistance.UserSocialRepository(db: req.db)
+        return try await handler(req, uri, repository)
+    }
+}
+
 struct UserSocialController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(
             endpoint: FollowGroup.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(FollowGroup.Request.self)
                 return repository.follow(selfUser: user.id, targetGroup: input.id)
@@ -26,7 +37,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UpdateRecentlyFollowing.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UpdateRecentlyFollowing.Request.self)
                 return repository.updateRecentlyFollowing(selfUser: user.id, groups: input.groups)
@@ -34,7 +45,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UnfollowGroup.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnfollowGroup.Request.self)
                 return repository.unfollow(selfUser: user.id, targetGroup: input.id)
@@ -42,25 +53,25 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: GroupFollowers.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 repository.followers(selfGroup: uri.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: FollowingGroups.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.followings(
                     userId: uri.id, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: RecentlyFollowingGroups.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.recentlyFollowingGroups(userId: uri.id, selfUser: user.id)
             })
         try routes.on(
             endpoint: FollowUser.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(FollowUser.Request.self)
                 let notificationService = makePushNotificationService(request: req)
@@ -73,7 +84,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UnfollowUser.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnfollowUser.Request.self)
                 return repository.unfollowUser(selfUser: user.id, targetUser: input.id)
@@ -81,17 +92,17 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UserFollowers.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 repository.userFollowers(selfUser: uri.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: FollowingUsers.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 repository.followingUsers(selfUser: uri.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: BlockUser.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(BlockUser.Request.self)
                 return repository.block(selfUser: user.id, target: input.id)
@@ -99,7 +110,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UnblockUser.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnblockUser.Request.self)
                 return repository.unblock(selfUser: user.id, target: input.id)
@@ -107,58 +118,58 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: RecommendedUsers.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 return repository.recommendedUsers(selfUser: user, page: uri.page, per: uri.per)
             }
         )
         try routes.on(
             endpoint: GetUpcomingLives.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.upcomingLives(
                     userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetFollowingGroupFeeds.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.followingGroupFeeds(userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetFollowingUserFeeds.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.followingUserFeeds(userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetAllUserFeeds.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.allUserFeeds(selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetLikedUserFeeds.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.likedUserFeeds(selfUser: uri.userId, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: LikeLive.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(LikeLive.Request.self)
                 return repository.likeLive(userId: user.id, liveId: input.liveId).map { Empty() }
             })
         try routes.on(
             endpoint: UnlikeLive.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnlikeLive.Request.self)
                 return repository.unlikeLive(userId: user.id, liveId: input.liveId).map { Empty() }
             })
         try routes.on(
             endpoint: Endpoint.GetLikedLive.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.likedLive(
                     userId: uri.userId, selfUser: user.id, series: .past, page: uri.page,
@@ -166,7 +177,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: Endpoint.GetLikedFutureLive.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.likedLive(
                     userId: uri.userId, selfUser: user.id, series: .future, page: uri.page,
@@ -174,7 +185,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: LikeUserFeed.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(LikeUserFeed.Request.self)
                 let notificationService = makePushNotificationService(request: req)
@@ -191,7 +202,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UnlikeUserFeed.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnlikeUserFeed.Request.self)
                 return repository.unlikeUserFeed(userId: user.id, feedId: input.feedId).map {
@@ -200,30 +211,30 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: GetAllPosts.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 return repository.allPosts(userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetLikedPosts.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.likedPosts(userId: uri.userId, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetTrendPosts.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 return repository.trendPosts(userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetFollowingPosts.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 return repository.followingPosts(userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: LikePost.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(LikePost.Request.self)
                 let notificationService = makePushNotificationService(request: req)
@@ -243,37 +254,37 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: UnlikePost.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(UnlikePost.Request.self)
                 return repository.unlikePost(userId: user.id, postId: input.postId).map { Empty() }
             })
         try routes.on(
             endpoint: GetLiveLikedUsers.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.getLiveLikedUsers(
                     liveId: uri.liveId, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetLikedLiveTransition.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.getLikedLiveTransition(userId: uri.userId)
             })
         try routes.on(
             endpoint: FrequentlyWatchingGroups.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
-                return repository.frequentlyWatchingGroups(
+                return try await repository.frequentlyWatchingGroups(
                     userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: IsUsernameExists.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.isUsernameExists(username: uri.username)
             })
         try routes.on(
             endpoint: RegisterUsername.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let request = try req.content.decode(RegisterUsername.Request.self)
                 return repository.registerUsername(userId: user.id, username: request.username).map
@@ -281,7 +292,7 @@ struct UserSocialController: RouteCollection {
             })
         try routes.on(
             endpoint: Endpoint.GetUserByUsername.self,
-            use: injectProvider { req, uri, repository in
+            use: legacyInjectProvider { req, uri, repository in
                 return repository.getUserByUsername(username: uri.username)
             })
     }

@@ -13,7 +13,7 @@ public protocol UserSocialRepository {
     func recentlyFollowingGroups(userId: User.ID, selfUser: User.ID) -> EventLoopFuture<[GroupFeed]>
     func frequentlyWatchingGroups(
         userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int
-    ) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>>
+    ) async throws -> Domain.Page<Domain.GroupFeed>
     func followers(selfGroup: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<User>>
     func followers(selfGroup: Group.ID) -> EventLoopFuture<[User.ID]>
     func isFollowing(selfUser: User.ID, targetGroup: Group.ID) -> EventLoopFuture<Bool>

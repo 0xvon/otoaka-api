@@ -26,7 +26,7 @@ public struct GetUserProfileUseCase: UseCase {
         async let transition = userSocialRepository.getLikedLiveTransition(userId: user.id).get()
         async let frequentlyWatchingGroups = userSocialRepository.frequentlyWatchingGroups(
             userId: user.id, selfUser: user.id, page: 1, per: 50
-        ).get().items
+        ).items
         async let recentlyFollowingGroups = userSocialRepository.recentlyFollowingGroups(
             userId: user.id, selfUser: user.id
         ).get()
