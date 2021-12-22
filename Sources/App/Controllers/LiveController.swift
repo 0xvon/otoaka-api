@@ -70,9 +70,13 @@ struct LiveController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let groupRepository = makeGroupRepository(request: req)
-                guard let live = try await repository.getLive(by: uri.liveId).get() else { throw Abort(.notFound, stackTrace: nil) }
-                guard try await groupRepository.isMember(of: live.hostGroup.id, member: user.id).get() else { throw Abort(.badRequest, stackTrace: nil) }
-                
+                guard let live = try await repository.getLive(by: uri.liveId).get() else {
+                    throw Abort(.notFound)
+                }
+                guard try await groupRepository.isMember(of: live.hostGroup.id, member: user.id).get() else {
+                    throw Abort(.badRequest)
+                }
+
                 return try await repository.getParticipants(liveId: live.id, page: uri.page, per: uri.per).get()
             })
         try routes.on(endpoint: GetLivePosts.self, use: injectProvider { req, uri, repository in
