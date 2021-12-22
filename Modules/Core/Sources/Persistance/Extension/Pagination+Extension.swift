@@ -21,7 +21,7 @@ extension Endpoint.Page {
         // The `item` is captured by coroutine frame due to coroutine splitting, but the
         // frame's lifetime is upper bounded by the caller frame.
         let items = try await withoutActuallyEscaping(item) { escapedItem in
-            try await withThrowingTaskGroup(of: Item.self) { group -> [Item] in
+            try await withOrderedTaskGroup(of: Item.self) { group -> [Item] in
                 for pageItem in page.items {
                     group.addTask {
                         return try await escapedItem(pageItem)
