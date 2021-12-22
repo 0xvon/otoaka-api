@@ -103,21 +103,26 @@ struct GroupController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(groupId: uri.groupId, page: uri.page, per: uri.per)
             })
-        try routes.on(endpoint: Endpoint.GetGroupPosts.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(User.self)
-            return repository.getGroupPosts(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
-        })
+        try routes.on(
+            endpoint: Endpoint.GetGroupPosts.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.getGroupPosts(
+                    groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
+            })
         try routes.on(
             endpoint: Endpoint.GetGroupsUserFeeds.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
-                return repository.getGroupUserFeeds(groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
+                return repository.getGroupUserFeeds(
+                    groupId: uri.groupId, userId: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.SearchGroup.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
-                return repository.search(query: uri.term, selfUser: user.id, page: uri.page, per: uri.per)
+                return repository.search(
+                    query: uri.term, selfUser: user.id, page: uri.page, per: uri.per)
             })
     }
 
@@ -133,11 +138,13 @@ struct GroupController: RouteCollection {
         let isFollowing = userSocialRepository.isFollowing(
             selfUser: user.id, targetGroup: uri.groupId)
         let followersCount = userSocialRepository.followersCount(selfGroup: uri.groupId)
-        let watchingCount = userSocialRepository.watchingCount(selfGroup: uri.groupId, selfUser: user.id)
+        let watchingCount = userSocialRepository.watchingCount(
+            selfGroup: uri.groupId, selfUser: user.id)
         return group.and(isMember).and(isFollowing).and(followersCount).and(watchingCount).map {
             ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1)
         }.map {
-            Domain.GroupDetail(group: $0, isMember: $1, isFollowing: $2, followersCount: $3, watchingCount: $4)
+            Domain.GroupDetail(
+                group: $0, isMember: $1, isFollowing: $2, followersCount: $3, watchingCount: $4)
         }
     }
 

@@ -43,7 +43,7 @@ class AppClient {
         headers.add(name: .contentType, value: HTTPMediaType.json.serialize())
         return headers
     }
-    
+
     func createUser(
         name: String = UUID().uuidString,
         role: RoleProperties = .artist(Artist(part: "vocal"))
@@ -74,7 +74,10 @@ class AppClient {
         return appUser
     }
 
-    func createGroup(body: CreateGroup.Request = try! Stub.make() { $0.set(\.name, value: "WALL OF DEATH") }, with user: AppUser) throws
+    func createGroup(
+        body: CreateGroup.Request = try! Stub.make { $0.set(\.name, value: "WALL OF DEATH") },
+        with user: AppUser
+    ) throws
         -> Endpoint.Group
     {
         let bodyData = try ByteBuffer(data: encoder.encode(body))
@@ -159,50 +162,52 @@ class AppClient {
         try app.test(
             .POST, "user_social/follow_group", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func updateRecentlyFollowing(groups: [Group.ID], with user: AppUser) throws {
         let body = Endpoint.UpdateRecentlyFollowing.Request(groups: groups)
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        
-        try app.test(.POST, "user_social/update_recently_following", headers: makeHeaders(for: user), body: bodyData)
+
+        try app.test(
+            .POST, "user_social/update_recently_following", headers: makeHeaders(for: user),
+            body: bodyData)
     }
-    
+
     func followUser(target: AppUser, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.FollowUser.Request.self) {
             $0.set(\.id, value: target.user.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        
+
         try app.test(
             .POST, "user_social/follow_user", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func unfollowUser(target: AppUser, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.UnfollowUser.Request.self) {
             $0.set(\.id, value: target.user.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        
+
         try app.test(
             .POST, "user_social/unfollow_user", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func blockUser(target: AppUser, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.BlockUser.Request.self) {
             $0.set(\.id, value: target.user.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        
+
         try app.test(
             .POST, "user_social/block_user", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func unblockUser(target: AppUser, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.UnblockUser.Request.self) {
             $0.set(\.id, value: target.user.id)
         }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
-        
+
         try app.test(
             .POST, "user_social/unblock_user", headers: makeHeaders(for: user), body: bodyData)
     }
@@ -243,7 +248,7 @@ class AppClient {
         }
         return created
     }
-    
+
     func createUserFeed(
         feedType: FeedType = .appleMusic(try! Stub.make()),
         with user: AppUser,
@@ -262,7 +267,7 @@ class AppClient {
         }
         return created
     }
-    
+
     func deleteUserFeed(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(DeleteUserFeed.Request.self) {
             $0.set(\.id, value: feed.id)
@@ -270,7 +275,7 @@ class AppClient {
         let bodyData = try ByteBuffer(data: encoder.encode(body))
         try app.test(.DELETE, "users/delete_feed", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func likeUserFeed(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikeUserFeed.Request.self) {
             $0.set(\.feedId, value: feed.id)
@@ -280,7 +285,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/like_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func unlikeUserFeed(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.UnlikeUserFeed.Request.self) {
             $0.set(\.feedId, value: feed.id)
@@ -290,7 +295,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func commentUserFeed(feed: UserFeed, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.PostUserFeedComment.Request.self) {
             $0.set(\.feedId, value: feed.id)
@@ -310,7 +315,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func createPost(with user: AppUser, live: Live? = nil) throws -> Post {
         let groupX = try self.createGroup(with: user)
         let groupY = try self.createGroup(with: user)
@@ -325,12 +330,13 @@ class AppClient {
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
         var created: Endpoint.Post!
-        try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) { res in
+        try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) {
+            res in
             created = try res.content.decode(Endpoint.CreatePost.Response.self)
         }
         return created
     }
-    
+
     func createPost(with user: AppUser, groups: [Group], live: Live? = nil) throws -> Post {
         let dummyLive = try self.createLive(hostGroup: groups.first!, with: user)
         let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
@@ -343,12 +349,13 @@ class AppClient {
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
         var created: Endpoint.Post!
-        try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) { res in
+        try app.test(.POST, "users/create_post", headers: makeHeaders(for: user), body: bodyData) {
+            res in
             created = try res.content.decode(Endpoint.CreatePost.Response.self)
         }
         return created
     }
-    
+
     func editPost(with user: AppUser, post: Post) throws -> Post {
         let body = try! Stub.make(Endpoint.EditPost.Request.self) {
             $0.set(\.text, value: "Edited Post")
@@ -359,7 +366,9 @@ class AppClient {
         let bodyData = try ByteBuffer(data: encoder.encode(body))
 
         var created: Endpoint.Post!
-        try app.test(.POST, "users/edit_post/\(post.id)", headers: makeHeaders(for: user), body: bodyData) { res in
+        try app.test(
+            .POST, "users/edit_post/\(post.id)", headers: makeHeaders(for: user), body: bodyData
+        ) { res in
             created = try res.content.decode(Endpoint.CreatePost.Response.self)
         }
         return created
@@ -373,7 +382,7 @@ class AppClient {
 
         try app.test(.DELETE, "users/delete_post", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func likePost(post: Post, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.LikePost.Request.self) {
             $0.set(\.postId, value: post.id)
@@ -383,7 +392,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/like_post", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func unlikePost(post: Post, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.UnlikePost.Request.self) {
             $0.set(\.postId, value: post.id)
@@ -393,7 +402,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/unlike_post", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func commentPost(post: Post, with user: AppUser) throws {
         let body = try! Stub.make(Endpoint.AddPostComment.Request.self) {
             $0.set(\.postId, value: post.id)
@@ -403,7 +412,7 @@ class AppClient {
         try app.test(
             .POST, "user_social/add_post_comment", headers: makeHeaders(for: user), body: bodyData)
     }
-    
+
     func createMessageRoom(with user: AppUser, member: [AppUser]) throws -> MessageRoom {
         let body = try! Stub.make(Endpoint.CreateMessageRoom.Request.self) {
             $0.set(\.members, value: member.map { $0.user.id })
@@ -417,7 +426,7 @@ class AppClient {
         }
         return created
     }
-    
+
     func sendMessage(with user: AppUser, roomId: MessageRoom.ID) throws -> Message {
         let body = try! Stub.make(Endpoint.SendMessage.Request.self) {
             $0.set(\.roomId, value: roomId)
@@ -431,7 +440,7 @@ class AppClient {
         }
         return created
     }
-    
+
     func getRooms(page: Int = 1, per: Int = 10, with user: AppUser) throws -> [MessageRoom] {
         var rooms: [MessageRoom] = []
         try app.test(
@@ -441,8 +450,10 @@ class AppClient {
         }
         return rooms
     }
-    
-    func openMessageRoom(page: Int = 1, per: Int = 10, with user: AppUser, roomId: MessageRoom.ID) throws -> [Message] {
+
+    func openMessageRoom(page: Int = 1, per: Int = 10, with user: AppUser, roomId: MessageRoom.ID)
+        throws -> [Message]
+    {
         var messages: [Message] = []
         try app.test(
             .GET, "messages/\(roomId)?page=\(page)&per=\(per)", headers: makeHeaders(for: user)
@@ -451,7 +462,7 @@ class AppClient {
         }
         return messages
     }
-    
+
     func deleteMessageRoom(with user: AppUser, roomId: MessageRoom.ID) throws {
         let body = Endpoint.DeleteMessageRoom.Request(roomId: roomId)
         let bodyData = try ByteBuffer(data: encoder.encode(body))

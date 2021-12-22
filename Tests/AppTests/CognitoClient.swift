@@ -1,6 +1,6 @@
-import SotoCognitoIdentityProvider
 import Foundation
 import NIO
+import SotoCognitoIdentityProvider
 import Vapor
 
 class CognitoClient {

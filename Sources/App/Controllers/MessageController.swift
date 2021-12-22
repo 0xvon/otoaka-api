@@ -24,7 +24,7 @@ struct MessageController: RouteCollection {
                 let input = try req.content.decode(Endpoint.CreateMessageRoom.Request.self)
                 return repository.createRoom(selfUser: user.id, input: input)
             })
-        
+
         try routes.on(
             endpoint: Endpoint.DeleteMessageRoom.self,
             use: injectProvider { req, uri, repository in
@@ -33,7 +33,7 @@ struct MessageController: RouteCollection {
                 return repository.deleteRoom(selfUser: user.id, roomId: input.roomId)
                     .map { Empty() }
             })
-        
+
         try routes.on(
             endpoint: Endpoint.GetRooms.self,
             use: injectProvider { req, uri, repository in
@@ -41,14 +41,15 @@ struct MessageController: RouteCollection {
                 return repository.rooms(selfUser: user.id, page: uri.page, per: uri.per)
             }
         )
-        
+
         try routes.on(
             endpoint: OpenRoomMessages.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.open(selfUser: user.id, roomId: uri.roomId, page: uri.page, per: uri.per)
+                return repository.open(
+                    selfUser: user.id, roomId: uri.roomId, page: uri.page, per: uri.per)
             })
-        
+
         try routes.on(
             endpoint: Endpoint.SendMessage.self,
             use: injectProvider { req, uri, repository in
@@ -60,11 +61,12 @@ struct MessageController: RouteCollection {
                         let notification = PushNotification(message: "\(user.name)からメッセージが届きました")
                         return repository.getRoomMember(selfUser: user.id, roomId: message.roomId)
                             .flatMapEach(on: req.eventLoop) { member in
-                                return notificationService.publish(to: member.id, notification: notification)
+                                return notificationService.publish(
+                                    to: member.id, notification: notification)
                             }
                             .map { _ in message }
                     }
-                
+
             })
     }
 }

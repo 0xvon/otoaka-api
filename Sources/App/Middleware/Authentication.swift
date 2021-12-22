@@ -2,6 +2,7 @@ import Domain
 import Foundation
 import JWTKit
 import Persistance
+import SotoCognitoIdentityProvider
 import Vapor
 
 #if canImport(FoundationNetworking)
@@ -77,9 +78,6 @@ class JWTAuthenticator: BearerAuthenticator {
 extension Domain.User: Authenticatable {}
 extension JWTAuthenticator.Payload: Authenticatable {}
 
-import SotoCognitoIdentityProvider
-
-
 class UserPoolMigrator_20210213 {
     typealias User = PersistanceUser
     let userPoolId: String
@@ -96,20 +94,25 @@ class UserPoolMigrator_20210213 {
     ) -> EventLoopFuture<Void> {
 
         let cognitoUsers = cognito._listUsersPaginator(
-            CognitoIdentityProvider.ListUsersRequest(userPoolId: userPoolId), [CognitoIdentityProvider._UserType]()
-        ) { (users, response, eventLoop) -> EventLoopFuture<(Bool, [CognitoIdentityProvider._UserType])> in
+            CognitoIdentityProvider.ListUsersRequest(userPoolId: userPoolId),
+            [CognitoIdentityProvider._UserType]()
+        ) {
+            (users, response, eventLoop) -> EventLoopFuture<
+                (Bool, [CognitoIdentityProvider._UserType])
+            > in
             eventLoop.makeSucceededFuture((true, users + (response.users ?? [])))
         }
 
-        return cognitoUsers
+        return
+            cognitoUsers
             .map { cognitoUsers in
-            users.forEach {
-                self.migrateUser(
-                    user: $0, cognitoId: $0.cognitoId,
-                    cognitoUsers: cognitoUsers
-                )
+                users.forEach {
+                    self.migrateUser(
+                        user: $0, cognitoId: $0.cognitoId,
+                        cognitoUsers: cognitoUsers
+                    )
+                }
             }
-        }
     }
 
     func migrateUser(
@@ -122,14 +125,15 @@ class UserPoolMigrator_20210213 {
         user.cognitoUsername = username
     }
 
-    fileprivate func getUsername(cognitoId: String, cognitoUsers: [CognitoIdentityProvider._UserType]) -> String? {
+    fileprivate func getUsername(
+        cognitoId: String, cognitoUsers: [CognitoIdentityProvider._UserType]
+    ) -> String? {
         guard let user = cognitoUsers.first(where: { $0.sub == cognitoId }) else {
             return nil
         }
         return user.username
     }
 }
-
 
 extension CognitoIdentityProvider._UserType {
     fileprivate var sub: String? {
@@ -161,8 +165,13 @@ extension CognitoIdentityProvider {
         }
     }
 
-    func _listUsers(_ input: ListUsersRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) -> EventLoopFuture<_ListUsersResponse> {
-        return self.client.execute(operation: "ListUsers", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    func _listUsers(
+        _ input: ListUsersRequest, logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<_ListUsersResponse> {
+        return self.client.execute(
+            operation: "ListUsers", path: "/", httpMethod: .POST, serviceConfig: self.config,
+            input: input, logger: logger, on: eventLoop)
     }
 
     func _listUsersPaginator<Result>(

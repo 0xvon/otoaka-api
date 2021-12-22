@@ -25,10 +25,13 @@ private func injectProvider<T, URI>(
 
 struct PublicController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        try routes.on(endpoint: GetUserProfile.self, use: injectProvider { req, uri, repository in
-            let useCase = GetUserProfileUseCase(userSocialRepository: repository, eventLoop: req.eventLoop)
-            return try useCase(uri.username)
-        })
+        try routes.on(
+            endpoint: GetUserProfile.self,
+            use: injectProvider { req, uri, repository in
+                let useCase = GetUserProfileUseCase(
+                    userSocialRepository: repository, eventLoop: req.eventLoop)
+                return try useCase(uri.username)
+            })
     }
 }
 

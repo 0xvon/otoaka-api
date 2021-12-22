@@ -53,83 +53,96 @@ class AuthenticationTests: XCTestCase {
         func all() -> EventLoopFuture<[User]> {
             fatalError("unimplemented")
         }
-        
+
         func editPost(for input: CreatePost.Request, postId: Post.ID) -> EventLoopFuture<Post> {
             fatalError("unimplemented")
         }
-        
-        func addPostComment(userId: User.ID, input: AddPostComment.Request) -> EventLoopFuture<PostComment> {
+
+        func addPostComment(userId: User.ID, input: AddPostComment.Request) -> EventLoopFuture<
+            PostComment
+        > {
             fatalError("unimplemented")
         }
-        
-        func getPostComments(postId: Post.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostComment>> {
+
+        func getPostComments(postId: Post.ID, page: Int, per: Int) -> EventLoopFuture<
+            Page<PostComment>
+        > {
             fatalError("unimplemented")
         }
-        
+
         func createPost(for input: CreatePost.Request, authorId: User.ID) -> EventLoopFuture<Post> {
             fatalError("unimplemented")
         }
-        
+
         func deletePost(postId: Post.ID) -> EventLoopFuture<Void> {
             fatalError("unimplemented")
         }
-        
+
         func getPost(postId: Post.ID) -> EventLoopFuture<Post> {
             fatalError("unimplemented")
         }
-        
+
         func findPostSummary(postId: Post.ID, userId: User.ID) -> EventLoopFuture<PostSummary> {
             fatalError("unimplemented")
         }
-        
+
         func posts(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>> {
             fatalError("unimplemented")
         }
-        
-        func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<UserFeedSummary?> {
+
+        func findUserFeedSummary(userFeedId: UserFeed.ID, userId: User.ID) -> EventLoopFuture<
+            UserFeedSummary?
+        > {
             fatalError("unimplemented")
         }
-        
-        func getNotifications(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserNotification>> {
+
+        func getNotifications(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
+            Page<UserNotification>
+        > {
             fatalError("unimplemented")
         }
-        
+
         func readNotification(notificationId: UserNotification.ID) -> EventLoopFuture<Void> {
             fatalError("unimplemented")
         }
-        
+
         func find(by userId: User.ID) -> EventLoopFuture<User?> {
             fatalError("unimplemented")
         }
-        
+
         func search(query: String, page: Int, per: Int) -> EventLoopFuture<Page<User>> {
             fatalError("unimplemented")
         }
-        
-        func createFeed(for input: CreateUserFeed.Request, authorId: User.ID) -> EventLoopFuture<UserFeed> {
+
+        func createFeed(for input: CreateUserFeed.Request, authorId: User.ID) -> EventLoopFuture<
+            UserFeed
+        > {
             fatalError("unimplemented")
         }
-        
+
         func deleteFeed(id: UserFeed.ID) -> EventLoopFuture<Void> {
             fatalError("unimplemented")
         }
-        
+
         func getUserFeed(feedId: UserFeed.ID) -> EventLoopFuture<UserFeed> {
             fatalError("unimplemented")
         }
-        
-        func addUserFeedComment(userId: User.ID, input: PostUserFeedComment.Request) -> EventLoopFuture<UserFeedComment> {
+
+        func addUserFeedComment(userId: User.ID, input: PostUserFeedComment.Request)
+            -> EventLoopFuture<UserFeedComment>
+        {
             fatalError("unimplemented")
         }
-        
-        func getUserFeedComments(feedId: UserFeed.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedComment>> {
+
+        func getUserFeedComments(feedId: UserFeed.ID, page: Int, per: Int) -> EventLoopFuture<
+            Page<UserFeedComment>
+        > {
             fatalError("unimplemented")
         }
-        
+
         func feeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedSummary>> {
             fatalError("unimplemented")
         }
-        
 
         func editInfo(userId: User.ID, input: EditUserInfo.Request) -> EventLoopFuture<User> {
             fatalError("unimplemented")
@@ -149,7 +162,10 @@ class AuthenticationTests: XCTestCase {
             self.eventLoop = eventLoop
         }
 
-        func create(cognitoId: CognitoID, cognitoUsername: CognitoUsername, email: String, input: Signup.Request) -> EventLoopFuture<
+        func create(
+            cognitoId: CognitoID, cognitoUsername: CognitoUsername, email: String,
+            input: Signup.Request
+        ) -> EventLoopFuture<
             Endpoint.User
         > {
             let newUser = Endpoint.User(

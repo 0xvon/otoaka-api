@@ -46,7 +46,7 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.title, body.title)
             created = responseBody
         }
-        
+
         let anotherGroup = try appClient.createGroup(with: user)
         let anotherBody = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: anotherGroup.id)
@@ -54,18 +54,23 @@ class LiveControllerTests: XCTestCase {
             $0.set(\.liveHouse, value: liveHouse)
         }
         let anotherBodyData = try ByteBuffer(data: appClient.encoder.encode(anotherBody))
-        
-        try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: anotherBodyData) {
+
+        try app.test(
+            .POST, "lives", headers: appClient.makeHeaders(for: user), body: anotherBodyData
+        ) {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
             XCTAssertEqual(responseBody.id, created.id)
         }
-        
-        try app.test(.GET, "lives/\(created.id)", headers: appClient.makeHeaders(for: user)) { res in
+
+        try app.test(.GET, "lives/\(created.id)", headers: appClient.makeHeaders(for: user)) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
-            XCTAssertEqual(Set([createdGroup.id, anotherGroup.id]), Set(responseBody.live.style.performers.map(\.id)))
+            XCTAssertEqual(
+                Set([createdGroup.id, anotherGroup.id]),
+                Set(responseBody.live.style.performers.map(\.id)))
         }
     }
 
@@ -92,32 +97,32 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.title, newTitle)
         }
 
-//        try app.test(
-//            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userB),
-//            body: bodyData
-//        ) {
-//            res in
-//            XCTAssertEqual(res.status, .forbidden, res.body.string)
-//        }
+        //        try app.test(
+        //            .POST, "lives/edit/\(live.id)", headers: appClient.makeHeaders(for: userB),
+        //            body: bodyData
+        //        ) {
+        //            res in
+        //            XCTAssertEqual(res.status, .forbidden, res.body.string)
+        //        }
     }
 
-//    func testCreateLiveAsNonHostMember() throws {
-//        let user = try appClient.createUser(role: .artist(Artist(part: "important")))
-//        let createdGroup = try appClient.createGroup(with: user)
-//
-//        let nonMemberUser = try appClient.createUser()
-//
-//        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
-//            $0.set(\.hostGroupId, value: createdGroup.id)
-//            $0.set(\.style, value: .oneman(performer: createdGroup.id))
-//        }
-//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-//        let headers = appClient.makeHeaders(for: nonMemberUser)
-//
-//        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
-//            XCTAssertNotEqual(res.status, .ok)
-//        }
-//    }
+    //    func testCreateLiveAsNonHostMember() throws {
+    //        let user = try appClient.createUser(role: .artist(Artist(part: "important")))
+    //        let createdGroup = try appClient.createGroup(with: user)
+    //
+    //        let nonMemberUser = try appClient.createUser()
+    //
+    //        let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+    //            $0.set(\.hostGroupId, value: createdGroup.id)
+    //            $0.set(\.style, value: .oneman(performer: createdGroup.id))
+    //        }
+    //        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+    //        let headers = appClient.makeHeaders(for: nonMemberUser)
+    //
+    //        try app.test(.POST, "lives", headers: headers, body: bodyData) { res in
+    //            XCTAssertNotEqual(res.status, .ok)
+    //        }
+    //    }
 
     func testCreateLiveWithDuplicatedPerformers() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
@@ -162,7 +167,7 @@ class LiveControllerTests: XCTestCase {
             let group = try appClient.createGroup(body: request, with: artist)
             performers.append(group)
         }
-        
+
         let live = try appClient.createLive(
             hostGroup: hostGroup, style: .battle(performers: performers.map(\.id)), with: user)
         _ = try appClient.like(live: live, with: userB)
@@ -170,7 +175,8 @@ class LiveControllerTests: XCTestCase {
         try app.test(.GET, "lives/\(live.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
-            XCTAssertEqual(Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
+            XCTAssertEqual(
+                Set(performers.map(\.id)), Set(responseBody.live.style.performers.map(\.id)))
             XCTAssertEqual(responseBody.participatingFriends.count, 1)
             guard let friend = responseBody.participatingFriends.first else { return }
             XCTAssertEqual(friend.id, userB.user.id)
@@ -197,7 +203,9 @@ class LiveControllerTests: XCTestCase {
             }
         }
 
-        try app.test(.GET, "lives/my_tickets?userId=\(user.user.id)&page=1&per=10", headers: headers) { res in
+        try app.test(
+            .GET, "lives/my_tickets?userId=\(user.user.id)&page=1&per=10", headers: headers
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(Endpoint.GetMyTickets.Response.self)
             XCTAssertEqual(response.items.count, 1)
@@ -226,15 +234,15 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 1)
         }
     }
-    
+
     func testSearchLive() throws {
         let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
         let userB = try appClient.createUser()
         let group = try appClient.createGroup(with: user)
         let live = try appClient.createLive(hostGroup: group, with: user)
-        
+
         let headers = appClient.makeHeaders(for: user)
-        
+
         try app.test(
             .GET, "lives/search?term=dead+pop&page=1&per=1", headers: headers
         ) { res in
@@ -244,11 +252,11 @@ class LiveControllerTests: XCTestCase {
             guard let item = body.items.first else { return }
             XCTAssertEqual(item.live.title, live.title)
         }
-        
+
         let group2 = try appClient.createGroup(with: user)
         _ = try appClient.createLive(hostGroup: group2, with: user)
         _ = try appClient.createLive(hostGroup: group2, with: user)
-        
+
         try app.test(
             .GET, "lives/search?groupId=\(group.id)&page=1&per=1", headers: headers
         ) { res in
@@ -266,40 +274,40 @@ class LiveControllerTests: XCTestCase {
         }
     }
 
-//    func testReplyRequestAccept() throws {
-//        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))
-//        let hostGroup = try appClient.createGroup(with: hostUser)
-//
-//        let userX = try appClient.createUser(role: .artist(.init(part: "foo")))
-//        let groupA = try appClient.createGroup(with: userX)
-//
-//        _ = try appClient.createLive(
-//            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]),
-//            with: hostUser
-//        )
-//
-//        let requests = try appClient.getPerformanceRequests(with: userX)
-//        XCTAssertEqual(requests.items.count, 1)
-//        let receivedRequest = try XCTUnwrap(requests.items.first)
-//        XCTAssertEqual(receivedRequest.status, .pending)
-//
-//        do {
-//            let requests = try appClient.getPerformanceRequests(with: hostUser)
-//            XCTAssertEqual(requests.items.count, 0)
-//        }
-//
-//        let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
-//            $0.set(\.reply, value: .accept)
-//            $0.set(\.requestId, value: receivedRequest.id)
-//        }
-//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-//
-//        let headers = appClient.makeHeaders(for: userX)
-//        try app.test(.POST, "lives/reply", headers: headers, body: bodyData) { res in
-//            XCTAssertEqual(res.status, .ok, res.body.string)
-//        }
-//
-//        let updatedRequests = try appClient.getPerformanceRequests(with: userX)
-//        XCTAssertEqual(updatedRequests.items.first?.status, .accepted)
-//    }
+    //    func testReplyRequestAccept() throws {
+    //        let hostUser = try appClient.createUser(role: .artist(.init(part: "vocal")))
+    //        let hostGroup = try appClient.createGroup(with: hostUser)
+    //
+    //        let userX = try appClient.createUser(role: .artist(.init(part: "foo")))
+    //        let groupA = try appClient.createGroup(with: userX)
+    //
+    //        _ = try appClient.createLive(
+    //            hostGroup: hostGroup, style: .battle(performers: [groupA.id, hostGroup.id]),
+    //            with: hostUser
+    //        )
+    //
+    //        let requests = try appClient.getPerformanceRequests(with: userX)
+    //        XCTAssertEqual(requests.items.count, 1)
+    //        let receivedRequest = try XCTUnwrap(requests.items.first)
+    //        XCTAssertEqual(receivedRequest.status, .pending)
+    //
+    //        do {
+    //            let requests = try appClient.getPerformanceRequests(with: hostUser)
+    //            XCTAssertEqual(requests.items.count, 0)
+    //        }
+    //
+    //        let body = try! Stub.make(ReplyPerformanceRequest.Request.self) {
+    //            $0.set(\.reply, value: .accept)
+    //            $0.set(\.requestId, value: receivedRequest.id)
+    //        }
+    //        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+    //
+    //        let headers = appClient.makeHeaders(for: userX)
+    //        try app.test(.POST, "lives/reply", headers: headers, body: bodyData) { res in
+    //            XCTAssertEqual(res.status, .ok, res.body.string)
+    //        }
+    //
+    //        let updatedRequests = try appClient.getPerformanceRequests(with: userX)
+    //        XCTAssertEqual(updatedRequests.items.first?.status, .accepted)
+    //    }
 }

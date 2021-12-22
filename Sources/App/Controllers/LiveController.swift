@@ -23,7 +23,8 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                let liveDetail = try await repository.getLiveDetail(by: uri.liveId, selfUserId: user.id)
+                let liveDetail = try await repository.getLiveDetail(
+                    by: uri.liveId, selfUserId: user.id)
                 return liveDetail
             })
         try routes.on(endpoint: Endpoint.ReserveTicket.self, use: injectProvider(reserveTicket))
@@ -51,19 +52,23 @@ struct LiveController: RouteCollection {
             endpoint: Endpoint.GetGroupLives.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.get(selfUser: user.id, page: uri.page, per: uri.per, group: uri.groupId)
+                return try await repository.get(
+                    selfUser: user.id, page: uri.page, per: uri.per, group: uri.groupId)
             })
         try routes.on(
             endpoint: Endpoint.SearchLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.search(selfUser: user.id, query: uri.term, groupId: uri.groupId, fromDate: uri.fromDate, toDate: uri.toDate, page: uri.page, per: uri.per)
+                return try await repository.search(
+                    selfUser: user.id, query: uri.term, groupId: uri.groupId,
+                    fromDate: uri.fromDate, toDate: uri.toDate, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetMyTickets.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return try await repository.getUserTickets(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+                return try await repository.getUserTickets(
+                    userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetLiveParticipants.self,
@@ -73,16 +78,24 @@ struct LiveController: RouteCollection {
                 guard let live = try await repository.getLive(by: uri.liveId).get() else {
                     throw Abort(.notFound)
                 }
-                guard try await groupRepository.isMember(of: live.hostGroup.id, member: user.id).get() else {
+                guard
+                    try await groupRepository.isMember(of: live.hostGroup.id, member: user.id).get()
+                else {
                     throw Abort(.badRequest)
                 }
 
-                return try await repository.getParticipants(liveId: live.id, page: uri.page, per: uri.per).get()
+                return try await repository.getParticipants(
+                    liveId: live.id, page: uri.page, per: uri.per
+                ).get()
             })
-        try routes.on(endpoint: GetLivePosts.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(Domain.User.self)
-            return try await repository.getLivePosts(liveId: uri.liveId, userId: user.id, page: uri.page, per: uri.per).get()
-        })
+        try routes.on(
+            endpoint: GetLivePosts.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return try await repository.getLivePosts(
+                    liveId: uri.liveId, userId: user.id, page: uri.page, per: uri.per
+                ).get()
+            })
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) async throws
@@ -160,9 +173,9 @@ extension Endpoint.GetPendingRequestCount.Response: Content {}
 extension EditLiveUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {
         switch self {
-//        case .fanCannotEditLive: return .forbidden
+        //        case .fanCannotEditLive: return .forbidden
         case .liveNotFound: return .notFound
-//        case .isNotMemberOfHostGroup: return .forbidden
+        //        case .isNotMemberOfHostGroup: return .forbidden
         }
     }
 }

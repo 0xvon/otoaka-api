@@ -121,7 +121,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
+
     func testGetUserDetail() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
@@ -140,7 +140,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(response.followersCount, 1)
             XCTAssertEqual(response.followingGroupsCount, 1)
         }
-        
+
         try app.test(.GET, "users/\(userB.user.id)", headers: header) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetUserDetail.Response.self)
@@ -172,7 +172,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
-    
+
     func testCreateUserFeed() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
@@ -203,19 +203,23 @@ class UserControllerTests: XCTestCase {
             $0.set(\.id, value: feed.id)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-        
-        try app.test(.GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers) { res in
+
+        try app.test(
+            .GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLikedUserFeeds.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
-        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=200", headers: headers) { res in
+
+        try app.test(
+            .GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=200", headers: headers
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
+
         try app.test(.GET, "users/\(user.user.id)/feeds?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
@@ -230,8 +234,10 @@ class UserControllerTests: XCTestCase {
         try app.test(.DELETE, "users/delete_feed", headers: headers, body: bodyData) { res in
             XCTAssertNotEqual(res.status, .ok, res.body.string)
         }
-        
-        try app.test(.GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers) { res in
+
+        try app.test(
+            .GET, "user_social/liked_user_feeds/\(user.user.id)?page=1&per=10", headers: headers
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetLikedUserFeeds.Response.self)
             XCTAssertEqual(responseBody.items.count, 0)
@@ -257,14 +263,14 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(firstItem.id, feed.id)
             XCTAssertEqual(firstItem.commentCount, 0)
         }
-        
+
         try app.test(.GET, "users/feeds/\(feed.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeed.Response.self)
             XCTAssertEqual(responseBody.id, feed.id)
         }
     }
-    
+
     func testCreatePost() throws {
         let user = try appClient.createUser()
         let headers = appClient.makeHeaders(for: user)
@@ -280,7 +286,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.first!.groups.count, 2)
             XCTAssertEqual(responseBody.items.first!.imageUrls.count, 2)
         }
-        
+
         // edit 1 post
         _ = try appClient.editPost(with: user, post: post)
 
@@ -292,7 +298,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetPosts.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
+
         let group = try appClient.createGroup(with: user)
         let live = try appClient.createLive(hostGroup: group, with: user)
         _ = try appClient.createPost(with: user, groups: [group], live: live)
@@ -304,14 +310,14 @@ class UserControllerTests: XCTestCase {
             XCTAssertTrue(responseBody.items.first!.live?.id == live.id)
         }
     }
-    
+
     func testGetPost() throws {
         let user = try appClient.createUser()
         let headers = appClient.makeHeaders(for: user)
 
         // create 2 posts
         let post = try appClient.createPost(with: user)
-        
+
         try app.test(.GET, "users/posts/\(post.id)", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetPost.Response.self)
@@ -331,50 +337,55 @@ class UserControllerTests: XCTestCase {
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
         let headers = appClient.makeHeaders(for: userY)
-        try app.test(.POST, "user_social/user_feed_comment", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "user_social/user_feed_comment", headers: headers, body: bodyData) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.PostUserFeedComment.Response.self)
             XCTAssertEqual(responseBody.author.id, userY.user.id)
         }
 
-        try app.test(.GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=10", headers: headers) {
+        try app.test(
+            .GET, "user_social/user_feed_comment/\(feed.id)?page=1&per=10", headers: headers
+        ) {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeedComments.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
     }
-    
+
     func testGetNotifications() throws {
         let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userY = try appClient.createUser(role: .fan(.init()))
         let groupX = try appClient.createGroup(with: userX)
         let feed = try appClient.createUserFeed(with: userX, groupId: groupX.id)
         let post = try appClient.createPost(with: userX)
-        let _ = try appClient.followUser(target: userX, with: userY) // notify
+        let _ = try appClient.followUser(target: userX, with: userY)  // notify
         let headers = appClient.makeHeaders(for: userX)
-        
+
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             XCTAssertFalse(responseBody.items.first!.isRead)
-            
-            let readNotiBody = Endpoint.ReadNotification.Request(notificationId: responseBody.items.first!.id)
+
+            let readNotiBody = Endpoint.ReadNotification.Request(
+                notificationId: responseBody.items.first!.id)
             let readNotiBodyData = try ByteBuffer(data: appClient.encoder.encode(readNotiBody))
 
-            try app.test(.POST, "users/read_notification", headers: headers, body: readNotiBodyData) { res in
+            try app.test(.POST, "users/read_notification", headers: headers, body: readNotiBodyData)
+            { res in
                 XCTAssertEqual(res.status, .ok, res.body.string)
             }
         }
-        
+
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
             XCTAssertTrue(responseBody.items.first!.isRead)
         }
-        
+
         let _ = try appClient.likeUserFeed(feed: feed, with: userY)
         let _ = try appClient.commentUserFeed(feed: feed, with: userY)
 
@@ -383,7 +394,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 3)
         }
-        
+
         // unfollow user → delete notification
         let _ = try appClient.unfollowUser(target: userX, with: userY)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -391,7 +402,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 2)
         }
-        
+
         // unlike user feed → delete notification
         let _ = try appClient.unlikeUserFeed(feed: feed, with: userY)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -399,7 +410,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
+
         // delete user feed -> delete all notification about this feed
         let _ = try appClient.deleteUserFeed(feed: feed, with: userX)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -407,7 +418,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 0)
         }
-        
+
         let _ = try appClient.likePost(post: post, with: userY)
         let _ = try appClient.commentPost(post: post, with: userY)
 
@@ -417,7 +428,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 2)
         }
-        
+
         // unlike post → delete notification
         _ = try appClient.unlikePost(post: post, with: userY)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -425,7 +436,7 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetNotifications.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
+
         // delete post -> delete all notification about this post
         _ = try appClient.deletePost(postId: post.id, with: userX)
         try app.test(.GET, "users/notifications?page=1&per=10", headers: headers) { res in
@@ -434,7 +445,7 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 0)
         }
     }
-    
+
     func testPostCommentOnPost() throws {
         let userX = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userY = try appClient.createUser(role: .fan(.init()))
@@ -446,7 +457,8 @@ class UserControllerTests: XCTestCase {
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
         let headers = appClient.makeHeaders(for: userY)
-        try app.test(.POST, "user_social/add_post_comment", headers: headers, body: bodyData) { res in
+        try app.test(.POST, "user_social/add_post_comment", headers: headers, body: bodyData) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.AddPostComment.Response.self)
             XCTAssertEqual(responseBody.author.id, userY.user.id)
@@ -458,7 +470,6 @@ class UserControllerTests: XCTestCase {
             let responseBody = try res.content.decode(Endpoint.GetPostComments.Response.self)
             XCTAssertEqual(responseBody.items.count, 1)
         }
-        
-        
+
     }
 }
