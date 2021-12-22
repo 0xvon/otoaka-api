@@ -4,7 +4,8 @@ import Foundation
 public struct Signup: EndpointProtocol {
     public struct Request: Codable {
         public init(
-            name: String, biography: String? = nil, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String? = nil,
+            name: String, biography: String? = nil, sex: String?, age: Int?, liveStyle: String?,
+            residence: String?, thumbnailURL: String? = nil,
             role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
         ) {
             self.name = name
@@ -153,9 +154,10 @@ public struct CreateUserFeed: EndpointProtocol {
         public var thumbnailUrl: String?
         public var groupId: Group.ID
         public var title: String
-        
+
         public init(
-            text: String, feedType: FeedType, ogpUrl: String?, thumbnailUrl: String?, groupId: Group.ID, title: String
+            text: String, feedType: FeedType, ogpUrl: String?, thumbnailUrl: String?,
+            groupId: Group.ID, title: String
         ) {
             self.text = text
             self.feedType = feedType
@@ -221,7 +223,7 @@ public struct Track: Codable {
     public var artistName: String
     public var artwork: String
     public var trackType: FeedType
-    
+
     public init(
         name: String, artistName: String, artwork: String, trackType: FeedType
     ) {
@@ -240,7 +242,7 @@ public struct CreatePost: EndpointProtocol {
         public var tracks: [Track]
         public var groups: [Group]
         public var imageUrls: [String]
-        
+
         public init(
             author: User.ID,
             live: Live.ID,
@@ -257,7 +259,7 @@ public struct CreatePost: EndpointProtocol {
             self.imageUrls = imageUrls
         }
     }
-    
+
     public typealias Response = Post
     public struct URI: CodableURL {
         @StaticPath("users", "create_post") public var prefix: Void
@@ -280,12 +282,12 @@ public struct EditPost: EndpointProtocol {
 public struct DeletePost: EndpointProtocol {
     public struct Request: Codable {
         public let postId: Post.ID
-        
+
         public init(postId: Post.ID) {
             self.postId = postId
         }
     }
-    
+
     public typealias Response = Empty
     public struct URI: CodableURL {
         @StaticPath("users", "delete_post") public var prefix: Void
@@ -297,7 +299,7 @@ public struct DeletePost: EndpointProtocol {
 public struct GetPosts: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<PostSummary>
-    
+
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("users") public var prefix: Void
         @DynamicPath public var userId: User.ID
@@ -312,7 +314,7 @@ public struct GetPosts: EndpointProtocol {
 public struct GetPost: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = PostSummary
-    
+
     public struct URI: CodableURL {
         @StaticPath("users", "posts") public var prefix: Void
         @DynamicPath public var postId: Post.ID
@@ -337,7 +339,7 @@ public struct SearchUser: EndpointProtocol {
 public struct GetNotifications: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<UserNotification>
-    
+
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("users", "notifications") public var prefix: Void
         @Query public var page: Int

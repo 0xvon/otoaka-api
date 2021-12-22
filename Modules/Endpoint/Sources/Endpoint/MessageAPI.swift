@@ -5,14 +5,14 @@
 //  Created by Masato TSUTSUMI on 2021/05/20.
 //
 
-import Foundation
 import CodableURL
+import Foundation
 
 public struct CreateMessageRoom: EndpointProtocol {
     public struct Request: Codable {
         public let members: [User.ID]
         public let name: String?
-        
+
         public init(members: [User.ID], name: String?) {
             self.members = members
             self.name = name
@@ -26,10 +26,10 @@ public struct CreateMessageRoom: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
-public struct DeleteMessageRoom: EndpointProtocol {    
+public struct DeleteMessageRoom: EndpointProtocol {
     public struct Request: Codable {
         public let roomId: MessageRoom.ID
-        
+
         public init(roomId: MessageRoom.ID) {
             self.roomId = roomId
         }
@@ -72,7 +72,7 @@ public struct SendMessage: EndpointProtocol {
         public let roomId: MessageRoom.ID
         public let text: String?
         public let imageUrl: String?
-        
+
         public init(
             roomId: MessageRoom.ID, text: String? = nil, imageUrl: String? = nil
         ) {

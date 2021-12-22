@@ -38,7 +38,7 @@ final class Live: Model {
     var startAt: Date?
     @Timestamp(key: "end_at", on: .none)
     var endAt: Date?
-    
+
     @OptionalField(key: "date")
     var date: String?
     @OptionalField(key: "end_date")
@@ -47,16 +47,15 @@ final class Live: Model {
     var openAtV2: String?
     @OptionalField(key: "start_at_v2")
     var startAtV2: String?
-    
+
     @OptionalField(key: "pia_event_code")
     var piaEventCode: String?
-    
+
     @OptionalField(key: "pia_release_url")
     var piaReleaseUrl: String?
-    
+
     @OptionalField(key: "pia_event_url")
     var piaEventUrl: String?
-    
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -180,7 +179,8 @@ extension Endpoint.Live {
                     style: style, price: entity.price,
                     artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                     hostGroup: hostGroup, liveHouse: entity.liveHouse,
-                    date: entity.date, endDate: entity.endDate, openAt: entity.openAtV2, startAt: entity.startAtV2,
+                    date: entity.date, endDate: entity.endDate, openAt: entity.openAtV2,
+                    startAt: entity.startAtV2,
                     piaEventCode: entity.piaEventCode,
                     piaReleaseUrl: entity.piaReleaseUrl.map { URL(string: $0)! },
                     piaEventUrl: entity.piaEventUrl.map { URL(string: $0)! },
@@ -237,7 +237,9 @@ extension Domain.Ticket {
 }
 
 extension Domain.LiveFeed {
-    static func translate(fromPersistance entity: Live, selfUser: Domain.User.ID, on db: Database) -> EventLoopFuture<Domain.LiveFeed> {
+    static func translate(fromPersistance entity: Live, selfUser: Domain.User.ID, on db: Database)
+        -> EventLoopFuture<Domain.LiveFeed>
+    {
         let isLiked = LiveLike.query(on: db)
             .filter(\.$live.$id == entity.id!)
             .filter(\.$user.$id == selfUser.rawValue)
@@ -262,12 +264,18 @@ extension Domain.LiveFeed {
             .fields(for: LiveLike.self)
             .with(\LiveLike.$user)
             .all()
-            .flatMapEach(on: db.eventLoop) { [db] in Domain.User.translate(fromPersistance: $0.user, on: db) }
+            .flatMapEach(on: db.eventLoop) { [db] in
+                Domain.User.translate(fromPersistance: $0.user, on: db)
+            }
 
         return Domain.Live.translate(fromPersistance: entity, on: db)
-            .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(participatingFriends).map { ( $0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
+            .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(
+                participatingFriends
+            ).map { ($0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
             .map {
-                Domain.LiveFeed(live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4, postCount: $5, participatingFriends: $6)
+                Domain.LiveFeed(
+                    live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4,
+                    postCount: $5, participatingFriends: $6)
             }
     }
 }

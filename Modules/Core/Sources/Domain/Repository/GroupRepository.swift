@@ -14,7 +14,7 @@ public protocol GroupRepository {
     func findGroup(by id: Group.ID) -> EventLoopFuture<Group?>
     func isExists(by id: Group.ID) -> EventLoopFuture<Bool>
     func isLeader(of groupId: Group.ID, member: User.ID) -> EventLoopFuture<Bool>
-    
+
     func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Group>>
     func get(selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
     func deleteGroup(id: Group.ID) -> EventLoopFuture<Void>
@@ -31,9 +31,13 @@ public protocol GroupRepository {
     func getArtistFeedComments(feedId: ArtistFeed.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<ArtistFeedComment>>
     func feeds(groupId: Group.ID, page: Int, per: Int) -> EventLoopFuture<Page<ArtistFeedSummary>>
-    func getGroupUserFeeds(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<UserFeedSummary>>
-    func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Page<PostSummary>>
-    func search(query: String, selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<Page<GroupFeed>>
+    func getGroupUserFeeds(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Page<UserFeedSummary>>
+    func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Page<PostSummary>>
+    func search(query: String, selfUser: User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Page<GroupFeed>
+    >
     func followedGroups() -> EventLoopFuture<[Domain.Group]>
     func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void>
 }

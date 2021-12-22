@@ -34,7 +34,9 @@ public struct CreateLiveUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         try validateInput(request: request)
         let input = request.input
-        if let live = try await liveRepository.getLive(date: input.date, liveHouse: input.liveHouse).get() {
+        if let live = try await liveRepository.getLive(date: input.date, liveHouse: input.liveHouse)
+            .get()
+        {
             // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
             let editted = try await liveRepository.update(id: live.id, input: input).get()
             try await liveRepository.updateStyle(id: live.id).get()
@@ -51,7 +53,8 @@ public struct CreateLiveUseCase: UseCase {
                 try await withThrowingTaskGroup(of: Void.self) { group in
                     for performer in performers {
                         group.addTask {
-                            let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
+                            let notification = PushNotification(
+                                message: "\(performer.name) のライブ情報が更新されました")
                             try await notificationService.publish(
                                 toGroupFollowers: performer.id, notification: notification
                             ).get()
@@ -68,14 +71,14 @@ public struct CreateLiveUseCase: UseCase {
         guard request.input.price >= 0 else {
             throw Error.invalidPrice
         }
-//        switch request.input.style {
-//        case .oneman(let performer):
-//            guard request.input.hostGroupId == performer else {
-//                throw Error.onemanStylePerformerShouldBeHostGroup
-//            }
-//        default:
-//            break
-//        }
+        //        switch request.input.style {
+        //        case .oneman(let performer):
+        //            guard request.input.hostGroupId == performer else {
+        //                throw Error.onemanStylePerformerShouldBeHostGroup
+        //            }
+        //        default:
+        //            break
+        //        }
     }
 }
 
@@ -86,9 +89,9 @@ public struct EditLiveUseCase: UseCase {
     public typealias Response = Live
 
     public enum Error: Swift.Error {
-//        case fanCannotEditLive
+        //        case fanCannotEditLive
         case liveNotFound
-//        case isNotMemberOfHostGroup
+        //        case isNotMemberOfHostGroup
     }
 
     public let groupRepository: GroupRepository
@@ -106,18 +109,18 @@ public struct EditLiveUseCase: UseCase {
     }
 
     public func callAsFunction(_ request: Request) async throws -> Response {
-//        guard case .artist = request.user.role else {
-//            return eventLoop.makeFailedFuture(Error.fanCannotEditLive)
-//        }
-//        let precondition = live.map(\.live.hostGroup).flatMap { hostGroup in
-//            groupRepository.isMember(
-//                of: hostGroup.id, member: request.user.id
-//            )
-//        }
-//        .flatMapThrowing {
-//            guard $0 else { throw Error.isNotMemberOfHostGroup }
-//            return
-//        }
+        //        guard case .artist = request.user.role else {
+        //            return eventLoop.makeFailedFuture(Error.fanCannotEditLive)
+        //        }
+        //        let precondition = live.map(\.live.hostGroup).flatMap { hostGroup in
+        //            groupRepository.isMember(
+        //                of: hostGroup.id, member: request.user.id
+        //            )
+        //        }
+        //        .flatMapThrowing {
+        //            guard $0 else { throw Error.isNotMemberOfHostGroup }
+        //            return
+        //        }
 
         return try await liveRepository.update(id: request.id, input: request.input).get()
     }
@@ -147,6 +150,7 @@ public struct ReserveLiveTicketUseCase: UseCase {
     }
 
     public func callAsFunction(_ request: Request) async throws -> Response {
-        return try await liveRepository.reserveTicket(liveId: request.liveId, user: request.user.id).get()
+        return try await liveRepository.reserveTicket(liveId: request.liveId, user: request.user.id)
+            .get()
     }
 }

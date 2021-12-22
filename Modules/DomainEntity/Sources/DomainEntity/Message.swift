@@ -14,7 +14,7 @@ public struct MessageRoom: Codable, Identifiable, Equatable {
     public var members: [User]
     public var owner: User
     public var latestMessage: Message?
-    
+
     public init(
         id: MessageRoom.ID, name: String?, members: [User], owner: User, latestMessage: Message?
     ) {
@@ -35,7 +35,7 @@ public struct Message: Codable, Identifiable, Equatable {
     public var imageUrl: String?
     public var sentAt: Date
     public var readingUsers: [User]
-    
+
     public init(
         id: Message.ID,
         roomId: MessageRoom.ID,

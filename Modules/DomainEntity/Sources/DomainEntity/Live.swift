@@ -1,6 +1,7 @@
 import Foundation
 
-public enum LiveStyle<Performer>: Codable, Equatable where Performer: Codable, Performer: Equatable {
+public enum LiveStyle<Performer>: Codable, Equatable
+where Performer: Codable, Performer: Equatable {
     case oneman(performer: Performer)
     case battle(performers: [Performer])
     case festival(performers: [Performer])
@@ -78,7 +79,7 @@ public struct Live: Codable, Identifiable, Equatable {
 
     public init(
         id: ID, title: String,
-        style: LiveStyleOutput,price: Int, artworkURL: URL?,
+        style: LiveStyleOutput, price: Int, artworkURL: URL?,
         hostGroup: Group, liveHouse: String?,
         date: String?, endDate: String?, openAt: String?, startAt: String?,
         piaEventCode: String?, piaReleaseUrl: URL?, piaEventUrl: URL?,
