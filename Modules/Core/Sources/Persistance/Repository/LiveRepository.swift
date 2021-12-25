@@ -144,17 +144,8 @@ public class LiveRepository: Domain.LiveRepository {
                 .with(\LiveLike.$user)
                 .all()
                 .map { $0.user }
-            return try await withOrderedTaskGroup(of: Domain.User.self) { [db] group in
-                for user in likeUsers {
-                    group.addTask {
-                        try await Domain.User.translate(fromPersistance: user, on: db).get()
-                    }
-                }
-                var participatingFriends: [Domain.User] = []
-                for try await user in group {
-                    participatingFriends.append(user)
-                }
-                return participatingFriends
+            return try await likeUsers.asyncMap { user in
+                try await Domain.User.translate(fromPersistance: user, on: db).get()
             }
         }()
         async let live: Domain.Live = {

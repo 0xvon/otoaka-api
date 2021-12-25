@@ -166,26 +166,15 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             )
             .all(decoding: WatchingCount.self).get()
 
-            let items = try await withOrderedTaskGroup(
-                of: (Domain.GroupFeed).self, returning: [Domain.GroupFeed].self
-            ) { [db] group in
-                var items: [Domain.GroupFeed] = []
-                for watchingCount in watchingCounts {
-                    group.addTask {
-                        guard let group = try await Group.find(watchingCount.group_id, on: db).get()
-                        else {
-                            throw Error.groupNotFound
-                        }
-                        let feed = try await GroupFeed.translate(
-                            fromPersistance: group, selfUser: userId, on: db
-                        ).get()
-                        return feed
-                    }
+            let items = try await watchingCounts.asyncMap { watchingCount -> GroupFeed in
+                guard let group = try await Group.find(watchingCount.group_id, on: db).get()
+                else {
+                    throw Error.groupNotFound
                 }
-                for try await feed in group {
-                    items.append(feed)
-                }
-                return items
+                let feed = try await GroupFeed.translate(
+                    fromPersistance: group, selfUser: userId, on: db
+                ).get()
+                return feed
             }
             return Domain.Page<GroupFeed>(
                 items: items,
