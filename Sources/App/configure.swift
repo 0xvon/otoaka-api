@@ -15,7 +15,7 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
 }
 
 public struct EnvironmentSecrets: Secrets {
-    init() {
+    public init() {
         func require(_ key: String) -> String {
             guard let value = Environment.get(key) else {
                 fatalError("Please set \"\(key)\" environment variable")
