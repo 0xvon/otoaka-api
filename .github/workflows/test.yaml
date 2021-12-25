@@ -33,7 +33,7 @@ jobs:
       - name: Install Swift
         run: swiftenv install
       - name: Build and test
-        run: swiftenv exec swift test --parallel
+        run: swiftenv exec swift test
         env:
           AWS_REGION: ap-northeast-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
