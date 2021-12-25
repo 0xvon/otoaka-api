@@ -15,18 +15,28 @@ class JWTAuthenticator: BearerAuthenticator {
     private let issuer: String
     private let userRepositoryFactory: (Request) -> Domain.UserRepository
 
-    init(
+    convenience init(
         awsRegion: String, cognitoUserPoolId: String,
         userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
             Persistance.UserRepository(db: $0.db)
         }
     ) throws {
-        self.userRepositoryFactory = userRepositoryFactory
-        issuer = "https://cognito-idp.\(awsRegion).amazonaws.com/\(cognitoUserPoolId)"
+        let issuer = "https://cognito-idp.\(awsRegion).amazonaws.com/\(cognitoUserPoolId)"
         let jwkURL = URL(string: "\(issuer)/.well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
-        signer = JWTSigners()
+        let signer = JWTSigners()
         try signer.use(jwks: jwks)
+        self.init(signer: signer, issuer: issuer, userRepositoryFactory: userRepositoryFactory)
+    }
+    init(
+        signer: JWTSigners, issuer: String,
+        userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
+            Persistance.UserRepository(db: $0.db)
+        }
+    ) {
+        self.signer = signer
+        self.issuer = issuer
+        self.userRepositoryFactory = userRepositoryFactory
     }
 
     struct Payload: JWTPayload {

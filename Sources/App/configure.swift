@@ -4,6 +4,7 @@ import Persistance
 import Service
 import SotoCore
 import Vapor
+import JWTKit
 
 protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
@@ -13,7 +14,7 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var cognitoUserPoolId: String { get }
 }
 
-struct EnvironmentSecrets: Secrets {
+public struct EnvironmentSecrets: Secrets {
     init() {
         func require(_ key: String) -> String {
             guard let value = Environment.get(key) else {
@@ -28,12 +29,12 @@ struct EnvironmentSecrets: Secrets {
         self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
         self.databaseURL = require("DATABASE_URL")
     }
-    let awsAccessKeyId: String
-    let awsSecretAccessKey: String
-    let awsRegion: String
-    let snsPlatformApplicationArn: String
-    let cognitoUserPoolId: String
-    let databaseURL: String
+    public let awsAccessKeyId: String
+    public let awsSecretAccessKey: String
+    public let awsRegion: String
+    public let snsPlatformApplicationArn: String
+    public let cognitoUserPoolId: String
+    public let databaseURL: String
 }
 
 extension Application {
@@ -58,8 +59,14 @@ struct AWSClientLifecycle: LifecycleHandler {
 }
 
 // configures your application
-public func configure(_ app: Application) throws {
-    let secrets = EnvironmentSecrets()
+public func configure(
+    _ app: Application,
+    secrets: EnvironmentSecrets = EnvironmentSecrets(),
+    authenticator: Authenticator? = nil
+) throws {
+    let authenticator = try authenticator ?? JWTAuthenticator(
+        awsRegion: secrets.awsRegion, cognitoUserPoolId: secrets.cognitoUserPoolId
+    )
     app.secrets = secrets
     app.awsClient = AWSClient(
         credentialProvider: .static(
@@ -80,5 +87,5 @@ public func configure(_ app: Application) throws {
             ).migrateUsers(users: $0)
         }
     )
-    try routes(app)
+    try routes(app, authenticator: authenticator)
 }
