@@ -2,6 +2,7 @@ import Domain
 import Foundation
 import JWTKit
 import Persistance
+import SotoCognitoIdentityProvider
 import Vapor
 
 #if canImport(FoundationNetworking)
@@ -14,18 +15,28 @@ class JWTAuthenticator: BearerAuthenticator {
     private let issuer: String
     private let userRepositoryFactory: (Request) -> Domain.UserRepository
 
-    init(
+    convenience init(
         auth0Domain: String,
         userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
             Persistance.UserRepository(db: $0.db)
         }
     ) throws {
-        self.userRepositoryFactory = userRepositoryFactory
-        self.issuer = "\(auth0Domain)/"
+        let issuer = "\(auth0Domain)/"
         let jwkURL = URL(string: "\(issuer).well-known/jwks.json")!
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(contentsOf: jwkURL))
-        signer = JWTSigners()
+        let signer = JWTSigners()
         try signer.use(jwks: jwks)
+        self.init(signer: signer, issuer: issuer, userRepositoryFactory: userRepositoryFactory)
+    }
+    init(
+        signer: JWTSigners, issuer: String,
+        userRepositoryFactory: @escaping (Request) -> Domain.UserRepository = {
+            Persistance.UserRepository(db: $0.db)
+        }
+    ) {
+        self.signer = signer
+        self.issuer = issuer
+        self.userRepositoryFactory = userRepositoryFactory
     }
 
     struct Payload: JWTPayload {
@@ -83,112 +94,6 @@ public func convertToCognitoUsername(_ sub: String) -> String {
         .replacingOccurrences(of: "google-oauth2", with: "Google")
         .replacingOccurrences(of: "auth0_", with: "")
 }
-
 extension Domain.User: Authenticatable {}
 extension JWTAuthenticator.Payload: Authenticatable {}
 
-//import SotoCognitoIdentityProvider
-
-//
-//class UserPoolMigrator_20210213 {
-//    typealias User = PersistanceUser
-//    let userPoolId: String
-//    let region: String = Environment.get("AWS_REGION")!
-//    let cognito: CognitoIdentityProvider
-//
-//    init(awsClient: AWSClient, userPoolId: String) {
-//        self.cognito = CognitoIdentityProvider(client: awsClient, region: Region(rawValue: region))
-//        self.userPoolId = userPoolId
-//    }
-//
-//    func migrateUsers(
-//        users: [User]
-//    ) -> EventLoopFuture<Void> {
-//
-//        let cognitoUsers = cognito._listUsersPaginator(
-//            CognitoIdentityProvider.ListUsersRequest(userPoolId: userPoolId), [CognitoIdentityProvider._UserType]()
-//        ) { (users, response, eventLoop) -> EventLoopFuture<(Bool, [CognitoIdentityProvider._UserType])> in
-//            eventLoop.makeSucceededFuture((true, users + (response.users ?? [])))
-//        }
-//
-//        return cognitoUsers
-//            .map { cognitoUsers in
-//            users.forEach {
-//                self.migrateUser(
-//                    user: $0, cognitoId: $0.cognitoId,
-//                    cognitoUsers: cognitoUsers
-//                )
-//            }
-//        }
-//    }
-//
-//    func migrateUser(
-//        user: User, cognitoId: String,
-//        cognitoUsers: [CognitoIdentityProvider._UserType]
-//    ) {
-//        guard let username = getUsername(cognitoId: cognitoId, cognitoUsers: cognitoUsers) else {
-//            return
-//        }
-//        user.cognitoUsername = username
-//    }
-//
-//    fileprivate func getUsername(cognitoId: String, cognitoUsers: [CognitoIdentityProvider._UserType]) -> String? {
-//        guard let user = cognitoUsers.first(where: { $0.sub == cognitoId }) else {
-//            return nil
-//        }
-//        return user.username
-//    }
-//}
-
-//
-//extension CognitoIdentityProvider._UserType {
-//    fileprivate var sub: String? {
-//        attributes?.first(where: { $0.name == "sub" })?.value
-//    }
-//}
-
-//extension CognitoIdentityProvider {
-//    struct _ListUsersResponse: AWSDecodableShape {
-//        /// An identifier that was returned from the previous call to this operation, which can be used to return the next set of items in the list.
-//        let paginationToken: String?
-//        /// The users returned in the request to list users.
-//        let users: [_UserType]?
-//
-//        private enum CodingKeys: String, CodingKey {
-//            case paginationToken = "PaginationToken"
-//            case users = "Users"
-//        }
-//    }
-//    struct _UserType: AWSDecodableShape {
-//        /// A container with information about the user type attributes.
-//        let attributes: [CognitoIdentityProvider.AttributeType]?
-//        /// The user name of the user you wish to describe.
-//        let username: String?
-//
-//        enum CodingKeys: String, CodingKey {
-//            case attributes = "Attributes"
-//            case username = "Username"
-//        }
-//    }
-//
-//    func _listUsers(_ input: ListUsersRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) -> EventLoopFuture<_ListUsersResponse> {
-//        return self.client.execute(operation: "ListUsers", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
-//    }
-//
-//    func _listUsersPaginator<Result>(
-//        _ input: ListUsersRequest,
-//        _ initialValue: Result,
-//        logger: Logger = AWSClient.loggingDisabled,
-//        on eventLoop: EventLoop? = nil,
-//        onPage: @escaping (Result, _ListUsersResponse, EventLoop) -> EventLoopFuture<(Bool, Result)>
-//    ) -> EventLoopFuture<Result> {
-//        return client.paginate(
-//            input: input,
-//            initialValue: initialValue,
-//            command: _listUsers,
-//            tokenKey: \_ListUsersResponse.paginationToken,
-//            on: eventLoop,
-//            onPage: onPage
-//        )
-//    }
-//}

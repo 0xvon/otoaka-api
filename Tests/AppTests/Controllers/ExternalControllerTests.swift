@@ -21,6 +21,11 @@ class ExternalControllerTests: XCTestCase {
         appClient = nil
     }
 
+    /*
+     These E2E tests don't check anything and meaningless but take a long time.
+     Controller's logics are very thin and most parts are proven by type-system.
+     If you want to test their use-cases, please move tests in Domain module
+
     func testCheckGlobalIP() throws {
         let user = try appClient.createUser()
         try app.test(
@@ -60,6 +65,7 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
+    */
 
     func testGetUserProfile() throws {
         let user = try appClient.createUser()

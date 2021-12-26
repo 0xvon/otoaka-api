@@ -4,6 +4,7 @@ import Persistance
 import Service
 import SotoCore
 import Vapor
+import JWTKit
 
 protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
@@ -13,8 +14,8 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var auth0Domain: String { get }
 }
 
-struct EnvironmentSecrets: Secrets {
-    init() {
+public struct EnvironmentSecrets: Secrets {
+    public init() {
         func require(_ key: String) -> String {
             guard let value = Environment.get(key) else {
                 fatalError("Please set \"\(key)\" environment variable")
@@ -28,12 +29,12 @@ struct EnvironmentSecrets: Secrets {
         self.auth0Domain = require("AUTH0_DOMAIN")
         self.databaseURL = require("DATABASE_URL")
     }
-    let awsAccessKeyId: String
-    let awsSecretAccessKey: String
-    let awsRegion: String
-    let snsPlatformApplicationArn: String
-    var auth0Domain: String
-    let databaseURL: String
+    public let awsAccessKeyId: String
+    public let awsSecretAccessKey: String
+    public let awsRegion: String
+    public let snsPlatformApplicationArn: String
+    public var auth0Domain: String
+    public let databaseURL: String
 }
 
 extension Application {
@@ -58,8 +59,12 @@ struct AWSClientLifecycle: LifecycleHandler {
 }
 
 // configures your application
-public func configure(_ app: Application) throws {
-    let secrets = EnvironmentSecrets()
+public func configure(
+    _ app: Application,
+    secrets: EnvironmentSecrets = EnvironmentSecrets(),
+    authenticator: Authenticator? = nil
+) throws {
+    let authenticator = try authenticator ?? JWTAuthenticator(auth0Domain: secrets.auth0Domain)
     app.secrets = secrets
     app.awsClient = AWSClient(
         credentialProvider: .static(
@@ -75,5 +80,5 @@ public func configure(_ app: Application) throws {
         migrator: app.migrator,
         migrations: app.migrations
     )
-    try routes(app)
+    try routes(app, authenticator: authenticator)
 }

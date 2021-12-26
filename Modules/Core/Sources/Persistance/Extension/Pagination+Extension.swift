@@ -12,15 +12,11 @@ extension Endpoint.Page {
     }
 
     static func translate<T>(
-        page: FluentKit.Page<T>, eventLoop: EventLoop, item: (T) async throws -> Item
+        page: FluentKit.Page<T>, item: (T) async throws -> Item
     ) async throws -> Endpoint.Page<Item> {
         let metadata = Endpoint.PageMetadata(
             page: page.metadata.page, per: page.metadata.per, total: page.metadata.total)
-        var items: [Item] = []
-        for pageItem in page.items {
-            let item = try await item(pageItem)
-            items.append(item)
-        }
+        let items = try await page.items.asyncMap(item)
         return Endpoint.Page(items: items, metadata: metadata)
     }
 }

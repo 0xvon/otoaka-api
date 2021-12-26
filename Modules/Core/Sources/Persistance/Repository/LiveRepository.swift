@@ -124,35 +124,39 @@ public class LiveRepository: Domain.LiveRepository {
     public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) async throws
         -> Domain.LiveDetail
     {
-        let isLiked =
-            try await LiveLike.query(on: db)
+        async let isLiked =
+            LiveLike.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUserId.rawValue)
             .count() > 0
-        let likeCount = try await LiveLike.query(on: db)
+        async let likeCount = LiveLike.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
-        let postCount = try await Post.query(on: db)
+        async let postCount = Post.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
-        let likeUsers = try await LiveLike.query(on: db)
-            .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
-            .filter(\.$live.$id == id.rawValue)
-            .filter(UserFollowing.self, \.$user.$id == selfUserId.rawValue)
-            .fields(for: LiveLike.self)
-            .with(\LiveLike.$user)
-            .all()
-            .map { $0.user }
-        var participatingFriends: [Domain.User] = []
-        for user in likeUsers {
-            let friend = try await Domain.User.translate(fromPersistance: user, on: db).get()
-            participatingFriends.append(friend)
-        }
-        guard let live = try await Live.find(id.rawValue, on: db) else { throw Error.liveNotFound }
-        let domainLive = try await Domain.Live.translate(fromPersistance: live, on: db).get()
+        async let participatingFriends: [Domain.User] = {
+            let likeUsers = try await LiveLike.query(on: db)
+                .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
+                .filter(\.$live.$id == id.rawValue)
+                .filter(UserFollowing.self, \.$user.$id == selfUserId.rawValue)
+                .fields(for: LiveLike.self)
+                .with(\LiveLike.$user)
+                .all()
+                .map { $0.user }
+            return try await likeUsers.asyncMap { user in
+                try await Domain.User.translate(fromPersistance: user, on: db).get()
+            }
+        }()
+        async let live: Domain.Live = {
+            guard let live = try await Live.find(id.rawValue, on: db) else {
+                throw Error.liveNotFound
+            }
+            return try await Domain.Live.translate(fromPersistance: live, on: db).get()
+        }()
 
-        return Domain.LiveDetail(
-            live: domainLive,
+        return try await Domain.LiveDetail(
+            live: live,
             isLiked: isLiked,
             likeCount: likeCount,
             postCount: postCount,
@@ -240,8 +244,7 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(Ticket.self, \.$user.$id == userId.rawValue)
             .sort(Live.self, \.$date)
             .paginate(PageRequest(page: page, per: per))
-        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) {
-            live in
+        return try await Domain.Page<LiveFeed>.translate(page: lives) { live in
             try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
                 .get()
         }
@@ -299,8 +302,7 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(LivePerformer.self, \.$group.$id == group.rawValue)
             .sort(\.$date, .descending)
             .paginate(PageRequest(page: page, per: per))
-        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) {
-            live in
+        return try await Domain.Page<LiveFeed>.translate(page: lives) { live in
             try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
                 .get()
         }
@@ -315,7 +317,7 @@ public class LiveRepository: Domain.LiveRepository {
             .filter(Membership.self, \.$isLeader == true)
             .with(\.$group).with(\.$live)
             .paginate(PageRequest(page: page, per: per))
-        return try await Domain.Page.translate(page: performers, eventLoop: db.eventLoop) {
+        return try await Domain.Page.translate(page: performers) {
             try await Domain.PerformanceRequest.translate(fromPersistance: $0, on: db).get()
         }
     }
@@ -374,8 +376,7 @@ public class LiveRepository: Domain.LiveRepository {
             .fields(for: Live.self)
             .sort(\.$date, .descending)
             .paginate(PageRequest(page: page, per: per))
-        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) {
-            live in
+        return try await Domain.Page<LiveFeed>.translate(page: lives) { live in
             try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
                 .get()
         }
