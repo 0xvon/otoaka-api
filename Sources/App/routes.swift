@@ -27,7 +27,6 @@ func routes(_ app: Application, authenticator: Authenticator) throws {
     }
 
     try app.register(collection: PublicController())
-
     let loginTried = app.routes.grouped(authenticator)
     try loginTried.register(collection: UserController())
     let signedUp = loginTried.grouped(

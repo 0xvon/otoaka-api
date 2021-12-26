@@ -30,8 +30,7 @@ public func setup(
 
 public func setupMigration(
     migrator: Migrator,
-    migrations: Migrations,
-    cognitoUserMigrator: @escaping (_ users: [PersistanceUser]) -> EventLoopFuture<Void>
+    migrations: Migrations
 ) throws {
     migrations.add([
         CreateUser(),
@@ -52,7 +51,7 @@ public func setupMigration(
         CreatePostComment(), CreatePostGroup(),
         AddPostOnUserNotification(),
 
-        MoreInfoToUser(migrator: cognitoUserMigrator),
+        MoreInfoToUser(),
         CreateUserBlocking(),
 
         CreateMessageRoom(), CreateMessageRoomMember(),

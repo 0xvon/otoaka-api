@@ -14,8 +14,7 @@ extension JWTAuthenticator {
     ) throws {
         let secrets = EnvironmentSecrets()
         try self.init(
-            awsRegion: secrets.awsRegion,
-            cognitoUserPoolId: secrets.cognitoUserPoolId,
+            auth0Domain: secrets.auth0Domain,
             userRepositoryFactory: userRepositoryFactory
         )
     }
@@ -39,14 +38,13 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testVerifyJWT() throws {
-        let client = CognitoClient()
+        let client = Auth0Client(app)
         let authenticator = try JWTAuthenticator()
         let dummyUserName = UUID().uuidString
-        let dummyEmail = "\(dummyUserName)@example.com"
-        let dummyUser = try client.createToken(userName: dummyUserName).wait()
-        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+        let dummyUser = try client.createToken(userName: dummyUserName)
+        defer { try! client.destroyUser(id: dummyUser.sub).wait() }
         let payload = try authenticator.verifyJWT(token: dummyUser.token)
-        XCTAssertEqual(payload.email, dummyEmail)
+        XCTAssertEqual(payload.sub.value, convertToCognitoUsername(dummyUser.sub))
     }
 
     class InMemoryUserRepository: Domain.UserRepository {
@@ -198,16 +196,17 @@ class AuthenticationTests: XCTestCase {
     }
 
     func testIntegratedHTTPRequests() throws {
-        let client = CognitoClient()
+        let client = Auth0Client(app)
         let dummyUserName = UUID().uuidString
         let dummyEmail = "\(dummyUserName)@example.com"
-        let dummyUser = try client.createToken(userName: dummyUserName).wait()
-        defer { try! client.destroyUser(userName: dummyUserName).wait() }
+        let dummyUser = try client.createToken(userName: dummyUserName)
+        defer { try! client.destroyUser(id: dummyUser.sub).wait() }
 
         let authenticator = try JWTAuthenticator(userRepositoryFactory: {
             let repo = InMemoryUserRepository(eventLoop: $0.eventLoop)
             _ = try! repo.create(
-                cognitoId: dummyUser.sub, cognitoUsername: dummyUserName,
+                cognitoId: convertToCognitoUsername(dummyUser.sub),
+                cognitoUsername: convertToCognitoUsername(dummyUser.sub),
                 email: dummyEmail, input: Stub.make()
             )
             .wait()

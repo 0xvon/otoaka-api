@@ -23,7 +23,6 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.4.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.3.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
-        .package(url: "https://github.com/soto-project/soto.git", from: "5.2.0"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
@@ -40,8 +39,7 @@ let package = Package(
                 .product(name: "Persistance", package: "Core"),
                 .product(name: "Service", package: "Core"),
                 .product(name: "Endpoint", package: "Endpoint"),
-                .product(name: "LoggingDiscord", package: "LoggingDiscord"),
-                .product(name: "SotoCognitoIdentityProvider", package: "soto"),
+                .product(name: "LoggingDiscord", package: "LoggingDiscord")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -54,8 +52,7 @@ let package = Package(
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
-            .product(name: "SotoCognitoIdentityProvider", package: "soto"),
-            .product(name: "StubKit", package: "StubKit"),
-        ], swiftSettings: swiftSettings),
+            .product(name: "StubKit", package: "StubKit")
+        ]),
     ]
 )

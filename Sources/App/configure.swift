@@ -11,7 +11,7 @@ protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsSecretAccessKey: String { get }
     var awsRegion: String { get }
     var snsPlatformApplicationArn: String { get }
-    var cognitoUserPoolId: String { get }
+    var auth0Domain: String { get }
 }
 
 public struct EnvironmentSecrets: Secrets {
@@ -26,14 +26,14 @@ public struct EnvironmentSecrets: Secrets {
         self.awsSecretAccessKey = require("AWS_SECRET_ACCESS_KEY")
         self.awsRegion = require("AWS_REGION")
         self.snsPlatformApplicationArn = require("SNS_PLATFORM_APPLICATION_ARN")
-        self.cognitoUserPoolId = require("CONGNITO_IDP_USER_POOL_ID")
+        self.auth0Domain = require("AUTH0_DOMAIN")
         self.databaseURL = require("DATABASE_URL")
     }
     public let awsAccessKeyId: String
     public let awsSecretAccessKey: String
     public let awsRegion: String
     public let snsPlatformApplicationArn: String
-    public let cognitoUserPoolId: String
+    public var auth0Domain: String
     public let databaseURL: String
 }
 
@@ -64,9 +64,7 @@ public func configure(
     secrets: EnvironmentSecrets = EnvironmentSecrets(),
     authenticator: Authenticator? = nil
 ) throws {
-    let authenticator = try authenticator ?? JWTAuthenticator(
-        awsRegion: secrets.awsRegion, cognitoUserPoolId: secrets.cognitoUserPoolId
-    )
+    let authenticator = try authenticator ?? JWTAuthenticator(auth0Domain: secrets.auth0Domain)
     app.secrets = secrets
     app.awsClient = AWSClient(
         credentialProvider: .static(
@@ -80,12 +78,7 @@ public func configure(
     )
     try Persistance.setupMigration(
         migrator: app.migrator,
-        migrations: app.migrations,
-        cognitoUserMigrator: {
-            UserPoolMigrator_20210213(
-                awsClient: app.awsClient, userPoolId: secrets.cognitoUserPoolId
-            ).migrateUsers(users: $0)
-        }
+        migrations: app.migrations
     )
     try routes(app, authenticator: authenticator)
 }

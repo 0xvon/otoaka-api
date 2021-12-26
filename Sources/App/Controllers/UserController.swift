@@ -186,8 +186,8 @@ struct UserController: RouteCollection {
         let input = try req.content.decode(Signup.Request.self)
         let cognitoId = jwtPayload.sub.value
         let user = repository.create(
-            cognitoId: cognitoId, cognitoUsername: jwtPayload.username,
-            email: jwtPayload.email, input: input
+            cognitoId: cognitoId, cognitoUsername: jwtPayload.sub.value,
+            email: jwtPayload.email ?? "dummy@example.com", input: input
         )
         return user
     }
