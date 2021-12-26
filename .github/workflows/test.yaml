@@ -31,7 +31,7 @@ jobs:
           export SWIFTENV_ROOT="$HOME/.swiftenv"
           echo "$SWIFTENV_ROOT/bin" >> $GITHUB_PATH
       - name: Install Swift
-        run: swiftenv install
+        run: swiftenv install || true
       - name: Build and test
         run: swiftenv exec swift test
         env:
