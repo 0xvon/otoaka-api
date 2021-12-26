@@ -30,6 +30,7 @@ class AuthenticationTests: XCTestCase {
 
     override func tearDown() {
         app.shutdown()
+        app = nil
     }
 
     func testCognitoPublicKeys() throws {

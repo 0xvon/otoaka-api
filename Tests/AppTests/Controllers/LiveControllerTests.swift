@@ -18,6 +18,8 @@ class LiveControllerTests: XCTestCase {
 
     override func tearDown() {
         app.shutdown()
+        app = nil
+        appClient = nil
     }
 
     func testCreateWithoutLogin() throws {

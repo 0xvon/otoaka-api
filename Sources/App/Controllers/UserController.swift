@@ -18,11 +18,15 @@ private func injectProvider<T, URI>(
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
 
-        let beforeSignup = routes.grouped(JWTAuthenticator.Payload.guardMiddleware())
+        let beforeSignup = routes.grouped(JWTAuthenticator.Payload.guardMiddleware(
+            throwing: Abort(.unauthorized, reason: "\(JWTAuthenticator.Payload.self) not authenticated.", stackTrace: nil)
+        ))
         try beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
         try beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
 
-        let loggedIn = routes.grouped(User.guardMiddleware())
+        let loggedIn = routes.grouped(User.guardMiddleware(
+            throwing: Abort(.unauthorized, reason: "\(User.self) not authenticated.", stackTrace: nil)
+        ))
         try loggedIn.on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
         try loggedIn.on(
             endpoint: Endpoint.EditUserInfo.self,

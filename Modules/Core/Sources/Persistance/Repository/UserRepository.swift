@@ -155,33 +155,40 @@ public class UserRepository: Domain.UserRepository {
     }
 
     public func deleteFeed(id: Domain.UserFeed.ID) -> EventLoopFuture<Void> {
-        _ = UserFeedLike.query(on: db)
-            .filter(\.$feed.$id == id.rawValue)
-            .all()
-            .flatMap { [db] in
-                $0.delete(force: true, on: db)
-            }
         let comments = UserFeedComment.query(on: db)
             .filter(\.$feed.$id == id.rawValue)
             .all()
-        _ = comments.flatMapEach(on: db.eventLoop) { [db] in
-            UserNotification.query(on: db)
-                .filter(\.$feedComment.$id == $0.id)
-                .all()
-                .flatMap { [db] in $0.delete(force: true, on: db) }
-        }
-        _ = comments.flatMap { [db] in $0.delete(force: true, on: db) }
-        _ = UserNotification.query(on: db)
+        let deleteComments = comments.flatMapEach(on: db.eventLoop) { [db] in
+                UserNotification.query(on: db)
+                    .filter(\.$feedComment.$id == $0.id)
+                    .all()
+                    .flatMap { [db] in $0.delete(force: true, on: db) }
+            }
+            .flatMap { [db] in
+                comments.flatMap { [db] in $0.delete(force: true, on: db) }
+            }
+        let deleteLikes = UserNotification.query(on: db)
             .filter(\.$likedFeed.$id == id.rawValue)
             .all()
             .flatMap { [db] in $0.delete(force: true, on: db) }
-        return UserFeed.find(id.rawValue, on: db)
-            .unwrap(orError: Error.feedNotFound)
-            .flatMapThrowing { feed -> UserFeed in
-                guard feed.$id.exists else { throw Error.feedDeleted }
-                return feed
+            .flatMap { [db] in
+                UserFeedLike.query(on: db)
+                    .filter(\.$feed.$id == id.rawValue)
+                    .all()
+                    .flatMap { [db] in
+                        $0.delete(force: true, on: db)
+                    }
             }
-            .flatMap { [db] in $0.delete(on: db) }
+        return deleteLikes.and(deleteComments)
+            .flatMap { [db] _ in
+                UserFeed.find(id.rawValue, on: db)
+                    .unwrap(orError: Error.feedNotFound)
+                    .flatMapThrowing { feed -> UserFeed in
+                        guard feed.$id.exists else { throw Error.feedDeleted }
+                        return feed
+                    }
+                    .flatMap { [db] in $0.delete(on: db) }
+            }
     }
 
     public func feeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<

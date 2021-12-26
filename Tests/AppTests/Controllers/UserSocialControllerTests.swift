@@ -18,6 +18,8 @@ class UserSocialControllerTests: XCTestCase {
 
     override func tearDown() {
         app.shutdown()
+        app = nil
+        appClient = nil
     }
 
     func testFollow() throws {

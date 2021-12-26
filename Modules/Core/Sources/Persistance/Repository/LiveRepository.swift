@@ -120,67 +120,40 @@ public class LiveRepository: Domain.LiveRepository {
             .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
     }
 
-    public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) -> EventLoopFuture<
-        Domain.LiveDetail?
-    > {
-        let isLiked = LiveLike.query(on: db)
+    public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) async throws -> Domain.LiveDetail {
+        let isLiked = try await LiveLike.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .filter(\.$user.$id == selfUserId.rawValue)
-            .count().map { $0 > 0 }
-        let likeCount = LiveLike.query(on: db)
+            .count() > 0
+        let likeCount = try await LiveLike.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
-        let ticket = Ticket.query(on: db)
-            .filter(\.$live.$id == id.rawValue)
-            .filter(\.$user.$id == selfUserId.rawValue)
-            .filter(\.$status == .reserved)
-            .first()
-            .optionalFlatMap { [db] in
-                Domain.Ticket.translate(fromPersistance: $0, on: db)
-            }
-        let participants = Ticket.query(on: db)
-            .filter(\.$live.$id == id.rawValue)
-            .filter(\.$status == .reserved)
-            .count()
-        let postCount = Post.query(on: db)
+        let postCount = try await Post.query(on: db)
             .filter(\.$live.$id == id.rawValue)
             .count()
-        let participatingFriends = LiveLike.query(on: db)
+        let likeUsers = try await LiveLike.query(on: db)
             .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
             .filter(\.$live.$id == id.rawValue)
             .filter(UserFollowing.self, \.$user.$id == selfUserId.rawValue)
             .fields(for: LiveLike.self)
+            .with(\LiveLike.$user)
             .all()
-            .flatMapEach(on: db.eventLoop) { [db] in $0.$user.get(on: db).flatMap { [db] in Domain.User.translate(fromPersistance: $0, on: db) } }
-        
-        return Live.find(id.rawValue, on: db).optionalFlatMap { [db] in
-            let live = Domain.Live.translate(fromPersistance: $0, on: db)
-            return live.and(isLiked).and(participants).and(likeCount).and(ticket).and(postCount).and(participatingFriends)
-                .map { (
-                    $0.0.0.0.0.0.0,
-                    $0.0.0.0.0.0.1,
-                    $0.0.0.0.0.1,
-                    $0.0.0.0.1,
-                    $0.0.0.1,
-                    $0.0.1,
-                    $0.1
-                ) }
-                .map {
-                    (
-                        live: Domain.Live, isLiked: Bool, participants: Int, likeCount: Int,
-                        ticket: Domain.Ticket?, postCount: Int, participatingFriends: [Domain.User]
-                    ) -> Domain.LiveDetail in
-                    return Domain.LiveDetail(
-                        live: live,
-                        isLiked: isLiked,
-                        participants: participants,
-                        likeCount: likeCount,
-                        ticket: ticket,
-                        postCount: postCount,
-                        participatingFriends: participatingFriends
-                    )
-                }
+            .map { $0.user }
+        var participatingFriends: [Domain.User] = []
+        for user in likeUsers {
+            let friend = try await Domain.User.translate(fromPersistance: user, on: db).get()
+            participatingFriends.append(friend)
         }
+        guard let live = try await Live.find(id.rawValue, on: db) else { throw Error.liveNotFound }
+        let domainLive = try await Domain.Live.translate(fromPersistance: live, on: db).get()
+        
+        return Domain.LiveDetail(
+            live: domainLive,
+            isLiked: isLiked,
+            likeCount: likeCount,
+            postCount: postCount,
+            participatingFriends: participatingFriends
+        )
     }
 
     public func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?> {
@@ -244,33 +217,23 @@ public class LiveRepository: Domain.LiveRepository {
         }
     }
 
-    public func refundTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
-        Void
-    > {
-        let ticket = Ticket.query(on: db)
-            .filter(\.$live.$id == liveId.rawValue)
-            .first()
-            
-        return ticket
-            .flatMapThrowing { [db] ticket -> Void in
-                guard let ticket = ticket else { throw Error.ticketNotFound }
-                _ = ticket.delete(on: db)
-            }
+    public func refundTicket(liveId: Domain.Live.ID, user: Domain.User.ID) async throws -> Void {
+        guard let ticket = try await Ticket.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue).first() else { throw Error.ticketNotFound }
+        try await ticket.delete(force: true, on: db)
     }
 
-    public func getUserTickets(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.LiveFeed>
-    > {
-        return Live.query(on: db)
+    public func getUserTickets(
+        userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int
+    ) async throws -> Domain.Page<Domain.LiveFeed> {
+        let lives = try await Live.query(on: db)
             .join(Ticket.self, on: \Ticket.$live.$id == \Live.$id)
             .filter(Ticket.self, \.$user.$id == userId.rawValue)
             .sort(Live.self, \.$date)
             .paginate(PageRequest(page: page, per: per))
-            .flatMap { [db] in
-                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
-                }
-            }
+        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) { live in
+            try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db).get()
+        }
     }
 
     public func updatePerformerStatus(
@@ -315,38 +278,31 @@ public class LiveRepository: Domain.LiveRepository {
                 }
             }
     }
-    public func get(selfUser: Domain.User.ID, page: Int, per: Int, group: Domain.Group.ID) -> EventLoopFuture<
-        Domain.Page<Domain.LiveFeed>
-    > {
-        let lives = Live.query(on: db)
+    public func get(selfUser: Domain.User.ID, page: Int, per: Int, group: Domain.Group.ID) async throws -> Domain.Page<Domain.LiveFeed> {
+        let lives = try await Live.query(on: db)
             .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
             .filter(LivePerformer.self, \.$group.$id == group.rawValue)
             .sort(\.$date, .descending)
-        return lives.paginate(PageRequest(page: page, per: per))
-            .flatMap { [db] in
-                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
-                }
-            }
+            .paginate(PageRequest(page: page, per: per))
+        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) { live in
+            try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db).get()
+        }
     }
 
-    public func getRequests(for user: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.PerformanceRequest>
-    > {
-        let performers = PerformanceRequest.query(on: db)
+    public func getRequests(for user: Domain.User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.PerformanceRequest> {
+        let performers = try await PerformanceRequest.query(on: db)
             .join(Membership.self, on: \PerformanceRequest.$group.$id == \Membership.$group.$id)
             .filter(Membership.self, \.$artist.$id == user.rawValue)
             .filter(Membership.self, \.$isLeader == true)
             .with(\.$group).with(\.$live)
-        return performers.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.PerformanceRequest.translate(fromPersistance: $0, on: db)
-            }
+            .paginate(PageRequest(page: page, per: per))
+        return try await Domain.Page.translate(page: performers, eventLoop: db.eventLoop) {
+            try await Domain.PerformanceRequest.translate(fromPersistance: $0, on: db).get()
         }
     }
 
-    public func getPendingRequestCount(for user: Domain.User.ID) -> EventLoopFuture<Int> {
-        PerformanceRequest.query(on: db)
+    public func getPendingRequestCount(for user: Domain.User.ID) async throws -> Int {
+        try await PerformanceRequest.query(on: db)
             .join(Membership.self, on: \PerformanceRequest.$group.$id == \Membership.$group.$id)
             .filter(Membership.self, \.$artist.$id == user.rawValue)
             .filter(Membership.self, \.$isLeader == true)
@@ -363,40 +319,41 @@ public class LiveRepository: Domain.LiveRepository {
             }
     }
 
-    public func search(selfUser: Domain.User.ID, query: String?, groupId: Domain.Group.ID?, fromDate: String?, toDate: String?, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.LiveFeed>
-    > {
-        var lives = Live.query(on: db)
+    public func search(
+        selfUser: Domain.User.ID, query: String?,
+        groupId: Domain.Group.ID?,
+        fromDate: String?, toDate: String?,
+        page: Int, per: Int
+    ) async throws -> Domain.Page<LiveFeed> {
+        var searchLive = Live.query(on: db)
             .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
             .join(Group.self, on: \Group.$id == \LivePerformer.$group.$id)
         
         if let query = query {
-            lives = lives
+            searchLive = searchLive
                 .group(.or) {
                     $0.filter(Live.self, \.$title, .custom("LIKE"), "%\(query)%")
                         .filter(Group.self, \.$name, .custom("LIKE"), "%\(query)%")
                 }
         }
         if let groupId = groupId {
-            lives = lives
+            searchLive = searchLive
                 .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
         }
         if let fromDate = fromDate, let toDate = toDate {
-            lives = lives
+            searchLive = searchLive
                 .filter(Live.self, \.$date >= fromDate)
                 .filter(Live.self, \.$date <= toDate)
         }
-            
-        return lives
+        
+        let lives = try await searchLive
             .unique()
             .fields(for: Live.self)
             .sort(\.$date, .descending)
             .paginate(PageRequest(page: page, per: per))
-            .flatMap { [db] in
-                Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
-                    Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)
-                }
-            }
+        return try await Domain.Page<LiveFeed>.translate(page: lives, eventLoop: db.eventLoop) { live in
+            try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db).get()
+        }
     }
 
     public func getLiveTickets(until: Date) -> EventLoopFuture<[Domain.Ticket]> {

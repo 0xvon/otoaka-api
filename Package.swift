@@ -1,6 +1,14 @@
 // swift-tools-version:5.2
 import PackageDescription
 
+// Disable availability checking to use concurrency API on macOS for development purpose
+// SwiftNIO exposes concurrency API with availability for deployment environment,
+// but in our use case, the deployment target is Linux, and we only use macOS while development,
+// so it's always safe to disable the checking in this situation.
+let swiftSettings: [SwiftSetting] = [
+    .unsafeFlags(["-Xfrontend", "-disable-availability-checking"])
+]
+
 let package = Package(
     name: "rocket-api",
     platforms: [
@@ -11,9 +19,9 @@ let package = Package(
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
-        .package(url: "https://github.com/vapor/vapor.git", from: "4.47.0"),
-        .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
-        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.54.0"),
+        .package(url: "https://github.com/vapor/fluent.git", from: "4.4.0"),
+        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.3.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
         .package(path: "Modules/LoggingDiscord"),
@@ -38,7 +46,7 @@ let package = Package(
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
-            ]
+            ] + swiftSettings
         ),
         .target(name: "Run", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [

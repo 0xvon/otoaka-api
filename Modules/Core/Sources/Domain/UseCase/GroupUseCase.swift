@@ -5,7 +5,7 @@ public enum GroupUpdateError: Swift.Error {
     case invalidEmptyId(String)
 }
 
-public struct CreateGroupUseCase: UseCase {
+public struct CreateGroupUseCase: LegacyUseCase {
     public typealias Request = (input: CreateGroup.Request, user: User.ID)
     public typealias Response = Group
 
@@ -30,7 +30,7 @@ public struct CreateGroupUseCase: UseCase {
     }
 }
 
-public struct EditGroupUseCase: UseCase {
+public struct EditGroupUseCase: LegacyUseCase {
     
     public typealias Request = (
         id: Group.ID,
@@ -75,7 +75,7 @@ fileprivate func validate(request: CreateGroup.Request) throws {
 }
 
 
-public struct DeleteGroupUseCase: UseCase {
+public struct DeleteGroupUseCase: LegacyUseCase {
     public typealias Request = (id: Group.ID, user: User.ID)
     public typealias Response = Void
 
@@ -105,7 +105,7 @@ public struct DeleteGroupUseCase: UseCase {
     }
 }
 
-public struct InviteGroupUseCase: UseCase {
+public struct InviteGroupUseCase: LegacyUseCase {
     public typealias Request = (
         artistId: User.ID, groupId: Group.ID
     )
@@ -151,7 +151,7 @@ public struct InviteGroupUseCase: UseCase {
     }
 }
 
-public struct JoinGroupUseCase: UseCase {
+public struct JoinGroupUseCase: LegacyUseCase {
     public typealias Request = (
         invitationId: GroupInvitation.ID,
         userId: User.ID
@@ -209,7 +209,7 @@ public struct JoinGroupUseCase: UseCase {
     }
 }
 
-public struct ReplyPerformanceRequestUseCase: UseCase {
+public struct ReplyPerformanceRequestUseCase: LegacyUseCase {
     public typealias Request = (
         user: User, input: Endpoint.ReplyPerformanceRequest.Request
     )
