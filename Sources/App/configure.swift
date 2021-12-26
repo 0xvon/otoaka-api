@@ -2,8 +2,8 @@ import Fluent
 import FluentMySQLDriver
 import Persistance
 import Service
-import Vapor
 import SotoCore
+import Vapor
 
 protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
@@ -62,7 +62,8 @@ public func configure(_ app: Application) throws {
     let secrets = EnvironmentSecrets()
     app.secrets = secrets
     app.awsClient = AWSClient(
-        credentialProvider: .static(accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
+        credentialProvider: .static(
+            accessKeyId: secrets.awsAccessKeyId, secretAccessKey: secrets.awsSecretAccessKey),
         httpClientProvider: .createNew
     )
     app.lifecycle.use(AWSClientLifecycle())

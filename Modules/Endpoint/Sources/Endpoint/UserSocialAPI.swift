@@ -216,7 +216,10 @@ public struct LiveFeed: Codable {
     public var postCount: Int
     public var participatingFriends: [User]
 
-    public init(live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int, postCount: Int, participatingFriends: [User]) {
+    public init(
+        live: Live, isLiked: Bool, hasTicket: Bool, likeCount: Int, participantCount: Int,
+        postCount: Int, participatingFriends: [User]
+    ) {
         self.live = live
         self.isLiked = isLiked
         self.hasTicket = hasTicket
@@ -330,7 +333,7 @@ public struct UserFeedSummary: Codable, Equatable {
 public struct LiveTransition: Codable, Equatable {
     public var yearLabel: [String]
     public var liveParticipatingCount: [Int]
-    
+
     public init(yearLabel: [String], liveParticipatingCount: [Int]) {
         self.yearLabel = yearLabel
         self.liveParticipatingCount = liveParticipatingCount
@@ -343,11 +346,11 @@ public struct PostSummary: Codable, Equatable {
     public var commentCount: Int
     public var likeCount: Int
     public var isLiked: Bool
-    
+
     public subscript<T>(dynamicMember keyPath: KeyPath<Post, T>) -> T {
         post[keyPath: keyPath]
     }
-    
+
     public init(
         post: Post, commentCount: Int, likeCount: Int, isLiked: Bool
     ) {
@@ -629,7 +632,7 @@ public struct IsUsernameExists: EndpointProtocol {
         public init() {}
     }
     public static var method: HTTPMethod = .get
-    
+
 }
 
 public struct RegisterUsername: EndpointProtocol {

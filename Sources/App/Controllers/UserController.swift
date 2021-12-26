@@ -18,15 +18,20 @@ private func injectProvider<T, URI>(
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
 
-        let beforeSignup = routes.grouped(JWTAuthenticator.Payload.guardMiddleware(
-            throwing: Abort(.unauthorized, reason: "\(JWTAuthenticator.Payload.self) not authenticated.", stackTrace: nil)
-        ))
+        let beforeSignup = routes.grouped(
+            JWTAuthenticator.Payload.guardMiddleware(
+                throwing: Abort(
+                    .unauthorized, reason: "\(JWTAuthenticator.Payload.self) not authenticated.",
+                    stackTrace: nil)
+            ))
         try beforeSignup.on(endpoint: Endpoint.Signup.self, use: injectProvider(createUser))
         try beforeSignup.on(endpoint: Endpoint.SignupStatus.self, use: getSignupStatus)
 
-        let loggedIn = routes.grouped(User.guardMiddleware(
-            throwing: Abort(.unauthorized, reason: "\(User.self) not authenticated.", stackTrace: nil)
-        ))
+        let loggedIn = routes.grouped(
+            User.guardMiddleware(
+                throwing: Abort(
+                    .unauthorized, reason: "\(User.self) not authenticated.", stackTrace: nil)
+            ))
         try loggedIn.on(endpoint: Endpoint.GetUserInfo.self, use: getUser)
         try loggedIn.on(
             endpoint: Endpoint.EditUserInfo.self,
@@ -75,7 +80,8 @@ struct UserController: RouteCollection {
             endpoint: GetUserFeed.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
-                return repository.findUserFeedSummary(userFeedId: uri.feedId, userId: user.id).unwrap(or: Abort(.notFound))
+                return repository.findUserFeedSummary(userFeedId: uri.feedId, userId: user.id)
+                    .unwrap(or: Abort(.notFound))
             })
         try routes.on(
             endpoint: DeleteUserFeed.self,
@@ -97,15 +103,19 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 return repository.feeds(userId: uri.userId, page: uri.page, per: uri.per)
             })
-        try loggedIn.on(endpoint: Endpoint.CreatePost.self,
+        try loggedIn.on(
+            endpoint: Endpoint.CreatePost.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(CreatePost.Request.self)
                 let notificationService = makePushNotificationService(request: req)
-                let useCase = CreatePostUserCase(userRepository: repository, notificationService: notificationService, eventLoop: req.eventLoop)
+                let useCase = CreatePostUserCase(
+                    userRepository: repository, notificationService: notificationService,
+                    eventLoop: req.eventLoop)
                 return try useCase((user: user, input: input))
             })
-        try loggedIn.on(endpoint: Endpoint.EditPost.self,
+        try loggedIn.on(
+            endpoint: Endpoint.EditPost.self,
             use: injectProvider { req, uri, repository in
                 let input = try req.content.decode(EditPost.Request.self)
                 return repository.editPost(for: input, postId: uri.id)
@@ -115,7 +125,8 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(DeletePost.Request.self)
-                let useCase = DeletePostUseCase(userRepository: repository, eventLoop: req.eventLoop)
+                let useCase = DeletePostUseCase(
+                    userRepository: repository, eventLoop: req.eventLoop)
                 return try useCase((postId: input.postId, userId: user.id)).map { Empty() }
             })
         try routes.on(
@@ -135,7 +146,9 @@ struct UserController: RouteCollection {
                 let user = try req.auth.require(User.self)
                 let input = try req.content.decode(AddPostComment.Request.self)
                 let notificationService = makePushNotificationService(request: req)
-                let useCase = AddPostCommentUseCase(userRepository: repository, notificationService: notificationService, eventLoop: req.eventLoop)
+                let useCase = AddPostCommentUseCase(
+                    userRepository: repository, notificationService: notificationService,
+                    eventLoop: req.eventLoop)
                 return try useCase((user: user, input: input))
             })
         try routes.on(
@@ -148,14 +161,20 @@ struct UserController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 repository.search(query: uri.term, page: uri.page, per: uri.per)
             })
-        try routes.on(endpoint: Endpoint.GetNotifications.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(User.self)
-            return repository.getNotifications(userId: user.id, page: uri.page, per: uri.per)
-        })
-        try routes.on(endpoint: Endpoint.ReadNotification.self, use: injectProvider { req, uri, repository in
-            let input = try req.content.decode(ReadNotification.Request.self)
-            return repository.readNotification(notificationId: input.notificationId).map { Empty() }
-        })
+        try routes.on(
+            endpoint: Endpoint.GetNotifications.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.getNotifications(userId: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: Endpoint.ReadNotification.self,
+            use: injectProvider { req, uri, repository in
+                let input = try req.content.decode(ReadNotification.Request.self)
+                return repository.readNotification(notificationId: input.notificationId).map {
+                    Empty()
+                }
+            })
     }
 
     func createUser(req: Request, uri: Signup.URI, repository: Domain.UserRepository) throws
@@ -204,29 +223,34 @@ struct UserController: RouteCollection {
             }
             .map { Empty() }
     }
-    
-    func getUserDetail(req: Request, uri: GetUserDetail.URI, repository: Domain.UserRepository) throws
+
+    func getUserDetail(req: Request, uri: GetUserDetail.URI, repository: Domain.UserRepository)
+        throws
         -> EventLoopFuture<
             Endpoint.GetUserDetail.Response
         >
     {
         let selfUser = try req.auth.require(User.self)
         let user = repository.find(by: uri.userId).unwrap(or: Abort(.notFound))
-        
+
         let userSocialRepository = Persistance.UserSocialRepository(db: req.db)
-        
+
         let followersCount = userSocialRepository.userFollowersCount(selfUser: uri.userId)
         let followingUsersCount = userSocialRepository.followingUsersCount(selfUser: uri.userId)
         let postCount = userSocialRepository.userPostCount(selfUser: uri.userId)
         let likePostCount = userSocialRepository.userLikePostCount(selfUser: uri.userId)
         let followingGroupsCount = userSocialRepository.followingGroupsCount(userId: uri.userId)
-        let likeFutureLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId, type: .future)
-        let likePastLiveCount = userSocialRepository.userLikeLiveCount(selfUser: uri.userId, type: .past)
-        let isFollowed = userSocialRepository.isUserFollowing(selfUser: uri.userId, targetUser: selfUser.id)
-        let isFollowing = userSocialRepository.isUserFollowing(selfUser: selfUser.id, targetUser: uri.userId)
+        let likeFutureLiveCount = userSocialRepository.userLikeLiveCount(
+            selfUser: uri.userId, type: .future)
+        let likePastLiveCount = userSocialRepository.userLikeLiveCount(
+            selfUser: uri.userId, type: .past)
+        let isFollowed = userSocialRepository.isUserFollowing(
+            selfUser: uri.userId, targetUser: selfUser.id)
+        let isFollowing = userSocialRepository.isUserFollowing(
+            selfUser: selfUser.id, targetUser: uri.userId)
         let isBlocked = userSocialRepository.isBlocking(selfUser: uri.userId, target: selfUser.id)
         let isBlocking = userSocialRepository.isBlocking(selfUser: selfUser.id, target: uri.userId)
-        
+
         return user.and(followersCount)
             .and(followingUsersCount)
             .and(postCount)
@@ -253,22 +277,22 @@ struct UserController: RouteCollection {
                     $0.1,
                     $1
                 )
-        }.map {
-            GetUserDetail.Response(
-                user: $0,
-                followersCount: $1,
-                followingUsersCount: $2,
-                postCount: $3,
-                likePostCount: $4,
-                likeFutureLiveCount: $5,
-                likePastLiveCount: $6,
-                followingGroupsCount: $7,
-                isFollowed: $8,
-                isFollowing: $9,
-                isBlocked: $10,
-                isBlocking: $11
-            )
-        }
+            }.map {
+                GetUserDetail.Response(
+                    user: $0,
+                    followersCount: $1,
+                    followingUsersCount: $2,
+                    postCount: $3,
+                    likePostCount: $4,
+                    likeFutureLiveCount: $5,
+                    likePastLiveCount: $6,
+                    followingGroupsCount: $7,
+                    isFollowed: $8,
+                    isFollowing: $9,
+                    isBlocked: $10,
+                    isBlocking: $11
+                )
+            }
     }
 }
 

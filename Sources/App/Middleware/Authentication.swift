@@ -39,7 +39,7 @@ class JWTAuthenticator: BearerAuthenticator {
         let iss: IssuerClaim
         let email: String?
         let exp: ExpirationClaim
-        
+
         func verify(using _: JWTSigner) throws {
             try exp.verifyNotExpired()
         }
@@ -75,7 +75,8 @@ class JWTAuthenticator: BearerAuthenticator {
 }
 
 public func convertToCognitoUsername(_ sub: String) -> String {
-    return sub
+    return
+        sub
         .replacingOccurrences(of: "|", with: "_")
         .replacingOccurrences(of: "apple", with: "SignInWithApple")
         .replacingOccurrences(of: "facebook", with: "Facebook")

@@ -49,7 +49,8 @@ struct UserSocialController: RouteCollection {
             endpoint: FollowingGroups.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.followings(userId: uri.id, selfUser: user.id, page: uri.page, per: uri.per)
+                return repository.followings(
+                    userId: uri.id, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: RecentlyFollowingGroups.self,
@@ -115,7 +116,8 @@ struct UserSocialController: RouteCollection {
             endpoint: GetUpcomingLives.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.upcomingLives(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+                return repository.upcomingLives(
+                    userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
             })
         try routes.on(
             endpoint: GetFollowingGroupFeeds.self,
@@ -158,13 +160,17 @@ struct UserSocialController: RouteCollection {
             endpoint: Endpoint.GetLikedLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.likedLive(userId: uri.userId, selfUser: user.id, series: .past, page: uri.page, per: uri.per)
+                return repository.likedLive(
+                    userId: uri.userId, selfUser: user.id, series: .past, page: uri.page,
+                    per: uri.per)
             })
         try routes.on(
             endpoint: Endpoint.GetLikedFutureLive.self,
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
-                return repository.likedLive(userId: uri.userId, selfUser: user.id, series: .future, page: uri.page, per: uri.per)
+                return repository.likedLive(
+                    userId: uri.userId, selfUser: user.id, series: .future, page: uri.page,
+                    per: uri.per)
             })
         try routes.on(
             endpoint: LikeUserFeed.self,
@@ -178,7 +184,8 @@ struct UserSocialController: RouteCollection {
                     .flatMap { _, feed in
                         let notification = PushNotification(
                             message: "\(user.name) さんがあなたの投稿にいいねしました")
-                        return notificationService.publish(to: feed.author.id, notification: notification)
+                        return notificationService.publish(
+                            to: feed.author.id, notification: notification)
                     }
                     .map { Empty() }
             })
@@ -187,7 +194,9 @@ struct UserSocialController: RouteCollection {
             use: injectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 let input = try req.content.decode(UnlikeUserFeed.Request.self)
-                return repository.unlikeUserFeed(userId: user.id, feedId: input.feedId).map { Empty() }
+                return repository.unlikeUserFeed(userId: user.id, feedId: input.feedId).map {
+                    Empty()
+                }
             })
         try routes.on(
             endpoint: GetAllPosts.self,
@@ -222,12 +231,14 @@ struct UserSocialController: RouteCollection {
                 return repository.likePost(userId: user.id, postId: input.postId)
                     .and(userRepository.getPost(postId: input.postId))
                     .flatMap { _, post -> EventLoopFuture<Void> in
-                        if (post.author.id != user.id) {
-                            let notification = PushNotification(message: "\(user.name)がレポートにいいねしました")
-                            return notificationService.publish(to: post.author.id, notification: notification)
+                        if post.author.id != user.id {
+                            let notification = PushNotification(
+                                message: "\(user.name)がレポートにいいねしました")
+                            return notificationService.publish(
+                                to: post.author.id, notification: notification)
                         }
                         return req.eventLoop.makeSucceededFuture(())
-                        
+
                     }.map { Empty() }
             })
         try routes.on(
@@ -237,27 +248,42 @@ struct UserSocialController: RouteCollection {
                 let input = try req.content.decode(UnlikePost.Request.self)
                 return repository.unlikePost(userId: user.id, postId: input.postId).map { Empty() }
             })
-        try routes.on(endpoint: GetLiveLikedUsers.self, use: injectProvider { req, uri, repository in
-            return repository.getLiveLikedUsers(liveId: uri.liveId, page: uri.page, per: uri.per)
-        })
-        try routes.on(endpoint: GetLikedLiveTransition.self, use: injectProvider { req, uri, repository in
-            return repository.getLikedLiveTransition(userId: uri.userId)
-        })
-        try routes.on(endpoint: FrequentlyWatchingGroups.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(User.self)
-            return repository.frequentlyWatchingGroups(userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
-        })
-        try routes.on(endpoint: IsUsernameExists.self, use: injectProvider { req, uri, repository in
-            return repository.isUsernameExists(username: uri.username)
-        })
-        try routes.on(endpoint: RegisterUsername.self, use: injectProvider { req, uri, repository in
-            let user = try req.auth.require(Domain.User.self)
-            let request = try req.content.decode(RegisterUsername.Request.self)
-            return repository.registerUsername(userId: user.id, username: request.username).map { Empty() }
-        })
-        try routes.on(endpoint: Endpoint.GetUserByUsername.self, use: injectProvider { req, uri, repository in
-            return repository.getUserByUsername(username: uri.username)
-        })
+        try routes.on(
+            endpoint: GetLiveLikedUsers.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getLiveLikedUsers(
+                    liveId: uri.liveId, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: GetLikedLiveTransition.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getLikedLiveTransition(userId: uri.userId)
+            })
+        try routes.on(
+            endpoint: FrequentlyWatchingGroups.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(User.self)
+                return repository.frequentlyWatchingGroups(
+                    userId: uri.userId, selfUser: user.id, page: uri.page, per: uri.per)
+            })
+        try routes.on(
+            endpoint: IsUsernameExists.self,
+            use: injectProvider { req, uri, repository in
+                return repository.isUsernameExists(username: uri.username)
+            })
+        try routes.on(
+            endpoint: RegisterUsername.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                let request = try req.content.decode(RegisterUsername.Request.self)
+                return repository.registerUsername(userId: user.id, username: request.username).map
+                { Empty() }
+            })
+        try routes.on(
+            endpoint: Endpoint.GetUserByUsername.self,
+            use: injectProvider { req, uri, repository in
+                return repository.getUserByUsername(username: uri.username)
+            })
     }
 }
 

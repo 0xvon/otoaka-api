@@ -51,7 +51,7 @@ public struct SendNotification: EndpointProtocol {
     public struct Request: Codable {
         public let message: String
         public let segment: Segment
-        
+
         public init(message: String, segment: Segment? = .all) {
             self.message = message
             self.segment = segment ?? .all

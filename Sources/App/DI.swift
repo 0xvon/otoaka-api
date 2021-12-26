@@ -1,6 +1,7 @@
 import Domain
 import Persistance
 import Service
+import SotoCore
 import Vapor
 
 func makePushNotificationService(request: Request) -> Domain.PushNotificationService {
@@ -25,9 +26,6 @@ func makeUserRepository(request: Request) -> Domain.UserRepository {
 func makeUserSocialRepository(request: Request) -> Domain.UserSocialRepository {
     Persistance.UserSocialRepository(db: request.db)
 }
-
-
-import SotoCore
 
 extension Application {
     struct AWSClientKey: StorageKey {

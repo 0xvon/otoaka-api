@@ -1,5 +1,5 @@
-import Foundation
 import DomainEntity
+import Foundation
 
 public struct CreateGroup: EndpointProtocol {
     public struct Request: Codable {
@@ -248,7 +248,7 @@ public struct GroupFeed: Codable {
     public var isFollowing: Bool
     public var followersCount: Int
     public var watchingCount: Int
-    
+
     public subscript<T>(dynamicMember keyPath: KeyPath<Group, T>) -> T {
         group[keyPath: keyPath]
     }
@@ -267,8 +267,10 @@ public struct GroupDetail: Codable {
     public var isFollowing: Bool
     public var followersCount: Int
     public var watchingCount: Int
-    
-    public init(group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int, watchingCount: Int) {
+
+    public init(
+        group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int, watchingCount: Int
+    ) {
         self.group = group
         self.isMember = isMember
         self.isFollowing = isFollowing

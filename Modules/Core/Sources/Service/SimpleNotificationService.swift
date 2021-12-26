@@ -1,7 +1,7 @@
 import Domain
+import Logging
 import NIO
 import SotoSNS
-import Logging
 
 public protocol SimpleNotificationServiceSecrets {
     var awsAccessKeyId: String { get }
@@ -70,10 +70,10 @@ public class SimpleNotificationService: PushNotificationService {
         return input.flatMap { [sns, eventLoop] in
             EventLoopFuture.andAllSucceed($0.map { sns.publish($0) }, on: eventLoop)
         }.map { _ in }
-        .flatMapError { [logger, eventLoop] error in
-            logger.error(Logger.Message(stringLiteral: String(describing: error)))
-            return eventLoop.makeSucceededFuture(())
-        }
+            .flatMapError { [logger, eventLoop] error in
+                logger.error(Logger.Message(stringLiteral: String(describing: error)))
+                return eventLoop.makeSucceededFuture(())
+            }
     }
 
     public func publish(toArtistFollowers artist: User.ID, notification: PushNotification)
@@ -94,7 +94,7 @@ public class SimpleNotificationService: PushNotificationService {
                 on: self.eventLoop)
         }
     }
-    
+
     public func publish(toUserFollowers user: User.ID, notification: PushNotification)
         -> EventLoopFuture<Void>
     {
@@ -118,11 +118,14 @@ public class SimpleNotificationService: PushNotificationService {
                 on: self.eventLoop)
         }
     }
-    
-    public func publish(toLiveLikedUsers: Live.ID, notification: PushNotification) -> EventLoopFuture<Void> {
+
+    public func publish(toLiveLikedUsers: Live.ID, notification: PushNotification)
+        -> EventLoopFuture<Void>
+    {
         let liveLikedUsers = userSocialRepository.getLiveLikedUsers(live: toLiveLikedUsers)
         return liveLikedUsers.flatMap { users in
-            EventLoopFuture.andAllSucceed(users.map { self.publish(to: $0, notification: notification) }, on: self.eventLoop)
+            EventLoopFuture.andAllSucceed(
+                users.map { self.publish(to: $0, notification: notification) }, on: self.eventLoop)
         }
     }
 

@@ -95,7 +95,6 @@ struct CreateArtistFeedComment: Migration {
     }
 }
 
-
 struct AddDeletedAtFieldToGroup: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Group.schema)

@@ -16,7 +16,7 @@ public struct CreatePostUserCase: LegacyUseCase {
     public let userRepository: UserRepository
     public let notificationService: PushNotificationService
     public let eventLoop: EventLoop
-    
+
     public init(
         userRepository: UserRepository,
         notificationService: PushNotificationService,
@@ -26,13 +26,15 @@ public struct CreatePostUserCase: LegacyUseCase {
         self.notificationService = notificationService
         self.eventLoop = eventLoop
     }
-    
+
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let post = userRepository.createPost(for: request.input, authorId: request.user.id)
         return post.flatMap { post in
             let notification = PushNotification(message: "\(request.user.name)がライブレポートを投稿しました")
-            return notificationService.publish(toUserFollowers: request.user.id, notification: notification)
-                .map { post }
+            return notificationService.publish(
+                toUserFollowers: request.user.id, notification: notification
+            )
+            .map { post }
         }
     }
 }
@@ -46,10 +48,10 @@ public struct DeletePostUseCase: LegacyUseCase {
     public enum Error: Swift.Error {
         case notAuthor
     }
-    
+
     public let userRepository: UserRepository
     public let eventLoop: EventLoop
-    
+
     public init(
         userRepository: UserRepository,
         eventLoop: EventLoop
@@ -57,8 +59,10 @@ public struct DeletePostUseCase: LegacyUseCase {
         self.userRepository = userRepository
         self.eventLoop = eventLoop
     }
-    
-    public func callAsFunction(_ request: (postId: Post.ID, userId: User.ID)) throws -> EventLoopFuture<Void> {
+
+    public func callAsFunction(_ request: (postId: Post.ID, userId: User.ID)) throws
+        -> EventLoopFuture<Void>
+    {
         let precondition = userRepository.getPost(postId: request.postId).flatMapThrowing {
             guard $0.author.id == request.userId else { throw Error.notAuthor }
             return
@@ -66,7 +70,6 @@ public struct DeletePostUseCase: LegacyUseCase {
         return precondition.flatMap { userRepository.deletePost(postId: request.postId) }
     }
 }
-
 
 public struct AddPostCommentUseCase: LegacyUseCase {
     public typealias Request = (
@@ -76,7 +79,7 @@ public struct AddPostCommentUseCase: LegacyUseCase {
     public let userRepository: UserRepository
     public let notificationService: PushNotificationService
     public let eventLoop: EventLoop
-    
+
     public init(
         userRepository: UserRepository,
         notificationService: PushNotificationService,
@@ -86,19 +89,24 @@ public struct AddPostCommentUseCase: LegacyUseCase {
         self.notificationService = notificationService
         self.eventLoop = eventLoop
     }
-    
+
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        let postComment = userRepository.addPostComment(userId: request.user.id, input: request.input)
+        let postComment = userRepository.addPostComment(
+            userId: request.user.id, input: request.input)
         let post = userRepository.getPost(postId: request.input.postId)
-        return postComment
+        return
+            postComment
             .and(post)
             .flatMap { (comment, post) in
                 if comment.author.id != post.author.id {
-                    let notification = PushNotification(message: "\(comment.author.name)があなたのレポートにコメントしました")
-                    return notificationService.publish(to: post.author.id, notification: notification)
-                        .map { comment }
+                    let notification = PushNotification(
+                        message: "\(comment.author.name)があなたのレポートにコメントしました")
+                    return notificationService.publish(
+                        to: post.author.id, notification: notification
+                    )
+                    .map { comment }
                 }
                 return eventLoop.makeSucceededFuture(comment)
-        }
+            }
     }
 }
