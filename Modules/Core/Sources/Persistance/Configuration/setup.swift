@@ -23,7 +23,7 @@ public func setup(
         fatalError("Invalid database url: \(secrets.databaseURL)")
     }
     databases.use(
-        .mysql(configuration: config, connectionPoolTimeout: .minutes(1)), as: .mysql,
+        .mysql(configuration: config), as: .mysql,
         isDefault: true)
 
 }
