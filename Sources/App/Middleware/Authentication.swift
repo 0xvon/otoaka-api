@@ -2,7 +2,6 @@ import Domain
 import Foundation
 import JWTKit
 import Persistance
-import SotoCognitoIdentityProvider
 import Vapor
 
 #if canImport(FoundationNetworking)
