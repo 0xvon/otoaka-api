@@ -21,13 +21,17 @@ jobs:
           key: ${{ runner.os }}-spm-v2-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.swiftenv
+          key: ${{ runner.os }}-swift-toolchain-${{ hashFiles('.swift-version') }}
       - name: Install swiftenv
         run: |
-          git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
+          [ -d ~/.swiftenv ] || git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
           export SWIFTENV_ROOT="$HOME/.swiftenv"
           echo "$SWIFTENV_ROOT/bin" >> $GITHUB_PATH
       - name: Install Swift
-        run: swiftenv install
+        run: swiftenv install || true
       - name: Build and test
         run: swiftenv exec swift test
         env:

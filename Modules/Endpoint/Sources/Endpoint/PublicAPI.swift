@@ -9,7 +9,7 @@ public struct GetUserProfile: EndpointProtocol {
         public var recentlyFollowingGroups: [GroupFeed]
         public var followingGroups: [GroupFeed]
         public var liveSchedule: [LiveFeed]
-        
+
         public init(
             user: User,
             transition: LiveTransition,
@@ -31,6 +31,6 @@ public struct GetUserProfile: EndpointProtocol {
         @DynamicPath public var username: String
         public init() {}
     }
-    
+
     public static let method: HTTPMethod = .get
 }

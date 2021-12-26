@@ -31,7 +31,7 @@ public struct CreateGroupUseCase: LegacyUseCase {
 }
 
 public struct EditGroupUseCase: LegacyUseCase {
-    
+
     public typealias Request = (
         id: Group.ID,
         input: EditGroup.Request, user: User.ID
@@ -55,16 +55,16 @@ public struct EditGroupUseCase: LegacyUseCase {
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         try validate(request: request.input)
-        let precondition = groupRepository.isMember(of: request.id, member: request.user).flatMapThrowing {
-            guard $0 else { throw Error.notMemberOfGroup }
-            return
-        }
+        let precondition = groupRepository.isMember(of: request.id, member: request.user)
+            .flatMapThrowing {
+                guard $0 else { throw Error.notMemberOfGroup }
+                return
+            }
         return precondition.flatMap { groupRepository.update(id: request.id, input: request.input) }
     }
 }
 
-
-fileprivate func validate(request: CreateGroup.Request) throws {
+private func validate(request: CreateGroup.Request) throws {
     func assertNotEmpty(_ keyPath: KeyPath<CreateGroup.Request, String?>, context: String) throws {
         if let value = request[keyPath: keyPath], value.isEmpty {
             throw GroupUpdateError.invalidEmptyId(context)
@@ -73,7 +73,6 @@ fileprivate func validate(request: CreateGroup.Request) throws {
     try assertNotEmpty(\.twitterId, context: "Twitter ID")
     try assertNotEmpty(\.youtubeChannelId, context: "Youtube Channel ID")
 }
-
 
 public struct DeleteGroupUseCase: LegacyUseCase {
     public typealias Request = (id: Group.ID, user: User.ID)
@@ -95,10 +94,11 @@ public struct DeleteGroupUseCase: LegacyUseCase {
     }
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        let precondition = groupRepository.isLeader(of: request.id, member: request.user).flatMapThrowing {
-            guard $0 else { throw Error.notLeader }
-            return
-        }
+        let precondition = groupRepository.isLeader(of: request.id, member: request.user)
+            .flatMapThrowing {
+                guard $0 else { throw Error.notLeader }
+                return
+            }
         return precondition.flatMap {
             groupRepository.deleteGroup(id: request.id)
         }
@@ -197,7 +197,9 @@ public struct JoinGroupUseCase: LegacyUseCase {
             return invitation
         }
         .flatMap { invitation in
-            groupRepository.isMember(of: invitation.group.id, member: request.userId).map { ($0, invitation) }
+            groupRepository.isMember(of: invitation.group.id, member: request.userId).map {
+                ($0, invitation)
+            }
         }
         .flatMapThrowing { (isAlreadyJoined, invitation) -> GroupInvitation in
             guard !isAlreadyJoined else { throw Error.alreadyJoined }

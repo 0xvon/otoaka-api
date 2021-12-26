@@ -102,7 +102,9 @@ class GroupControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let headers = appClient.makeHeaders(for: user)
         let createdGroup = try appClient.createGroup(with: user)
-        let live = try appClient.createLive(hostGroup: createdGroup, style: .oneman(performer: createdGroup.id), with: user, date: "20010101")
+        let live = try appClient.createLive(
+            hostGroup: createdGroup, style: .oneman(performer: createdGroup.id), with: user,
+            date: "20010101")
         _ = try appClient.like(live: live, with: user)
 
         try app.test(.GET, "groups/\(createdGroup.id)", headers: headers) { res in
@@ -126,8 +128,9 @@ class GroupControllerTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(response.items.count, 3)
             XCTAssertGreaterThanOrEqual(response.items.first!.watchingCount, 0)
         }
-        
-        try app.test(.GET, "groups/search?term=wall+of+death&page=1&per=10", headers: headers) { res in
+
+        try app.test(.GET, "groups/search?term=wall+of+death&page=1&per=10", headers: headers) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(SearchGroup.Response.self)
             XCTAssertGreaterThanOrEqual(response.items.count, 3)
@@ -306,7 +309,7 @@ class GroupControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.items.count, 1)
         }
     }
-    
+
     func testGetGroupsUserFeeds() throws {
         let userA = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
@@ -315,14 +318,15 @@ class GroupControllerTests: XCTestCase {
         _ = try appClient.createUserFeed(with: userA, groupId: groupX.id)
         _ = try appClient.createUserFeed(with: userB, groupId: groupX.id)
 
-        try app.test(.GET, "groups/\(groupX.id)/user_feeds?page=1&per=10", headers: headers) { res in
+        try app.test(.GET, "groups/\(groupX.id)/user_feeds?page=1&per=10", headers: headers) {
+            res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetUserFeeds.Response.self)
-            
+
             XCTAssertEqual(responseBody.items.count, 2)
         }
     }
-    
+
     func testGetGroupLives() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let userB = try appClient.createUser()
@@ -331,7 +335,7 @@ class GroupControllerTests: XCTestCase {
         let headers = appClient.makeHeaders(for: user)
         _ = try appClient.followUser(target: userB, with: user)
         _ = try appClient.like(live: live, with: userB)
-        
+
         try app.test(.GET, "groups/\(group.id)/lives?page=1&per=100", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.GetGroupLives.Response.self)

@@ -21,14 +21,20 @@ class ExternalControllerTests: XCTestCase {
         appClient = nil
     }
 
+    /*
+     These E2E tests don't check anything and meaningless but take a long time.
+     Controller's logics are very thin and most parts are proven by type-system.
+     If you want to test their use-cases, please move tests in Domain module
+
     func testCheckGlobalIP() throws {
         let user = try appClient.createUser()
         try app.test(
-        .GET, "external/global_ip", headers: appClient.makeHeaders(for: user)) { res in
+            .GET, "external/global_ip", headers: appClient.makeHeaders(for: user)
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
-    
+
     func testNotifyUpcomingLives() throws {
         let user = try appClient.createUser()
         try app.test(
@@ -37,7 +43,7 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
-    
+
     func testNotifyPastLives() throws {
         let user = try appClient.createUser()
         try app.test(
@@ -46,28 +52,34 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
-    
+
     func testSendNotification() throws {
         let user = try appClient.createUser()
         let body = Endpoint.SendNotification.Request(message: "こんにちは", segment: .all)
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-        
-        try app.test(.POST, "external/notification", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+
+        try app.test(
+            .POST, "external/notification", headers: appClient.makeHeaders(for: user),
+            body: bodyData
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
     }
-    
+    */
+
     func testGetUserProfile() throws {
         let user = try appClient.createUser()
         let username = "userhoge\(UUID.init().uuidString)"
-        
+
         let body = RegisterUsername.Request(username: username)
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-        
-        try app.test(.POST, "user_social/username", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+
+        try app.test(
+            .POST, "user_social/username", headers: appClient.makeHeaders(for: user), body: bodyData
+        ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
-        
+
         try app.test(.GET, "public/user_profile/\(username)") { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(GetUserProfile.Response.self)

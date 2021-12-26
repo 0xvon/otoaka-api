@@ -63,7 +63,9 @@ public struct User: Codable, Identifiable, Equatable {
     public var instagramUrl: URL?
 
     public init(
-        id: ID, name: String, username: String?, biography: String?, sex: String?, age: Int?, liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties, twitterUrl: URL?, instagramUrl: URL?
+        id: ID, name: String, username: String?, biography: String?, sex: String?, age: Int?,
+        liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties,
+        twitterUrl: URL?, instagramUrl: URL?
     ) {
         self.id = id
         self.name = name
@@ -91,9 +93,10 @@ public struct UserFeed: Codable, Equatable {
     public var group: Group
     public var title: String
     public var createdAt: Date
-    
+
     public init(
-        id: UserFeed.ID, text: String, feedType: FeedType, author: User, ogpUrl: String?, thumbnailUrl: String?, group: Group, title: String, createdAt: Date
+        id: UserFeed.ID, text: String, feedType: FeedType, author: User, ogpUrl: String?,
+        thumbnailUrl: String?, group: Group, title: String, createdAt: Date
     ) {
         self.id = id
         self.text = text
@@ -114,7 +117,7 @@ public struct UserFeedComment: Codable, Identifiable, Equatable {
     public var author: User
     public var userFeedId: UserFeed.ID
     public var createdAt: Date
-    
+
     public init(
         id: UserFeedComment.ID, text: String, author: User, userFeedId: UserFeed.ID,
         createdAt: Date
@@ -134,7 +137,7 @@ public struct UserNotification: Codable, Identifiable, Equatable {
     public var isRead: Bool
     public var notificationType: UserNotificationType
     public var createdAt: Date
-    
+
     public init(
         id: ID, user: User, isRead: Bool, notificationType: UserNotificationType, createdAt: Date
     ) {
@@ -156,7 +159,7 @@ public struct Post: Codable, Equatable {
     public var groups: [Group]
     public var imageUrls: [String]
     public var createdAt: Date
-    
+
     public init(
         id: Post.ID,
         author: User,
@@ -185,9 +188,10 @@ public struct PostTrack: Codable, Equatable, Identifiable {
     public var groupName: String
     public var type: FeedType
     public var thumbnailUrl: String?
-    
+
     public init(
-        id: PostTrack.ID, trackName: String, groupName: String, type: FeedType, thumbnailUrl: String?
+        id: PostTrack.ID, trackName: String, groupName: String, type: FeedType,
+        thumbnailUrl: String?
     ) {
         self.id = id
         self.trackName = trackName
@@ -204,7 +208,7 @@ public struct PostComment: Codable, Identifiable, Equatable {
     public var author: User
     public var post: Post
     public var createdAt: Date
-    
+
     public init(
         id: PostComment.ID, text: String, author: User, post: Post, createdAt: Date
     ) {
@@ -223,15 +227,15 @@ public enum UserNotificationType: Codable, Equatable {
     case likePost(PostLike)
     case postComment(PostComment)
     case officialAnnounce(OfficialAnnounce)
-    
+
     enum CodingKeys: CodingKey {
         case kind, value
     }
-    
+
     enum Kind: String, Codable {
         case follow, like, likePost, comment, postComment, officialAnnounce
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let kind = try container.decode(Kind.self, forKey: .kind)
@@ -279,7 +283,7 @@ public enum UserNotificationType: Codable, Equatable {
 public struct OfficialAnnounce: Codable, Equatable {
     public var title: String
     public var url: String?
-    
+
     public init(title: String, url: String?) {
         self.title = title
         self.url = url
@@ -289,7 +293,7 @@ public struct OfficialAnnounce: Codable, Equatable {
 public struct UserFeedLike: Codable, Equatable {
     public var feed: UserFeed
     public var likedBy: User
-    
+
     public init(feed: UserFeed, likedBy: User) {
         self.feed = feed
         self.likedBy = likedBy
@@ -299,7 +303,7 @@ public struct UserFeedLike: Codable, Equatable {
 public struct PostLike: Codable, Equatable {
     public var post: Post
     public var likedBy: User
-    
+
     public init(post: Post, likedBy: User) {
         self.post = post
         self.likedBy = likedBy

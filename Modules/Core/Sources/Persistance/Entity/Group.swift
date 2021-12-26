@@ -160,13 +160,13 @@ final class ArtistFeed: Model {
 
     @OptionalField(key: "youtube_url")
     var youtubeURL: String?
-    
+
     @OptionalField(key: "apple_music_song_id")
     var appleMusicSongId: String?
 
     @Parent(key: "author_id")
     var author: User
-    
+
     @OptionalField(key: "thumbnail_url")
     var thumbnailUrl: String?
 
@@ -241,13 +241,15 @@ extension Endpoint.ArtistFeedComment {
 }
 
 extension Endpoint.GroupFeed {
-    static func translate(fromPersistance entity: Group, selfUser: Domain.User.ID, on db: Database)-> EventLoopFuture<Endpoint.GroupFeed> {
+    static func translate(fromPersistance entity: Group, selfUser: Domain.User.ID, on db: Database)
+        -> EventLoopFuture<Endpoint.GroupFeed>
+    {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "YYYYMMdd"
             return dateFormatter
         }()
-        
+
         let isFollowing = Following.query(on: db)
             .filter(\.$user.$id == selfUser.rawValue)
             .filter(\.$target.$id == entity.id!)
@@ -266,12 +268,14 @@ extension Endpoint.GroupFeed {
             .and(isFollowing)
             .and(followersCount)
             .and(watchingCount)
-            .map { (
-                $0.0.0,
-                $0.0.1,
-                $0.1,
-                $1
-            )}
+            .map {
+                (
+                    $0.0.0,
+                    $0.0.1,
+                    $0.1,
+                    $1
+                )
+            }
             .map {
                 Domain.GroupFeed(
                     group: $0,

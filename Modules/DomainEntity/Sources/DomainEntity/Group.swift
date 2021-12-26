@@ -106,8 +106,10 @@ public struct ArtistFeed: Codable, Equatable {
     public var author: User
     public var createdAt: Date
 
-    public init(id: ArtistFeed.ID, text: String, thumbnailUrl: String?, feedType: FeedType, author: User, createdAt: Date)
-    {
+    public init(
+        id: ArtistFeed.ID, text: String, thumbnailUrl: String?, feedType: FeedType, author: User,
+        createdAt: Date
+    ) {
         self.id = id
         self.text = text
         self.thumbnailUrl = thumbnailUrl

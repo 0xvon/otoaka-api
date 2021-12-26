@@ -110,7 +110,7 @@ struct UpdateLiveForPia: Migration {
             .field("pia_event_url", .string)
             .update()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Live.schema)
             .deleteField("date")
@@ -129,7 +129,7 @@ struct UpdateLiveForDateTerm: Migration {
             .field("end_date", .string)
             .update()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Live.schema)
             .deleteField("end_date")

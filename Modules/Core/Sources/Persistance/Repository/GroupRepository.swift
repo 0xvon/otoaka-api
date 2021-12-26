@@ -150,7 +150,7 @@ public class GroupRepository: Domain.GroupRepository {
             Endpoint.Group.translate(fromPersistance: $0, on: db)
         }
     }
-    
+
     public func get(page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.Group>> {
         let groups = Group.query(on: db)
             .sort(\.$name, .ascending)
@@ -161,7 +161,9 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
-    public func get(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.GroupFeed>> {
+    public func get(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
+        Domain.Page<Domain.GroupFeed>
+    > {
         let groups = Group.query(on: db)
             .sort(\.$name, .ascending)
         return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
@@ -243,26 +245,37 @@ public class GroupRepository: Domain.GroupRepository {
         ArtistFeed.find(feedId.rawValue, on: db).unwrap(orError: Error.feedNotFound)
             .flatMap { [db] in Domain.ArtistFeed.translate(fromPersistance: $0, on: db) }
     }
-    
-    public func getGroupUserFeeds(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.UserFeedSummary>> {
+
+    public func getGroupUserFeeds(
+        groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int
+    ) -> EventLoopFuture<Domain.Page<Domain.UserFeedSummary>> {
         UserFeed.query(on: db)
             .filter(\.$group.$id == groupId.rawValue)
             .with(\.$comments)
             .with(\.$likes)
             .paginate(PageRequest(page: page, per: per))
             .flatMap { [db] in
-                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { feed -> EventLoopFuture<UserFeedSummary> in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
+                    feed -> EventLoopFuture<UserFeedSummary> in
                     return Domain.UserFeed.translate(fromPersistance: feed, on: db).map {
-                        UserFeedSummary(feed: $0, commentCount: feed.comments.count, likeCount: feed.likes.count, isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
+                        UserFeedSummary(
+                            feed: $0, commentCount: feed.comments.count,
+                            likeCount: feed.likes.count,
+                            isLiked: feed.likes.map { like in like.$user.$id.value! }.contains(
+                                userId.rawValue))
                     }
                 }
             }
     }
-    
-    public func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<Domain.Page<Domain.PostSummary>> {
+
+    public func getGroupPosts(groupId: Domain.Group.ID, userId: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.PostSummary>>
+    {
         Post.query(on: db)
             .join(PostGroup.self, on: \PostGroup.$post.$id == \Post.$id, method: .left)
-            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Post.$live.$id, method: .left)
+            .join(
+                LivePerformer.self, on: \LivePerformer.$live.$id == \Post.$live.$id, method: .left
+            )
             .group(.or) {
                 $0.filter(PostGroup.self, \PostGroup.$group.$id == groupId.rawValue)
                     .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
@@ -279,11 +292,15 @@ public class GroupRepository: Domain.GroupRepository {
                 Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
                     return Domain.Post.translate(fromPersistance: post, on: db)
                         .map {
-                            return Domain.PostSummary(post: $0, commentCount: post.comments.count, likeCount: post.likes.count, isLiked: post.likes.map { like in like.$user.$id.value! }.contains(userId.rawValue))
-                    }
+                            return Domain.PostSummary(
+                                post: $0, commentCount: post.comments.count,
+                                likeCount: post.likes.count,
+                                isLiked: post.likes.map { like in like.$user.$id.value! }.contains(
+                                    userId.rawValue))
+                        }
                 }
             }
-        
+
     }
 
     public func addArtistFeedComment(userId: Domain.User.ID, input: PostFeedComment.Request)
@@ -314,9 +331,11 @@ public class GroupRepository: Domain.GroupRepository {
             }
     }
 
-    public func search(query: String, selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
-        Domain.Page<Domain.GroupFeed>
-    > {
+    public func search(query: String, selfUser: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<
+            Domain.Page<Domain.GroupFeed>
+        >
+    {
         let lives = Group.query(on: db).filter(\.$name, .custom("LIKE"), "%\(query)%")
         return lives.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
@@ -324,7 +343,7 @@ public class GroupRepository: Domain.GroupRepository {
             }
         }
     }
-    
+
     public func followedGroups() -> EventLoopFuture<[Domain.Group]> {
         Group.query(on: db)
             .join(Following.self, on: \Following.$target.$id == \Group.$id)
@@ -334,8 +353,10 @@ public class GroupRepository: Domain.GroupRepository {
                 Domain.Group.translate(fromPersistance: $0, on: db)
             }
     }
-    
-    public func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void> {
+
+    public func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID)
+        -> EventLoopFuture<Void>
+    {
         let notification = UserNotification()
         notification.isRead = false
         notification.notificationType = .official_announce

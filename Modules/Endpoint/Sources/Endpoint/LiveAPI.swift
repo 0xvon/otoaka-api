@@ -97,7 +97,7 @@ public struct GetPendingRequestCount: EndpointProtocol {
         public init(pendingRequestCount: Int) {
             self.pendingRequestCount = pendingRequestCount
         }
-        
+
         public var pendingRequestCount: Int
     }
     public struct URI: CodableURL {
@@ -108,17 +108,27 @@ public struct GetPendingRequestCount: EndpointProtocol {
 }
 
 public struct LiveDetail: Codable {
-    public init(live: Live, isLiked: Bool, likeCount: Int, postCount: Int, participatingFriends: [User]) {
+    public init(
+        live: Live, isLiked: Bool, likeCount: Int, postCount: Int, participatingFriends: [User]
+    ) {
         self.live = live
         self.isLiked = isLiked
         self.likeCount = likeCount
         self.postCount = postCount
         self.participatingFriends = participatingFriends
+
+        self.participants = 0
+        self.ticket = nil
     }
 
     public var live: Live
     public var isLiked: Bool
+    public var hasTicket: Bool {
+        ticket != nil
+    }
+    public var participants: Int
     public var likeCount: Int
+    public var ticket: Ticket?
     public var postCount: Int
     public var participatingFriends: [User]
 }

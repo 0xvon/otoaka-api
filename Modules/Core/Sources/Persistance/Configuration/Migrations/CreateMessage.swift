@@ -14,7 +14,7 @@ struct CreateMessageRoom: Migration {
             .field("name", .string)
             .create()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(MessageRoom.schema).delete()
     }
@@ -31,7 +31,7 @@ struct CreateMessageRoomMember: Migration {
             .field("is_owner", .bool, .required)
             .create()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(MessageRoomMember.schema).delete()
     }
@@ -50,7 +50,7 @@ struct CreateMessage: Migration {
             .field("sent_at", .datetime, .required)
             .create()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Message.schema).delete()
     }
@@ -66,7 +66,7 @@ struct CreateMessageReading: Migration {
             .foreignKey("user_id", references: User.schema, .id)
             .create()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(MessageReading.schema).delete()
     }
@@ -78,7 +78,7 @@ struct AddMessageRoomToLatestMessageAt: Migration {
             .field("latest_message_at", .datetime)
             .update()
     }
-    
+
     func revert(on database: Database) -> EventLoopFuture<Void> {
         database.schema(MessageRoom.schema)
             .deleteField("latest_message_at")
