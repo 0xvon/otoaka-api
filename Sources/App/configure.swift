@@ -1,3 +1,4 @@
+import DomainEntity
 import Fluent
 import FluentMySQLDriver
 import Persistance
@@ -5,6 +6,7 @@ import Service
 import SotoCore
 import Vapor
 import JWTKit
+import Foundation
 
 protocol Secrets: SimpleNotificationServiceSecrets, DatabaseSecrets {
     var awsAccessKeyId: String { get }
@@ -65,6 +67,9 @@ public func configure(
     authenticator: Authenticator? = nil
 ) throws {
     let authenticator = try authenticator ?? JWTAuthenticator(auth0Domain: secrets.auth0Domain)
+    let adminAuthenticator = AdminGuardAuthenticator(adminUsers: [
+        User.ID(rawValue: UUID(uuid: (0x7D, 0xE0, 0x0E, 0x99, 0xFB, 0xD8, 0x4F, 0xA2, 0xB9, 0x50, 0xB8, 0xC2, 0x79, 0xCF, 0xC9, 0xF0)))
+    ])
     app.secrets = secrets
     app.awsClient = AWSClient(
         credentialProvider: .static(
@@ -80,5 +85,5 @@ public func configure(
         migrator: app.migrator,
         migrations: app.migrations
     )
-    try routes(app, authenticator: authenticator)
+    try routes(app, userAuthenticator: authenticator, adminAuthenticator: adminAuthenticator)
 }
