@@ -11,13 +11,14 @@ public struct Group: Codable, Identifiable, Equatable {
     public var twitterId: String?
     public var youtubeChannelId: String?
     public var hometown: String?
-    public var isVerified: Bool
+    public var isEntried: Bool
 
     public init(
         id: ID, name: String, englishName: String?,
         biography: String?, since: Date?, artworkURL: URL?,
         twitterId: String?, youtubeChannelId: String?,
-        hometown: String?
+        hometown: String?,
+        isEntried: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -28,7 +29,7 @@ public struct Group: Codable, Identifiable, Equatable {
         self.twitterId = twitterId
         self.youtubeChannelId = youtubeChannelId
         self.hometown = hometown
-        isVerified = false
+        self.isEntried = isEntried
     }
 }
 

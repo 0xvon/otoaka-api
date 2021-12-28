@@ -56,10 +56,11 @@ final class Group: Model {
 
 extension Endpoint.Group {
     static func translate(fromPersistance entity: Group, on db: Database) -> EventLoopFuture<Self> {
-        db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
-            try ($0, $0.requireID())
+        let isEntried = GroupEntry.query(on: db).filter(\.$group.$id == entity.id!).first().map { $0 != nil }
+        return db.eventLoop.makeSucceededFuture(entity).and(isEntried).flatMapThrowing {
+            try ($0, $0.requireID(), $1)
         }
-        .map { entity, id in
+        .map { entity, id, isEntried in
             Self.init(
                 id: ID(id),
                 name: entity.name, englishName: entity.englishName,
@@ -67,7 +68,8 @@ extension Endpoint.Group {
                 artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                 twitterId: entity.twitterId,
                 youtubeChannelId: entity.youtubeChannelId,
-                hometown: entity.hometown
+                hometown: entity.hometown,
+                isEntried: isEntried
             )
         }
     }
