@@ -241,4 +241,35 @@ class AuthenticationTests: XCTestCase {
             }
         }
     }
+
+    func testAdminGuard() throws {
+        let client = AppClient(application: app, authClient: Auth0Client(app))
+        let adminUser = try client.createUser()
+        let normalUser = try client.createUser()
+        app.grouped(try JWTAuthenticator(), AdminGuardAuthenticator(adminUsers: [adminUser.user.id])).get("admin") { _ in
+            "Authorized"
+        }
+        do {
+            // Accept admin user
+            var headers = HTTPHeaders()
+            headers.add(name: .authorization, value: "Bearer \(adminUser.token)")
+            try app.test(.GET, "admin", headers: headers) { res in
+                XCTAssertEqual(res.status, .ok)
+            }
+        }
+        do {
+            // Forbid access from normal user
+            var headers = HTTPHeaders()
+            headers.add(name: .authorization, value: "Bearer \(normalUser.token)")
+            try app.test(.GET, "admin", headers: headers) { res in
+                XCTAssertEqual(res.status, .forbidden)
+            }
+        }
+        do {
+            // Forbid access without authentication
+            try app.test(.GET, "admin") { res in
+                XCTAssertEqual(res.status, .unauthorized)
+            }
+        }
+    }
 }

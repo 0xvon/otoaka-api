@@ -5,7 +5,11 @@ import JWTKit
 import Persistance
 import Vapor
 
-func routes(_ app: Application, authenticator: Authenticator) throws {
+func routes(
+    _ app: Application,
+    userAuthenticator: Authenticator,
+    adminAuthenticator: Middleware
+) throws {
     app.routes.defaultMaxBodySize = "500kb"
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .all,
@@ -27,7 +31,7 @@ func routes(_ app: Application, authenticator: Authenticator) throws {
     }
 
     try app.register(collection: PublicController())
-    let loginTried = app.routes.grouped(authenticator)
+    let loginTried = app.routes.grouped(userAuthenticator)
     try loginTried.register(collection: UserController())
     let signedUp = loginTried.grouped(
         User.guardMiddleware(
@@ -39,5 +43,6 @@ func routes(_ app: Application, authenticator: Authenticator) throws {
     try signedUp.register(collection: UserSocialController())
     try signedUp.register(collection: MessageController())
     try signedUp.register(collection: SocialTipController())
-    try signedUp.register(collection: ExternalController())
+    try signedUp.grouped(adminAuthenticator)
+        .register(collection: ExternalController())
 }
