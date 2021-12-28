@@ -71,7 +71,13 @@ public enum Segment: String, Codable {
 }
 
 public struct EntryGroup: EndpointProtocol {
-    public typealias Request = Group.ID
+    public struct Request: Codable {
+        public let groupId: Group.ID
+        
+        public init(groupId: Group.ID) {
+            self.groupId = groupId
+        }
+    }
     public typealias Response = Empty
     
     public struct URI: CodableURL {
