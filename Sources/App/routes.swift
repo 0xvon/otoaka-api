@@ -38,5 +38,6 @@ func routes(_ app: Application, authenticator: Authenticator) throws {
     try signedUp.register(collection: LiveController())
     try signedUp.register(collection: UserSocialController())
     try signedUp.register(collection: MessageController())
+    try signedUp.register(collection: SocialTipController())
     try signedUp.register(collection: ExternalController())
 }

@@ -470,4 +470,16 @@ class AppClient {
             .DELETE, "messages/delete_room", headers: makeHeaders(for: user), body: bodyData
         )
     }
+    
+    func sendSocialTip(with user: AppUser, group: Endpoint.Group, tip: Int = 2000) throws {
+        let body = Endpoint.SendSocialTip.Request(
+            tip: tip,
+            type: .group(group)
+        )
+        
+        let header = makeHeaders(for: user)
+        let bodyData = try ByteBuffer(data: encoder.encode(body))
+        
+        try app.test(.POST, "social_tips/send", headers: header, body: bodyData)
+    }
 }
