@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CodableURL
 
 public struct ScanGroups: EndpointProtocol {
     public typealias Request = Empty
@@ -67,4 +68,15 @@ public struct SendNotification: EndpointProtocol {
 
 public enum Segment: String, Codable {
     case all
+}
+
+public struct EntryGroup: EndpointProtocol {
+    public typealias Request = Group.ID
+    public typealias Response = Empty
+    
+    public struct URI: CodableURL {
+        @StaticPath("external", "entry_group") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
 }

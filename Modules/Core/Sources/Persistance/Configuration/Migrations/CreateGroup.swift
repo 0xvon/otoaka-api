@@ -144,3 +144,18 @@ struct ThumbnailUrlAndAppleMusicToArtistFeed: Migration {
             .update()
     }
 }
+
+struct CreateGroupEntry: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(GroupEntry.schema)
+            .id()
+            .field("group_id", .uuid, .required)
+            .foreignKey("group_id", references: Group.schema, .id)
+            .field("entried_at", .datetime, .required)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(GroupEntry.schema).delete()
+    }
+}

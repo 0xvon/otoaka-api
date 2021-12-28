@@ -105,6 +105,27 @@ extension Endpoint.Membership {
     }
 }
 
+final class GroupEntry: Model {
+    static let schema = "group_entries"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "group_id")
+    var group: Group
+    
+    @Timestamp(key: "entried_at", on: .create)
+    var entriedAt: Date?
+    
+    init() {}
+    
+    init(
+        id: UUID? = nil, groupId: UUID
+    ) {
+        self.id = id
+        self.$group.id = groupId
+    }
+}
+
 final class GroupInvitation: Model {
     static let schema = "group_invitations"
     @ID(key: .id)
