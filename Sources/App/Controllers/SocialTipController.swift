@@ -31,6 +31,12 @@ struct SocialTipController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetGroupTips.self, use: injectProvider { req, uri, repository in
             return try await repository.get(groupId: uri.groupId, page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: Endpoint.GetGroupTipFromUserRanking.self, use: injectProvider { req, uri, repository in
+            return try await repository.groupTipRanking(groupId: uri.groupId)
+        })
+        try routes.on(endpoint: Endpoint.GetUserTipToGroupRanking.self, use: injectProvider { req, uri, repository in
+            return try await repository.userTipRanking(userId: uri.userId)
+        })
     }
 }
 

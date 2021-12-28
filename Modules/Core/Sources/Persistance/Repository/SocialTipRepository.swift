@@ -1,6 +1,7 @@
 import Domain
 import FluentKit
 import Foundation
+import SQLKit
 
 public class SocialTipRepository: Domain.SocialTipRepository {
     private let db: Database
@@ -62,5 +63,66 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         return try await Domain.Page<Domain.SocialTip>.translate(page: tips) { tip in
             try await Domain.SocialTip.translate(fromPersistance: tip, on: db)
         }
+    }
+    
+    public func groupTipRanking(groupId: Domain.Group.ID) async throws -> [Domain.UserTip] {
+        var response: [Domain.UserTip] = []
+        struct Tip: Codable {
+            let user_id: UUID
+            let tip_sum: Int
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, user_id \
+                from \(SocialTip.schema) \
+                where group_id=UNHEX(REPLACE('\(groupId.rawValue.uuidString)', '-', '')) \
+                group by user_id \
+                order by tip_sum desc \
+                limit 5
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let user = try await Domain.User.translate(
+                    fromPersistance: User.find(tip.user_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.UserTip(user: user, tip: tip.tip_sum))
+            }
+        }
+        return response
+    }
+    
+    
+    public func userTipRanking(userId: Domain.User.ID) async throws -> [Domain.GroupTip] {
+        var response: [Domain.GroupTip] = []
+        struct Tip: Codable {
+            let group_id: UUID
+            let tip_sum: Int
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, group_id \
+                from \(SocialTip.schema) \
+                where user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) \
+                group by group_id \
+                order by tip_sum desc \
+                limit 5
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let group = try await Domain.Group.translate(
+                    fromPersistance: Group.find(tip.group_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum))
+            }
+        }
+        return response
     }
 }
