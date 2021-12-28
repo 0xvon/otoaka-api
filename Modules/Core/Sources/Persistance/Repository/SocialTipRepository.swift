@@ -34,9 +34,6 @@ public class SocialTipRepository: Domain.SocialTipRepository {
     
     public func get(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTip> {
         let tips = try await SocialTip.query(on: db)
-            .with(\.$user)
-            .with(\.$group)
-            .with(\.$live)
             .sort(\.$thrownAt, .descending)
             .paginate(PageRequest(page: page, per: per))
         
@@ -47,9 +44,6 @@ public class SocialTipRepository: Domain.SocialTipRepository {
     
     public func get(groupId: Domain.Group.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTip> {
         let tips = try await SocialTip.query(on: db)
-            .with(\.$user)
-            .with(\.$group)
-            .with(\.$live)
             .sort(\.$thrownAt, .descending)
             .filter(\.$group.$id == groupId.rawValue)
             .paginate(PageRequest(page: page, per: per))
@@ -61,9 +55,6 @@ public class SocialTipRepository: Domain.SocialTipRepository {
     
     public func get(userId: Domain.User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTip> {
         let tips = try await SocialTip.query(on: db)
-            .with(\.$user)
-            .with(\.$group)
-            .with(\.$live)
             .sort(\.$thrownAt, .descending)
             .filter(\.$user.$id == userId.rawValue)
             .paginate(PageRequest(page: page, per: per))
