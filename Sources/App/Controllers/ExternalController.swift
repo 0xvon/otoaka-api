@@ -60,5 +60,11 @@ struct ExternalController: RouteCollection {
                 let page = try await repository.get(page: 1, per: 1000).get()
                 return page.items
             })
+        try routes.on(endpoint: EntryGroup.self, use: { req, uri in
+            let repository = Persistance.GroupRepository(db: req.db)
+            let groupId = try req.content.decode(Group.ID.self)
+            try await repository.entry(groupId: groupId)
+            return Empty()
+        })
     }
 }

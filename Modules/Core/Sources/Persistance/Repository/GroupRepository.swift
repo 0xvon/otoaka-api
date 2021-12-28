@@ -365,4 +365,12 @@ public class GroupRepository: Domain.GroupRepository {
         notification.$user.id = user.rawValue
         return notification.save(on: db)
     }
+    
+    public func entry(groupId: Domain.Group.ID) async throws {
+        guard try await Group.find(groupId.rawValue, on: db) != nil else {
+            throw Error.groupNotFound
+        }
+        let entry = GroupEntry(groupId: groupId.rawValue)
+        try await entry.create(on: db)
+    }
 }

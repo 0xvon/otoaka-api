@@ -42,6 +42,7 @@ func routes(
     try signedUp.register(collection: LiveController())
     try signedUp.register(collection: UserSocialController())
     try signedUp.register(collection: MessageController())
+    try signedUp.register(collection: SocialTipController())
     try signedUp.grouped(adminAuthenticator)
         .register(collection: ExternalController())
 }

@@ -64,6 +64,8 @@ public func setupMigration(
         CreateRecentlyFollowing(),
 
         CreateUsername(),
+        
+        CreateSocialTip(), CreateGroupEntry(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

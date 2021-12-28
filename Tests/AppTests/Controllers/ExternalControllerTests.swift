@@ -86,4 +86,15 @@ class ExternalControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.user.id, user.user.id)
         }
     }
+    
+//    func testEntryGroup() throws {
+//        let user = try appClient.createUser()
+//
+//        let group = try appClient.createGroup(with: user)
+//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(group.id))
+//
+//        try app.test(.POST, "external/entry_group", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+//            XCTAssertEqual(res.status, .ok, res.body.string)
+//        }
+//    }
 }

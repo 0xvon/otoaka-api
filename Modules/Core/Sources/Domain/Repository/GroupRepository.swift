@@ -40,6 +40,7 @@ public protocol GroupRepository {
     >
     func followedGroups() -> EventLoopFuture<[Domain.Group]>
     func updateYouTube(item: Domain.YouTubeVideo, to user: Domain.User.ID) -> EventLoopFuture<Void>
+    func entry(groupId: Domain.Group.ID) async throws
 }
 
 extension GroupRepository {

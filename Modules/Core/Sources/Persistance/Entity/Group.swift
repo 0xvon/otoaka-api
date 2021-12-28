@@ -56,10 +56,11 @@ final class Group: Model {
 
 extension Endpoint.Group {
     static func translate(fromPersistance entity: Group, on db: Database) -> EventLoopFuture<Self> {
-        db.eventLoop.makeSucceededFuture(entity).flatMapThrowing {
-            try ($0, $0.requireID())
+        let isEntried = GroupEntry.query(on: db).filter(\.$group.$id == entity.id!).first().map { $0 != nil }
+        return db.eventLoop.makeSucceededFuture(entity).and(isEntried).flatMapThrowing {
+            try ($0, $0.requireID(), $1)
         }
-        .map { entity, id in
+        .map { entity, id, isEntried in
             Self.init(
                 id: ID(id),
                 name: entity.name, englishName: entity.englishName,
@@ -67,7 +68,8 @@ extension Endpoint.Group {
                 artworkURL: entity.artworkURL.flatMap(URL.init(string:)),
                 twitterId: entity.twitterId,
                 youtubeChannelId: entity.youtubeChannelId,
-                hometown: entity.hometown
+                hometown: entity.hometown,
+                isEntried: isEntried
             )
         }
     }
@@ -102,6 +104,27 @@ extension Endpoint.Membership {
                 artistId: Endpoint.User.ID(entity.$artist.id)
             )
         }
+    }
+}
+
+final class GroupEntry: Model {
+    static let schema = "group_entries"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "group_id")
+    var group: Group
+    
+    @Timestamp(key: "entried_at", on: .create)
+    var entriedAt: Date?
+    
+    init() {}
+    
+    init(
+        id: UUID? = nil, groupId: UUID
+    ) {
+        self.id = id
+        self.$group.id = groupId
     }
 }
 
