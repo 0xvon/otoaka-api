@@ -71,11 +71,13 @@ public struct GetUserTips: EndpointProtocol {
 // 任意のuserのgroupごとのチップランキング
 public struct GetUserTipToGroupRanking: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = [GroupTip]
+    public typealias Response = Page<GroupTip>
     
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("social_tips", "user_ranking") public var prefix: Void
         @DynamicPath public var userId: User.ID
+        @Query public var page: Int
+        @Query public var per: Int
         public init() {}
     }
     public static var method: HTTPMethod = .get
@@ -84,11 +86,13 @@ public struct GetUserTipToGroupRanking: EndpointProtocol {
 // groupごとのチップランキング
 public struct GetGroupTipFromUserRanking: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = [UserTip]
+    public typealias Response = Page<UserTip>
     
-    public struct URI: CodableURL {
+    public struct URI: CodableURL, PaginationQuery {
         @StaticPath("social_tips", "group_ranking") public var prefix: Void
         @DynamicPath public var groupId: Group.ID
+        @Query public var page: Int
+        @Query public var per: Int
         public init() {}
     }
     public static var method: HTTPMethod = .get

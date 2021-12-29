@@ -86,21 +86,21 @@ class SocialTipControllerTests: XCTestCase {
         try appClient.sendSocialTip(with: userA, group: groupX)
         
         // 1位はuserAになり、投げ銭額は4000円
-        try app.test(.GET, "social_tips/group_ranking/\(groupX.id)", headers: header) { res in
+        try app.test(.GET, "social_tips/group_ranking/\(groupX.id)?page=1&per=10", headers: header) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetGroupTipFromUserRanking.Response.self)
-            XCTAssertEqual(response.count, 2)
-            XCTAssertEqual(response[0].tip, 4000)
-            XCTAssertEqual(response[1].tip, 2000)
+            XCTAssertEqual(response.items.count, 2)
+            XCTAssertEqual(response.items[0].tip, 4000)
+            XCTAssertEqual(response.items[1].tip, 2000)
         }
         
         // 1位はgroupXになり、投げ銭額は4000円
-        try app.test(.GET, "social_tips/user_ranking/\(userA.user.id)", headers: header) { res in
+        try app.test(.GET, "social_tips/user_ranking/\(userA.user.id)?page=1&per=10", headers: header) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetUserTipToGroupRanking.Response.self)
-            XCTAssertEqual(response.count, 2)
-            XCTAssertEqual(response[0].tip, 4000)
-            XCTAssertEqual(response[1].tip, 2000)
+            XCTAssertEqual(response.items.count, 2)
+            XCTAssertEqual(response.items[0].tip, 4000)
+            XCTAssertEqual(response.items[1].tip, 2000)
         }
     }
 }

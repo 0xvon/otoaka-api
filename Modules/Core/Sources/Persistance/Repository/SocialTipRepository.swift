@@ -65,7 +65,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         }
     }
     
-    public func groupTipRanking(groupId: Domain.Group.ID) async throws -> [Domain.UserTip] {
+    public func groupTipRanking(groupId: Domain.Group.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip> {
         var response: [Domain.UserTip] = []
         struct Tip: Codable {
             let user_id: UUID
@@ -80,7 +80,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                 where group_id=UNHEX(REPLACE('\(groupId.rawValue.uuidString)', '-', '')) \
                 group by user_id \
                 order by tip_sum desc \
-                limit 5
+                limit \(String(per)) offset \(String((page - 1) * per))
                 """
             ).all(decoding: Tip.self)
             
@@ -92,11 +92,16 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                 response.append(Domain.UserTip(user: user, tip: tip.tip_sum))
             }
         }
-        return response
+        return Domain.Page<UserTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
     }
     
     
-    public func userTipRanking(userId: Domain.User.ID) async throws -> [Domain.GroupTip] {
+    public func userTipRanking(userId: Domain.User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip> {
         var response: [Domain.GroupTip] = []
         struct Tip: Codable {
             let group_id: UUID
@@ -111,7 +116,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                 where user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) \
                 group by group_id \
                 order by tip_sum desc \
-                limit 5
+                limit \(String(per)) offset \(String((page - 1) * per))
                 """
             ).all(decoding: Tip.self)
             
@@ -123,6 +128,11 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                 response.append(Domain.GroupTip(group: group, tip: tip.tip_sum))
             }
         }
-        return response
+        return Domain.Page<GroupTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
     }
 }
