@@ -104,5 +104,17 @@ class SocialTipControllerTests: XCTestCase {
             XCTAssertEqual(response.items[0].tip, 4000)
             XCTAssertEqual(response.items[1].tip, 2000)
         }
+        
+        try app.test(.GET, "social_tips/user_tip_feed?page=1&per=10", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetUserTipFeed.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 1)
+        }
+        
+        try app.test(.GET, "social_tips/entried_groups?page=1&per=10", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetEntriedGroups.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 1)
+        }
     }
 }

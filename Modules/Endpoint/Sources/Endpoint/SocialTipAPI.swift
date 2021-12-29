@@ -104,7 +104,7 @@ public struct GetGroupTipFromUserRanking: EndpointProtocol {
 
 public struct GetUserTipFeed: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response =  Page<UserTipFeed>
+    public typealias Response =  Page<UserTip>
     
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("social_tips", "user_tip_feed") public var prefix: Void
@@ -117,7 +117,7 @@ public struct GetUserTipFeed: EndpointProtocol {
 
 public struct GetEntriedGroups: EndpointProtocol {
     public typealias Request = Empty
-    public typealias Response = Page<GroupFeed>
+    public typealias Response = Page<GroupTip>
     
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("social_tips", "entried_groups") public var prefix: Void
@@ -126,15 +126,6 @@ public struct GetEntriedGroups: EndpointProtocol {
         public init() {}
     }
     public static var method: HTTPMethod = .get
-}
-
-public struct UserTipFeed: Codable {
-    public let user: User
-    public let tip: Int
-    public init(user: User, tip: Int) {
-        self.user = user
-        self.tip = tip
-    }
 }
 
 public struct GroupTip: Codable, Equatable {

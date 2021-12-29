@@ -139,4 +139,74 @@ public class SocialTipRepository: Domain.SocialTipRepository {
             )
         )
     }
+    
+    public func userTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip> {
+        var response: [Domain.UserTip] = []
+        struct Tip: Codable {
+            let user_id: UUID
+            let tip_sum: Int
+            let thrown_from: Date
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, user_id, min(thrown_at) as thrown_from \
+                from \(SocialTip.schema) \
+                group by user_id \
+                order by tip_sum desc \
+                limit \(String(per)) offset \(String((page - 1) * per))
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let user = try await Domain.User.translate(
+                    fromPersistance: User.find(tip.user_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.UserTip(user: user, tip: tip.tip_sum, from: tip.thrown_from))
+            }
+        }
+        return Domain.Page<UserTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
+    }
+    
+    public func groupTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip> {
+        var response: [Domain.GroupTip] = []
+        struct Tip: Codable {
+            let group_id: UUID
+            let tip_sum: Int
+            let thrown_from: Date
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, group_id, min(thrown_at) as thrown_from \
+                from \(SocialTip.schema) \
+                group by group_id \
+                order by tip_sum desc \
+                limit \(String(per)) offset \(String((page - 1) * per))
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let group = try await Domain.Group.translate(
+                    fromPersistance: Group.find(tip.group_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum, from: tip.thrown_from))
+            }
+        }
+        return Domain.Page<GroupTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
+    }
 }
