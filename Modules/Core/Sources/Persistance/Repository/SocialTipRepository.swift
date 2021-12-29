@@ -26,6 +26,8 @@ public class SocialTipRepository: Domain.SocialTipRepository {
             tip: request.tip,
             userId: userId,
             type: type,
+            message: request.message,
+            isRealMoney: request.isRealMoney,
             groupId: group?.id,
             liveId: live?.id
         )
@@ -70,12 +72,13 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         struct Tip: Codable {
             let user_id: UUID
             let tip_sum: Int
+            let thrown_from: Date
         }
         
         if let mysql = db as? SQLDatabase {
             let tips = try await mysql.raw(
                 """
-                select sum(tip) as tip_sum, user_id \
+                select sum(tip) as tip_sum, user_id, min(thrown_at) as thrown_from \
                 from \(SocialTip.schema) \
                 where group_id=UNHEX(REPLACE('\(groupId.rawValue.uuidString)', '-', '')) \
                 group by user_id \
@@ -89,7 +92,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                     fromPersistance: User.find(tip.user_id, on: db)!,
                     on: db
                 ).get()
-                response.append(Domain.UserTip(user: user, tip: tip.tip_sum))
+                response.append(Domain.UserTip(user: user, tip: tip.tip_sum, from: tip.thrown_from))
             }
         }
         return Domain.Page<UserTip>(
@@ -106,12 +109,13 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         struct Tip: Codable {
             let group_id: UUID
             let tip_sum: Int
+            let thrown_from: Date
         }
         
         if let mysql = db as? SQLDatabase {
             let tips = try await mysql.raw(
                 """
-                select sum(tip) as tip_sum, group_id \
+                select sum(tip) as tip_sum, group_id, min(thrown_at) as thrown_from \
                 from \(SocialTip.schema) \
                 where user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) \
                 group by group_id \
@@ -125,7 +129,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                     fromPersistance: Group.find(tip.group_id, on: db)!,
                     on: db
                 ).get()
-                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum))
+                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum, from: tip.thrown_from))
             }
         }
         return Domain.Page<GroupTip>(

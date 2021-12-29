@@ -29,7 +29,9 @@ class SocialTipControllerTests: XCTestCase {
         
         let body = Endpoint.SendSocialTip.Request(
             tip: 2000,
-            type: .group(group)
+            type: .group(group),
+            message: "hello",
+            isRealMoney: true
         )
         let header = appClient.makeHeaders(for: user)
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))

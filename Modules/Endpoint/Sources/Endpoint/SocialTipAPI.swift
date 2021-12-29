@@ -7,12 +7,16 @@ public struct SendSocialTip: EndpointProtocol {
     public struct Request: Codable {
         public var tip: Int
         public var type: SocialTipType
+        public var message: String
+        public var isRealMoney: Bool
         
         public init(
-            tip: Int, type: SocialTipType
+            tip: Int, type: SocialTipType, message: String, isRealMoney: Bool
         ) {
             self.tip = tip
             self.type = type
+            self.message = message
+            self.isRealMoney = isRealMoney
         }
     }
     
@@ -98,28 +102,69 @@ public struct GetGroupTipFromUserRanking: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct GetUserTipFeed: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response =  Page<UserTipFeed>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "user_tip_feed") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetEntriedGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupFeed>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "entried_groups") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct UserTipFeed: Codable {
+    public let user: User
+    public let tip: Int
+    public init(user: User, tip: Int) {
+        self.user = user
+        self.tip = tip
+    }
+}
+
 public struct GroupTip: Codable, Equatable {
     public var group: Group
     public var tip: Int
+    public var from: Date
     
     public init(
         group: Group,
-        tip: Int
+        tip: Int,
+        from: Date
     ) {
         self.group = group
         self.tip = tip
+        self.from = from
     }
 }
 
 public struct UserTip: Codable, Equatable {
     public var user: User
     public var tip: Int
+    public var from: Date
     
     public init(
         user: User,
-        tip: Int
+        tip: Int,
+        from: Date
     ) {
         self.user = user
         self.tip = tip
+        self.from = from
     }
 }

@@ -474,7 +474,9 @@ class AppClient {
     func sendSocialTip(with user: AppUser, group: Endpoint.Group, tip: Int = 2000) throws {
         let body = Endpoint.SendSocialTip.Request(
             tip: tip,
-            type: .group(group)
+            type: .group(group),
+            message: "hello",
+            isRealMoney: true
         )
         
         let header = makeHeaders(for: user)

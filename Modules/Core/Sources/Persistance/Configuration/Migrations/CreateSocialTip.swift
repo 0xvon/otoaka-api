@@ -29,3 +29,19 @@ struct CreateSocialTip: Migration {
             .map { _ in }
     }
 }
+
+struct UpdateSocialTipToMessageAndIsRealMoney: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTip.schema)
+            .field("message", .string)
+            .field("is_real_money", .bool)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTip.schema)
+            .deleteField("message")
+            .deleteField("is_real_money")
+            .update()
+    }
+}

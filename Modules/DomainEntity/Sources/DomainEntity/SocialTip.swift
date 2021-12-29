@@ -6,6 +6,8 @@ public struct SocialTip: Codable, Identifiable, Equatable {
     public var user: User
     public var tip: Int
     public var type: SocialTipType
+    public var message: String
+    public var isRealMoney: Bool
     public var thrownAt: Date
     
     public init(
@@ -13,12 +15,16 @@ public struct SocialTip: Codable, Identifiable, Equatable {
         user: User,
         tip: Int,
         type: SocialTipType,
+        message: String,
+        isRealMoney: Bool,
         thrownAt: Date
     ) {
         self.id = id
         self.user = user
         self.tip = tip
         self.type = type
+        self.message = message
+        self.isRealMoney = isRealMoney
         self.thrownAt = thrownAt
     }
 }
