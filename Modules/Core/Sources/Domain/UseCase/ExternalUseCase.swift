@@ -28,7 +28,7 @@ public struct NotifyUpcomingLivesUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let date = Date()
@@ -71,7 +71,7 @@ public struct NotifyPastLivesUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let date = Date()

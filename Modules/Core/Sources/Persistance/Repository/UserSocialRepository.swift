@@ -152,7 +152,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         // ここだけGroupFeedの情報がselfUserじゃなくてuserIdに紐付いている
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         struct WatchingCount: Codable {
@@ -197,7 +197,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         return LivePerformer.query(on: db)
@@ -457,7 +457,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         return Live.query(on: db)
@@ -605,7 +605,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     > {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let live = Live.query(on: db)
@@ -856,7 +856,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
     {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let like = LiveLike.query(on: db).filter(\.$user.$id == selfUser.rawValue)
@@ -905,7 +905,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYY"
+            dateFormatter.dateFormat = "yyyy"
             return dateFormatter
         }()
         if let mysql = db as? SQLDatabase {

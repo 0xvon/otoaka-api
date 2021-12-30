@@ -535,7 +535,7 @@ class UserSocialControllerTests: XCTestCase {
         let group = try appClient.createGroup(with: user)
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let liveA = try appClient.createLive(
@@ -569,7 +569,7 @@ class UserSocialControllerTests: XCTestCase {
     func testFrequentlyWatchingGroups() throws {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
         let date = Date()

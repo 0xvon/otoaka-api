@@ -269,7 +269,7 @@ extension Endpoint.GroupFeed {
     {
         let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "YYYYMMdd"
+            dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
 
