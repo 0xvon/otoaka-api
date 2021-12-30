@@ -43,6 +43,7 @@ func routes(
     try signedUp.register(collection: UserSocialController())
     try signedUp.register(collection: MessageController())
     try signedUp.register(collection: SocialTipController())
+    try signedUp.register(collection: PointController())
     try signedUp.grouped(adminAuthenticator)
         .register(collection: ExternalController())
 }

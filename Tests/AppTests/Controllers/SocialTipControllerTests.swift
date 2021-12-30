@@ -4,7 +4,6 @@ import StubKit
 import XCTVapor
 
 @testable import App
-import XCTest
 
 class SocialTipControllerTests: XCTestCase {
     var app: Application!

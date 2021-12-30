@@ -107,6 +107,7 @@ extension Endpoint.User {
                 .first()
                 .optionalMap { $0.username }
         }
+        let point = Point.query(on: db).filter(\.$user.$id == entity.id!).first()
 
         switch entity.role {
         case .artist:
@@ -115,7 +116,9 @@ extension Endpoint.User {
             roleProperties = .fan(Endpoint.Fan())
         }
 
-        return id.and(username).map { (id, username) -> Domain.User in
+        return id.and(username).and(point)
+            .map { ($0.0.0, $0.0.1, $0.1) }
+            .map { (id, username, point) -> Domain.User in
             Domain.User(
                 id: ID(id),
                 name: entity.name,
@@ -128,7 +131,8 @@ extension Endpoint.User {
                 thumbnailURL: entity.thumbnailURL,
                 role: roleProperties,
                 twitterUrl: entity.twitterUrl.flatMap(URL.init(string:)),
-                instagramUrl: entity.instagramUrl.flatMap(URL.init(string:))
+                instagramUrl: entity.instagramUrl.flatMap(URL.init(string:)),
+                point: point?.value ?? 0
             )
         }
     }

@@ -61,11 +61,13 @@ public struct User: Codable, Identifiable, Equatable {
     public var role: RoleProperties
     public var twitterUrl: URL?
     public var instagramUrl: URL?
+    public var point: Int
 
     public init(
         id: ID, name: String, username: String?, biography: String?, sex: String?, age: Int?,
         liveStyle: String?, residence: String?, thumbnailURL: String?, role: RoleProperties,
-        twitterUrl: URL?, instagramUrl: URL?
+        twitterUrl: URL?, instagramUrl: URL?,
+        point: Int
     ) {
         self.id = id
         self.name = name
@@ -79,6 +81,7 @@ public struct User: Codable, Identifiable, Equatable {
         self.role = role
         self.twitterUrl = twitterUrl
         self.instagramUrl = instagramUrl
+        self.point = point
     }
 }
 

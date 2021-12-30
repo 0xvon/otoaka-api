@@ -178,7 +178,8 @@ class AuthenticationTests: XCTestCase {
                 thumbnailURL: input.thumbnailURL,
                 role: input.role,
                 twitterUrl: try! Stub.make(),
-                instagramUrl: try! Stub.make()
+                instagramUrl: try! Stub.make(),
+                point: 1000
             )
             users[cognitoUsername.lowercased()] = newUser
             return eventLoop.makeSucceededFuture(newUser)

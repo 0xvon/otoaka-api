@@ -66,7 +66,7 @@ public func setupMigration(
         CreateUsername(),
         
         CreateSocialTip(), CreateGroupEntry(),
-        UpdateSocialTipToMessageAndIsRealMoney(),
+        UpdateSocialTipToMessageAndIsRealMoney(), CreatePoint(),
     ])
 
     try migrator.setupIfNeeded().flatMap {
