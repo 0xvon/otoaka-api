@@ -38,4 +38,11 @@ public class PointRepository: Domain.PointRepository {
         try await point.update(on: db)
         return try await Domain.Point.translate(fromPersistance: point, on: db)
     }
+    
+    public func get(userId: Domain.User.ID) async throws -> Int {
+        let point = try await Point.query(on: db)
+            .filter(\.$user.$id == userId.rawValue)
+            .first()
+        return point?.value ?? 0
+    }
 }

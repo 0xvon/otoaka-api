@@ -32,3 +32,13 @@ public struct UsePoint: EndpointProtocol {
     }
     public static var method: HTTPMethod = .post
 }
+
+public struct GetMyPoint: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Int
+    public struct URI: CodableURL {
+        @StaticPath("points", "mine") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}

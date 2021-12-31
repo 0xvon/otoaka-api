@@ -26,6 +26,10 @@ struct PointController: RouteCollection {
             let request = try req.content.decode(UsePoint.Request.self)
             return try await repository.use(userId: user.id, input: request)
         })
+        try routes.on(endpoint: Endpoint.GetMyPoint.self, use: injectProvider { req, uri, repository in
+            let user = try req.auth.require(User.self)
+            return try await repository.get(userId: user.id)
+        })
     }
 }
 

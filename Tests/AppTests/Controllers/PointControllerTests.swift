@@ -40,6 +40,12 @@ class PointControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok, res.body.string)
         }
         
+        try app.test(.GET, "points/mine", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let point = try res.content.decode(GetMyPoint.Response.self)
+            XCTAssertEqual(point, 1000)
+        }
+        
         try app.test(.GET, "users/\(user.user.id)", headers: header) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetUserDetail.Response.self)
@@ -52,6 +58,12 @@ class PointControllerTests: XCTestCase {
         
         try app.test(.POST, "points/use", headers: header, body: useBodyData) { res in
             XCTAssertEqual(res.status, .badRequest, res.body.string)
+        }
+        
+        try app.test(.GET, "points/mine", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let point = try res.content.decode(GetMyPoint.Response.self)
+            XCTAssertEqual(point, 0)
         }
     }
 }
