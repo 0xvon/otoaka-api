@@ -243,6 +243,18 @@ public struct GetUpcomingLives: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetFollowingGroupsLives: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<LiveFeed>
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("user_social", "following_groups_lives") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct GetLikedLiveTransition: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = LiveTransition

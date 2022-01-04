@@ -471,6 +471,28 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                 }
             }
     }
+    
+    public func followingGroupsLives(userId: Domain.User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.LiveFeed> {
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd"
+            return dateFormatter
+        }()
+        
+        let live = try await Live.query(on: db)
+            .filter(\.$date >= dateFormatter.string(from: Date()))
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
+            .join(Following.self, on: \Following.$target.$id == \LivePerformer.$group.$id)
+            .filter(Following.self, \Following.$user.$id == userId.rawValue)
+            .fields(for: Live.self)
+            .sort(\.$date, .ascending)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+        
+        return try await Domain.Page<Domain.LiveFeed>.translate(page: live) { live in
+            try await Domain.LiveFeed.translate(fromPersistance: live, selfUser: userId, on: db).get()
+        }
+    }
 
     public func followingGroupFeeds(userId: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.ArtistFeedSummary>

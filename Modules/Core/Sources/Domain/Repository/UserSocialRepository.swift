@@ -34,6 +34,7 @@ public protocol UserSocialRepository {
     func followingUsersCount(selfUser: Domain.User.ID) -> EventLoopFuture<Int>
     func upcomingLives(userId: Domain.User.ID, selfUser: Domain.User.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<LiveFeed>>
+    func followingGroupsLives(userId: Domain.User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.LiveFeed>
     func followingGroupFeeds(userId: User.ID, page: Int, per: Int) -> EventLoopFuture<
         Page<ArtistFeedSummary>
     >
