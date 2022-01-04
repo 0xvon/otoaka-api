@@ -45,3 +45,24 @@ struct UpdateSocialTipToMessageAndIsRealMoney: Migration {
             .update()
     }
 }
+
+struct CreateSocialTipEvent: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTipEvent.schema)
+            .id()
+            .field("live_id", .uuid, .required)
+            .foreignKey("live_Id", references: Live.schema, .id)
+            .field("title", .string, .required)
+            .field("description", .string, .required)
+            .field("related_link", .string)
+            .field("since", .datetime, .required)
+            .field("until", .datetime, .required)
+            .field("created_at", .datetime, .required)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTipEvent.schema)
+            .delete()
+    }
+}

@@ -116,4 +116,45 @@ class SocialTipControllerTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(response.items.count, 1)
         }
     }
+    
+    func testGetHighTips() throws {
+        let userA = try appClient.createUser()
+        let group = try appClient.createGroup(with: userA)
+        let header = appClient.makeHeaders(for: userA)
+        
+        // 10,000円投げる
+        try appClient.sendSocialTip(with: userA, group: group, tip: 10000)
+        
+        try app.test(.GET, "social_tips/high?page=1&per=10", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetHighTips.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 1)
+        }
+    }
+    
+    func testGetSocialTipEvents() throws {
+        let userA = try appClient.createUser()
+        let group = try appClient.createGroup(with: userA)
+        let header = appClient.makeHeaders(for: userA)
+        let live = try appClient.createLive(hostGroup: group, with: userA)
+        let body = try! Stub.make(CreateSocialTipEvent.Request.self) {
+            $0.set(\.liveId, value: live.id)
+            $0.set(\.until, value: Date())
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(
+            .POST, "social_tips/events/create", headers: header, body: bodyData
+        ) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+        
+        try app.test(
+            .GET, "social_tips/events?page=1&per=10", headers: header
+        ) { res in
+            XCTAssertEqual(res.status, .ok)
+            let events = try res.content.decode(GetSocialTipEvent.Response.self)
+            XCTAssertGreaterThanOrEqual(events.items.count, 1)
+        }
+    }
 }

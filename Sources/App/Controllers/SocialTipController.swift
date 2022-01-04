@@ -31,6 +31,9 @@ struct SocialTipController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetGroupTips.self, use: injectProvider { req, uri, repository in
             return try await repository.get(groupId: uri.groupId, page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: Endpoint.GetHighTips.self, use: injectProvider { req, uri, repository in
+            return try await repository.high(page: uri.page, per: uri.per)
+        })
         try routes.on(endpoint: Endpoint.GetGroupTipFromUserRanking.self, use: injectProvider { req, uri, repository in
             return try await repository.groupTipRanking(groupId: uri.groupId, page: uri.page, per: uri.per)
         })
@@ -43,9 +46,17 @@ struct SocialTipController: RouteCollection {
         try routes.on(endpoint: Endpoint.GetEntriedGroups.self, use: injectProvider { req, uri, repository in
             return try await repository.groupTipFeed(page: uri.page, per: uri.per)
         })
+        try routes.on(endpoint: Endpoint.GetSocialTipEvent.self, use: injectProvider { req, uri, repository in
+            return try await repository.events(page: uri.page, per: uri.per)
+        })
+        try routes.on(endpoint: Endpoint.CreateSocialTipEvent.self, use: injectProvider { req, uri, repository in
+            let request = try req.content.decode(Endpoint.CreateSocialTipEvent.Request.self)
+            return try await repository.createEvent(request: request)
+        })
     }
 }
 
 extension Endpoint.SocialTip: Content {}
 extension Endpoint.UserTip: Content {}
 extension Endpoint.GroupTip: Content {}
+extension Endpoint.SocialTipEvent: Content {}

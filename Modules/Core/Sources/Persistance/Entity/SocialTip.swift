@@ -93,3 +93,69 @@ extension Endpoint.SocialTip {
         )
     }
 }
+
+final class SocialTipEvent: Model {
+    static var schema: String = "social_tip_events"
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Parent(key: "live_id")
+    var live: Live
+    
+    @Field(key: "title")
+    var title: String
+    
+    @Field(key: "description")
+    var description: String
+    
+    @OptionalField(key: "related_link")
+    var relatedLink: String?
+    
+    @Field(key: "since")
+    var since: Date
+    
+    @Field(key: "until")
+    var until: Date
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
+    init() {}
+    
+    init(
+        id: UUID? = nil,
+        liveId: Domain.Live.ID,
+        title: String,
+        description: String,
+        relatedLink: URL?,
+        since: Date,
+        until: Date
+    ) {
+        self.id = id
+        self.$live.id = liveId.rawValue
+        self.title = title
+        self.description = description
+        self.relatedLink = relatedLink?.absoluteString
+        self.since = since
+        self.until = until
+    }
+}
+
+extension Endpoint.SocialTipEvent {
+    static func translate(fromPersistance entity: SocialTipEvent, on db: Database) async throws -> Self {
+        let id = try entity.requireID()
+        let live = try await Domain.Live.translate(fromPersistance: entity.$live.get(on: db), on: db).get()
+        
+        return Self.init(
+            id: ID(id),
+            live: live,
+            title: entity.title,
+            description: entity.description,
+            relatedLink: entity.relatedLink.flatMap(URL.init(string:)),
+            since: entity.since,
+            until: entity.until,
+            createdAt: entity.createdAt!
+        )
+        
+    }
+}

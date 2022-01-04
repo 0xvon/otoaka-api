@@ -42,6 +42,20 @@ public struct GetAllTips: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+// 高額チップ
+public struct GetHighTips: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<SocialTip>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "high") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 // groupごとのチップ
 public struct GetGroupTips: EndpointProtocol {
     public typealias Request = Empty
@@ -126,6 +140,50 @@ public struct GetEntriedGroups: EndpointProtocol {
         public init() {}
     }
     public static var method: HTTPMethod = .get
+}
+
+public struct GetSocialTipEvent: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<SocialTipEvent>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "events") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct CreateSocialTipEvent: EndpointProtocol {
+    public struct Request: Codable {
+        public var liveId: Live.ID
+        public var title: String
+        public var description: String
+        public var relatedLink: URL?
+        public var since: Date
+        public var until: Date
+        
+        public init(
+            liveId: Live.ID, title: String,
+            description: String, relatedLink: URL?,
+            since: Date, until: Date
+        ) {
+            self.liveId = liveId
+            self.title = title
+            self.description = description
+            self.relatedLink = relatedLink
+            self.since = since
+            self.until = until
+        }
+    }
+    public typealias Response = SocialTipEvent
+    
+    public struct URI: CodableURL {
+        @StaticPath("social_tips", "events", "create") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .post
 }
 
 public struct GroupTip: Codable, Equatable {

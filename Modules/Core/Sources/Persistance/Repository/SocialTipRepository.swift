@@ -67,6 +67,17 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         }
     }
     
+    public func high(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTip> {
+        let tips = try await SocialTip.query(on: db)
+            .filter(\.$tip >= 10000)
+            .sort(\.$thrownAt, .descending)
+            .paginate(PageRequest(page: page, per: per))
+        
+        return try await Domain.Page<Domain.SocialTip>.translate(page: tips) { tip in
+            try await Domain.SocialTip.translate(fromPersistance: tip, on: db)
+        }
+    }
+    
     public func groupTipRanking(groupId: Domain.Group.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip> {
         var response: [Domain.UserTip] = []
         struct Tip: Codable {
@@ -208,5 +219,30 @@ public class SocialTipRepository: Domain.SocialTipRepository {
                 page: page, per: per, total: response.count
             )
         )
+    }
+    
+    public func events(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTipEvent> {
+        let today = Date()
+        let events = try await SocialTipEvent.query(on: db)
+            .filter(\.$until <= today)
+            .sort(\.$until, .ascending)
+            .paginate(PageRequest(page: page, per: per))
+        
+        return try await Domain.Page<Domain.SocialTipEvent>.translate(page: events) { event in
+            try await Domain.SocialTipEvent.translate(fromPersistance: event, on: db)
+        }
+    }
+    
+    public func createEvent(request: Endpoint.CreateSocialTipEvent.Request) async throws -> Domain.SocialTipEvent {
+        let event = SocialTipEvent(
+            liveId: request.liveId,
+            title: request.title,
+            description: request.description, relatedLink: request.relatedLink,
+            since: request.since,
+            until: request.until
+        )
+        try await event.create(on: db)
+        
+        return try await Domain.SocialTipEvent.translate(fromPersistance: event, on: db)
     }
 }

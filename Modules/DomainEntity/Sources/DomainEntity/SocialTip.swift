@@ -65,3 +65,34 @@ public enum SocialTipType: Codable, Equatable {
         }
     }
 }
+
+public struct SocialTipEvent: Codable, Identifiable, Equatable {
+    public typealias ID = Identifier<Self>
+    public let id: ID
+    public var live: Live
+    public var title: String
+    public var description: String
+    public var relatedLink: URL?
+    public var since: Date
+    public var until: Date
+    public var createdAt: Date
+    
+    public init(
+        id: SocialTipEvent.ID,
+        live: Live,
+        title: String,
+        description: String,
+        relatedLink: URL?,
+        since: Date,
+        until: Date,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.live = live
+        self.title = title
+        self.description = description
+        self.since = since
+        self.until = until
+        self.createdAt = createdAt
+    }
+}
