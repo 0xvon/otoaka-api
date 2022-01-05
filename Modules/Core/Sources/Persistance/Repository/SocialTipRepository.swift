@@ -222,9 +222,9 @@ public class SocialTipRepository: Domain.SocialTipRepository {
     }
     
     public func events(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTipEvent> {
-        let today = Date()
+        let yesterday = Date(timeInterval: -60*60*24, since: Date())
         let events = try await SocialTipEvent.query(on: db)
-            .filter(\.$until <= today)
+            .filter(\.$until >= yesterday)
             .sort(\.$until, .ascending)
             .paginate(PageRequest(page: page, per: per))
         

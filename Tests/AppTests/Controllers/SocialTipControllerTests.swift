@@ -139,7 +139,8 @@ class SocialTipControllerTests: XCTestCase {
         let live = try appClient.createLive(hostGroup: group, with: userA)
         let body = try! Stub.make(CreateSocialTipEvent.Request.self) {
             $0.set(\.liveId, value: live.id)
-            $0.set(\.until, value: Date())
+            $0.set(\.until, value: Date(timeInterval: 60 * 60 * 24 * 30, since: Date()))
+//            $0.set(\.until, value: Date())
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         
