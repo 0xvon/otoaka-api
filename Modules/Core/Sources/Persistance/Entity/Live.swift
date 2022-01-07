@@ -244,38 +244,19 @@ extension Domain.LiveFeed {
             .filter(\.$live.$id == entity.id!)
             .filter(\.$user.$id == selfUser.rawValue)
             .count().map { $0 > 0 }
-        let hasTicket = Ticket.query(on: db)
-            .filter(\.$live.$id == entity.id!)
-            .filter(\.$user.$id == selfUser.rawValue)
-            .count().map { $0 > 0 }
         let likeCount = LiveLike.query(on: db)
-            .filter(\.$live.$id == entity.id!)
-            .count()
-        let participantCount = Ticket.query(on: db)
             .filter(\.$live.$id == entity.id!)
             .count()
         let postCount = Post.query(on: db)
             .filter(\.$live.$id == entity.id!)
             .count()
-        let participatingFriends = LiveLike.query(on: db)
-            .join(UserFollowing.self, on: \LiveLike.$user.$id == \UserFollowing.$target.$id)
-            .filter(\.$live.$id == entity.id!)
-            .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
-            .fields(for: LiveLike.self)
-            .with(\LiveLike.$user)
-            .all()
-            .flatMapEach(on: db.eventLoop) { [db] in
-                Domain.User.translate(fromPersistance: $0.user, on: db)
-            }
 
         return Domain.Live.translate(fromPersistance: entity, on: db)
-            .and(isLiked).and(hasTicket).and(likeCount).and(participantCount).and(postCount).and(
-                participatingFriends
-            ).map { ($0.0.0.0.0.0, $0.0.0.0.0.1, $0.0.0.0.1, $0.0.0.1, $0.0.1, $0.1, $1) }
+            .and(isLiked).and(likeCount).and(postCount).map { ( $0.0.0, $0.0.1, $0.1, $1) }
             .map {
                 Domain.LiveFeed(
-                    live: $0, isLiked: $1, hasTicket: $2, likeCount: $3, participantCount: $4,
-                    postCount: $5, participatingFriends: $6)
+                    live: $0, isLiked: $1, hasTicket: false, likeCount: $2, participantCount: 0,
+                    postCount: $3, participatingFriends: [])
             }
     }
 }
