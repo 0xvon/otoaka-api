@@ -69,6 +69,8 @@ public func setupMigration(
         UpdateSocialTipToMessageAndIsRealMoney(), CreatePoint(),
         
         CreateSocialTipEvent(),
+
+        AddIndexToLives(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

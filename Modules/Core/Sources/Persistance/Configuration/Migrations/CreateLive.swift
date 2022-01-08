@@ -1,6 +1,7 @@
 import Domain
 import FluentKit
 import Foundation
+import MySQLNIO
 
 struct CreateLive: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
@@ -134,5 +135,22 @@ struct UpdateLiveForDateTerm: Migration {
         database.schema(Live.schema)
             .deleteField("end_date")
             .update()
+    }
+}
+
+struct AddIndexToLives: AsyncMigration {
+    func prepare(on database: Database) async throws {
+        guard let database = database as? MySQLDatabase else {
+            database.logger.warning("unsupported database type to add index: \(database)")
+            return
+        }
+        database.query("CREATE INDEX lives_date_index ON lives (date);")
+    }
+    func revert(on database: Database) async throws {
+        guard let database = database as? MySQLDatabase else {
+            database.logger.warning("unsupported database type to add index: \(database)")
+            return
+        }
+        database.query("DROP INDEX lives_date_index;")
     }
 }
