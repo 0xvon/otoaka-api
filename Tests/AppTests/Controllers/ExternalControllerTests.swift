@@ -98,4 +98,19 @@ class ExternalControllerTests: XCTestCase {
 //            XCTAssertEqual(res.status, .ok, res.body.string)
 //        }
 //    }
+    
+//    func testFetchLive() throws {
+//        let user = try appClient.createUser()
+//        let group = try appClient.createGroup(with: user)
+//        let body = Endpoint.FetchLive.Request(
+//            name: group.name,
+//            from: Date(timeInterval: -60*60*24*365, since: Date())
+//        )
+//        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+//        let header = appClient.makeHeaders(for: user)
+//
+//        try app.test(.POST, "external/fetch_live", headers: header, body: bodyData) { res in
+//            XCTAssertEqual(res.status, .ok, res.body.string)
+//        }
+//    }
 }
