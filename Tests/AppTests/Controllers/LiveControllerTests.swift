@@ -130,10 +130,7 @@ class LiveControllerTests: XCTestCase {
         let hostGroup = try appClient.createGroup(with: user)
 
         let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
-        let request = try! Stub.make(Endpoint.CreateGroup.Request.self) {
-            $0.set(\.name, value: UUID().uuidString)
-        }
-        let participatingGroup = try appClient.createGroup(body: request, with: artist)
+        let participatingGroup = try appClient.createGroup(with: artist)
 
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.hostGroupId, value: hostGroup.id)
@@ -161,10 +158,7 @@ class LiveControllerTests: XCTestCase {
         for _ in 0..<3 {
             let artist = try appClient.createUser(role: .artist(Artist(part: "vocal")))
             artists.append(artist)
-            let request = try! Stub.make(Endpoint.CreateGroup.Request.self) {
-                $0.set(\.name, value: UUID().uuidString)
-            }
-            let group = try appClient.createGroup(body: request, with: artist)
+            let group = try appClient.createGroup(with: artist)
             performers.append(group)
         }
 

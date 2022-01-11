@@ -20,6 +20,23 @@ class GroupControllerTests: XCTestCase {
         app = nil
         appClient = nil
     }
+    
+    func testCreateGroup() throws {
+        let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let groupName = "NEW GROUP\(UUID.init().uuidString)"
+        let body: CreateGroup.Request = try! Stub.make {
+            $0.set(\.name, value: groupName)
+        }
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        let header = appClient.makeHeaders(for: user)
+        try app.test(.POST, "groups", headers: header, body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+        }
+        
+        try app.test(.POST, "groups", headers: header, body: bodyData) { res in
+            XCTAssertEqual(res.status, .badRequest, res.body.string)
+        }
+    }
 
     func testUpdateGroup() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))

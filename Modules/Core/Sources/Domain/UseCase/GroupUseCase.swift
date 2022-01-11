@@ -8,6 +8,10 @@ public enum GroupUpdateError: Swift.Error {
 public struct CreateGroupUseCase: LegacyUseCase {
     public typealias Request = (input: CreateGroup.Request, user: User.ID)
     public typealias Response = Group
+    
+    public enum Error: Swift.Error {
+        case groupAlreadyExists
+    }
 
     public let groupRepository: GroupRepository
     public let eventLoop: EventLoop
@@ -22,10 +26,18 @@ public struct CreateGroupUseCase: LegacyUseCase {
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         try validate(request: request.input)
-        return groupRepository.create(input: request.input).flatMap { group in
-            groupRepository
-                .join(toGroup: group.id, artist: request.user, asLeader: true)
-                .map { _ in group }
+        let precondition = groupRepository.search(name: request.input.name)
+            .flatMapThrowing {
+                guard $0 == nil else { throw Error.groupAlreadyExists }
+                return
+            }
+        return precondition
+        .flatMap {
+            return groupRepository.create(input: request.input).flatMap { group in
+                groupRepository
+                    .join(toGroup: group.id, artist: request.user, asLeader: true)
+                    .map { _ in group }
+            }
         }
     }
 }

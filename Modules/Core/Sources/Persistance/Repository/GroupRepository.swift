@@ -17,6 +17,12 @@ public class GroupRepository: Domain.GroupRepository {
         case notMemberOfGroup
         case feedNotFound
     }
+    
+    public func search(name: String)  -> EventLoopFuture<Domain.Group?> {
+        return Group.query(on: db).filter(\.$name == name).first().optionalFlatMap { [db] in
+            Domain.Group.translate(fromPersistance: $0, on: db)
+        }
+    }
 
     public func create(input: Endpoint.CreateGroup.Request) -> EventLoopFuture<Domain.Group> {
         let group = Group(

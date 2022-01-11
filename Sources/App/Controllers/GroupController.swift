@@ -210,6 +210,12 @@ extension Endpoint.ArtistFeedComment: Content {}
 extension Endpoint.GroupFeed: Content {}
 extension Endpoint.GroupDetail: Content {}
 
+extension Domain.CreateGroupUseCase.Error: AbortError {
+    public var status: HTTPResponseStatus {
+        .badRequest
+    }
+}
+
 extension Domain.JoinGroupUseCase.Error: AbortError {
     public var status: HTTPResponseStatus {
         .badRequest

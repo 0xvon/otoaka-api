@@ -75,11 +75,14 @@ class AppClient {
     }
 
     func createGroup(
-        body: CreateGroup.Request = try! Stub.make { $0.set(\.name, value: "WALL OF DEATH") },
+        name: String = "WALL OF DEATH\(UUID.init().uuidString)",
         with user: AppUser
     ) throws
         -> Endpoint.Group
     {
+        let body: CreateGroup.Request = try! Stub.make {
+            $0.set(\.name, value: name)
+        }
         let bodyData = try ByteBuffer(data: encoder.encode(body))
         var createdGroup: Endpoint.Group!
         try app.test(.POST, "groups", headers: makeHeaders(for: user), body: bodyData) { res in
