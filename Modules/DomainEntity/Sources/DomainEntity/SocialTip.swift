@@ -5,6 +5,7 @@ public struct SocialTip: Codable, Identifiable, Equatable {
     public let id: ID
     public var user: User
     public var tip: Int
+    public var theme: String
     public var type: SocialTipType
     public var message: String
     public var isRealMoney: Bool
@@ -14,6 +15,7 @@ public struct SocialTip: Codable, Identifiable, Equatable {
         id: SocialTip.ID,
         user: User,
         tip: Int,
+        theme: String,
         type: SocialTipType,
         message: String,
         isRealMoney: Bool,
@@ -22,6 +24,7 @@ public struct SocialTip: Codable, Identifiable, Equatable {
         self.id = id
         self.user = user
         self.tip = tip
+        self.theme = theme
         self.type = type
         self.message = message
         self.isRealMoney = isRealMoney
@@ -91,6 +94,7 @@ public struct SocialTipEvent: Codable, Identifiable, Equatable {
         self.live = live
         self.title = title
         self.description = description
+        self.relatedLink = relatedLink
         self.since = since
         self.until = until
         self.createdAt = createdAt

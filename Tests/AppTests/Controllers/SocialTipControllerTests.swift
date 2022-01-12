@@ -29,6 +29,7 @@ class SocialTipControllerTests: XCTestCase {
         let body = Endpoint.SendSocialTip.Request(
             tip: 2000,
             type: .group(group),
+            theme: "このアーティストのオススメなところ",
             message: "hello",
             isRealMoney: true
         )
@@ -140,6 +141,7 @@ class SocialTipControllerTests: XCTestCase {
         let body = try! Stub.make(CreateSocialTipEvent.Request.self) {
             $0.set(\.liveId, value: live.id)
             $0.set(\.until, value: Date(timeInterval: 60 * 60 * 24 * 30, since: Date()))
+            $0.set(\.relatedLink, value: URL(string: "https://www.wall-of-death.com")!)
 //            $0.set(\.until, value: Date())
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
@@ -156,6 +158,7 @@ class SocialTipControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             let events = try res.content.decode(GetSocialTipEvent.Response.self)
             XCTAssertGreaterThanOrEqual(events.items.count, 1)
+            XCTAssertNotNil(events.items.first?.relatedLink)
         }
     }
 }

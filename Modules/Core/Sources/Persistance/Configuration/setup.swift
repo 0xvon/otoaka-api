@@ -70,7 +70,7 @@ public func setupMigration(
         
         CreateSocialTipEvent(),
 
-        AddIndexToLives(),
+        AddIndexToLives(), UpdateSocialTipToTheme(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

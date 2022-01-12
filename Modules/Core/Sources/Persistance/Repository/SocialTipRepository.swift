@@ -26,6 +26,7 @@ public class SocialTipRepository: Domain.SocialTipRepository {
             tip: request.tip,
             userId: userId,
             type: type,
+            theme: request.theme,
             message: request.message,
             isRealMoney: request.isRealMoney,
             groupId: group?.id,

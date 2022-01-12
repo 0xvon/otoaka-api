@@ -66,3 +66,17 @@ struct CreateSocialTipEvent: Migration {
             .delete()
     }
 }
+
+struct UpdateSocialTipToTheme: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTip.schema)
+            .field("theme", .string)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(SocialTip.schema)
+            .deleteField("theme")
+            .update()
+    }
+}

@@ -7,14 +7,16 @@ public struct SendSocialTip: EndpointProtocol {
     public struct Request: Codable {
         public var tip: Int
         public var type: SocialTipType
+        public var theme: String
         public var message: String
         public var isRealMoney: Bool
         
         public init(
-            tip: Int, type: SocialTipType, message: String, isRealMoney: Bool
+            tip: Int, type: SocialTipType, theme: String, message: String, isRealMoney: Bool
         ) {
             self.tip = tip
             self.type = type
+            self.theme = theme
             self.message = message
             self.isRealMoney = isRealMoney
         }

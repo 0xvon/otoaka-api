@@ -20,6 +20,9 @@ final class SocialTip: Model {
     @Enum(key: "type")
     var type: SocialTipType
     
+    @OptionalField(key: "theme")
+    var theme: String?
+    
     @OptionalField(key: "message")
     var message: String?
     
@@ -42,6 +45,7 @@ final class SocialTip: Model {
         tip: Int,
         userId: Domain.User.ID,
         type: SocialTipType,
+        theme: String,
         message: String,
         isRealMoney: Bool,
         groupId: Domain.Group.ID? = nil,
@@ -51,6 +55,7 @@ final class SocialTip: Model {
         self.tip = tip
         self.$user.id = userId.rawValue
         self.type = type
+        self.theme = theme
         self.message = message
         self.isRealMoney = isRealMoney
         self.$group.id = groupId?.rawValue
@@ -86,6 +91,7 @@ extension Endpoint.SocialTip {
             id: ID(id),
             user: user,
             tip: entity.tip,
+            theme: entity.theme ?? "このアーティストのオススメなところ",
             type: type,
             message: entity.message ?? "応援しています！",
             isRealMoney: entity.isRealMoney ?? false,

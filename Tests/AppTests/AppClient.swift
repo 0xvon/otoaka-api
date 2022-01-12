@@ -478,6 +478,7 @@ class AppClient {
         let body = Endpoint.SendSocialTip.Request(
             tip: tip,
             type: .group(group),
+            theme: "このアーティストのオススメなところ",
             message: "hello",
             isRealMoney: true
         )
