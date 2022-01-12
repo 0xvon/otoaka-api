@@ -31,11 +31,14 @@ class LiveControllerTests: XCTestCase {
     func testCreateLive() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let createdGroup = try appClient.createGroup(with: user)
+        let title = "title_\(UUID.init().uuidString)"
         let liveHouse = "livehouse_\(UUID.init().uuidString)"
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.title, value: title)
             $0.set(\.hostGroupId, value: createdGroup.id)
             $0.set(\.style, value: .oneman(performer: createdGroup.id))
             $0.set(\.liveHouse, value: liveHouse)
+            $0.set(\.date, value: "date_\(UUID.init().uuidString)")
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         var created: Live!
@@ -49,9 +52,11 @@ class LiveControllerTests: XCTestCase {
 
         let anotherGroup = try appClient.createGroup(with: user)
         let anotherBody = try! Stub.make(Endpoint.CreateLive.Request.self) {
+            $0.set(\.title, value: title)
             $0.set(\.hostGroupId, value: anotherGroup.id)
             $0.set(\.style, value: .oneman(performer: anotherGroup.id))
             $0.set(\.liveHouse, value: liveHouse)
+            $0.set(\.date, value: "date_\(UUID.init().uuidString)")
         }
         let anotherBodyData = try ByteBuffer(data: appClient.encoder.encode(anotherBody))
 

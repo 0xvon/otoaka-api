@@ -24,6 +24,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.3.0"),
         .package(url: "https://github.com/kateinoigakukun/StubKit.git", from: "0.1.6"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.12.0"),
+        .package(url: "https://github.com/tid-kijyun/Kanna.git", from: "5.2.2"),
         .package(path: "Modules/LoggingDiscord"),
         .package(path: "Modules/Core"),
         .package(path: "Modules/Endpoint"),
@@ -34,6 +35,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "XMLCoder", package: "XMLCoder"),
+                .product(name: "Kanna", package: "Kanna"),
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "Persistance", package: "Core"),
