@@ -116,7 +116,7 @@ struct ExternalController: RouteCollection {
     func searchArtist(
         req: Request, groupName: String
     ) async throws -> String {
-        let name = "MY FIRST STORY".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        let name = groupName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         let path = "/search?keyword=\(name)&genre=all&option=6"
         let html = try await requestLiveFansHtml(req: req, subPath: path)
         guard let groupId = html.body?.css("div.artistBox a").first?["href"]?
