@@ -179,9 +179,9 @@ public class LiveRepository: Domain.LiveRepository {
             }
     }
 
-    public func getLive(date: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?> {
+    public func getLive(title: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?> {
         Live.query(on: db)
-            .filter(\.$date, .custom("LIKE"), "\(date ?? "hogehogehogehoge")")
+            .filter(\.$title, .custom("LIKE"), "\(title ?? "hogehogehogehoge")")
             .filter(\.$liveHouse, .custom("LIKE"), "%\(liveHouse ?? "hogehogehogehoge")%")
             .first()
             .optionalFlatMap { [db] in

@@ -34,7 +34,7 @@ public struct CreateLiveUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         try validateInput(request: request)
         let input = request.input
-        if let live = try await liveRepository.getLive(date: input.date, liveHouse: input.liveHouse)
+        if let live = try await liveRepository.getLive(title: input.title, liveHouse: input.liveHouse)
             .get()
         {
             // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す

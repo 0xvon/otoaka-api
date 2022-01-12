@@ -9,7 +9,7 @@ public protocol LiveRepository {
         -> Domain.LiveDetail
     func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
     func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?>
-    func getLive(date: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?>
+    func getLive(title: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?>
     func updateStyle(id: Domain.Live.ID) -> EventLoopFuture<Void>
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
