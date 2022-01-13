@@ -66,13 +66,14 @@ public struct EditGroupUseCase: LegacyUseCase {
     }
 
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
-        try validate(request: request.input)
-        let precondition = groupRepository.isMember(of: request.id, member: request.user)
-            .flatMapThrowing {
-                guard $0 else { throw Error.notMemberOfGroup }
-                return
-            }
-        return precondition.flatMap { groupRepository.update(id: request.id, input: request.input) }
+//        try validate(request: request.input)
+//        let precondition = groupRepository.isMember(of: request.id, member: request.user)
+//            .flatMapThrowing {
+//                guard $0 else { throw Error.notMemberOfGroup }
+//                return
+//            }
+//        return precondition.flatMap { groupRepository.update(id: request.id, input: request.input) }
+        return groupRepository.update(id: request.id, input: request.input)
     }
 }
 
