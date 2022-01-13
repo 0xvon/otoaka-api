@@ -120,6 +120,55 @@ public class LiveRepository: Domain.LiveRepository {
         return modified.and(performers)
             .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
     }
+    
+    public func edit(id: Domain.Live.ID, input: EditLive.Request) -> EventLoopFuture<Domain.Live> {
+        let live = Live.find(id.rawValue, on: db)
+            .unwrap(orError: Error.liveNotFound)
+
+        let style: LiveStyle
+        switch input.style {
+        case .oneman: style = .oneman
+        case .battle: style = .battle
+        case .festival: style = .festival
+        }
+        let modified = live.map { (live) -> Live in
+            live.title = input.title
+            live.style = style
+            live.price = input.price
+            live.artworkURL = input.artworkURL?.absoluteString
+            live.$hostGroup.id = input.hostGroupId.rawValue
+            live.liveHouse = input.liveHouse
+            live.date = input.date
+            live.endDate = input.endDate
+            live.openAtV2 = input.openAt
+            live.startAtV2 = input.startAt
+            live.piaEventCode = input.piaEventCode
+            live.piaReleaseUrl = input.piaReleaseUrl?.absoluteString
+            live.piaEventUrl = input.piaEventUrl?.absoluteString
+            return live
+        }
+        .flatMap { [db] live in
+            live.update(on: db).map { live }
+        }
+        
+        // 既存のperformerを全員削除
+        let performers = LivePerformer.query(on: db)
+            .filter(\.$live.$id == id.rawValue)
+            .delete(force: true)
+            .flatMap { [db] in
+                // 新たなperformerを全員追加
+                input.style.performers.map { [db] performerId in
+                    let performer = LivePerformer()
+                    performer.$group.id = performerId.rawValue
+                    performer.$live.id = id.rawValue
+                    return performer.save(on: db)
+                }
+                .flatten(on: db.eventLoop)
+            }
+
+        return modified.and(performers)
+            .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
+    }
 
     public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) async throws
         -> Domain.LiveDetail

@@ -122,7 +122,7 @@ public struct EditLiveUseCase: UseCase {
         //            return
         //        }
 
-        return try await liveRepository.update(id: request.id, input: request.input).get()
+        return try await liveRepository.edit(id: request.id, input: request.input).get()
     }
 }
 
