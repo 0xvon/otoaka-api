@@ -167,12 +167,20 @@ public class GroupRepository: Domain.GroupRepository {
         }
     }
 
+    // オススメアーティストを表示する
     public func get(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.GroupFeed>
     > {
-        let groups = Group.query(on: db)
-            .sort(\.$name, .ascending)
-        return groups.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
+        // 自分がフォローしてる人たちがフォローしてるアーティストを表示
+        let followings = Group.query(on: db)
+            .join(Following.self, on: \Group.$id == \Following.$target.$id)
+            .join(UserFollowing.self, on: \Following.$user.$id == \UserFollowing.$target.$id)
+            .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
+            .fields(for: Group.self)
+            .sort(\.$id, .descending)
+            .unique()
+        
+        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
             Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
                 Domain.GroupFeed.translate(fromPersistance: $0, selfUser: selfUser, on: db)
             }

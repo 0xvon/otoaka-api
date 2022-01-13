@@ -134,16 +134,27 @@ class GroupControllerTests: XCTestCase {
 
     func testGetAllGroup() throws {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
         let headers = appClient.makeHeaders(for: user)
-        _ = try appClient.createGroup(with: user)
-        _ = try appClient.createGroup(with: user)
-        _ = try appClient.createGroup(with: user)
+        
+        // group
+        let groupX = try appClient.createGroup(with: user)
+        let groupY = try appClient.createGroup(with: user)
+        let groupZ = try appClient.createGroup(with: user)
+        
+        // follow by followingUsers
+        _ = try appClient.follow(group: groupX, with: userB)
+        _ = try appClient.follow(group: groupY, with: userB)
+        _ = try appClient.follow(group: groupZ, with: userB)
+        _ = try appClient.follow(group: groupX, with: userC)
+        _ = try appClient.followUser(target: userB, with: user)
+        _ = try appClient.followUser(target: userC, with: user)
 
         try app.test(.GET, "groups?page=1&per=10", headers: headers) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let response = try res.content.decode(GetAllGroups.Response.self)
-            XCTAssertGreaterThanOrEqual(response.items.count, 3)
-            XCTAssertGreaterThanOrEqual(response.items.first!.watchingCount, 0)
+            XCTAssertEqual(response.items.count, 3)
         }
 
         try app.test(.GET, "groups/search?term=wall+of+death&page=1&per=10", headers: headers) {
