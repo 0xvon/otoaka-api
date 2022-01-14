@@ -189,13 +189,13 @@ struct GroupController: RouteCollection {
     ) throws
         -> EventLoopFuture<Endpoint.Group>
     {
-        let user = try req.auth.require(Domain.User.self)
         let input = try req.content.decode(Endpoint.EditGroup.Request.self)
-        let precondition = repository.isMember(of: uri.id, member: user.id).flatMapThrowing {
-            guard $0 else { throw Abort(.forbidden) }
-            return
-        }
-        return precondition.flatMap { repository.update(id: uri.id, input: input) }
+//        let precondition = repository.isMember(of: uri.id, member: user.id).flatMapThrowing {
+//            guard $0 else { throw Abort(.forbidden) }
+//            return
+//        }
+//        return precondition.flatMap { repository.update(id: uri.id, input: input) }
+        return repository.update(id: uri.id, input: input)
     }
 }
 
