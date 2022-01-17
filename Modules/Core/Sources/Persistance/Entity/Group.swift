@@ -30,6 +30,9 @@ final class Group: Model {
 
     @OptionalField(key: "hometown")
     var hometown: String?
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?

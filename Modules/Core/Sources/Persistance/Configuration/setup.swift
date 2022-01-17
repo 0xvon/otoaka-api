@@ -71,6 +71,12 @@ public func setupMigration(
         CreateSocialTipEvent(),
 
         AddIndexToLives(), UpdateSocialTipToTheme(),
+        
+        AddGroupCreatedAt(), AddUserCreatedAt(),
+        AddFollowingCreatedAt(), AddLiveLikeCreatedAt(),
+        AddLivePerformerCreatedAt(), AddPointCreatedAt(),
+        AddRecentlyFollowingCreatedAt(), AddUserBlockingCreatedAt(),
+        AddUserFollowingCreatedAt(), AddUsernameCreatedAt(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

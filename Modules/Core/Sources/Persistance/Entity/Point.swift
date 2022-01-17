@@ -16,6 +16,9 @@ final class Point: Model {
     @OptionalField(key: "expired_at")
     var expiredAt: Date?
     
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
+    
     init() {}
     
     init(

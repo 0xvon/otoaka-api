@@ -117,6 +117,9 @@ final class LivePerformer: Model {
 
     @Parent(key: "group_id")
     var group: Group
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 }
 
 extension Endpoint.PerformanceRequest {

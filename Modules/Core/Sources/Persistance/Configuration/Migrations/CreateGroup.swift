@@ -159,3 +159,143 @@ struct CreateGroupEntry: Migration {
         database.schema(GroupEntry.schema).delete()
     }
 }
+
+struct AddGroupCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Group.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Group.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddUserCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(User.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddFollowingCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Following.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Following.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddLiveLikeCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LiveLike.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LiveLike.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddLivePerformerCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LivePerformer.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(LivePerformer.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddPointCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Point.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Point.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddRecentlyFollowingCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(RecentlyFollowing.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(RecentlyFollowing.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddUserBlockingCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserBlocking.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserBlocking.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddUserFollowingCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(UserFollowing.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}
+
+struct AddUsernameCreatedAt: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Username.schema)
+            .field("created_at", .datetime)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Username.schema)
+            .deleteField("created_at")
+            .update()
+    }
+}

@@ -54,6 +54,9 @@ final class User: Model {
 
     @OptionalField(key: "instagram_url")
     var instagramUrl: String?
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
     init(
@@ -94,6 +97,9 @@ final class Username: Model {
 
     @Parent(key: "user_id")
     var user: User
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 }
 
 extension Endpoint.User {
@@ -169,6 +175,9 @@ final class Following: Model {
 
     @Parent(key: "target_group_id")
     var target: Group
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
 }
@@ -184,6 +193,9 @@ final class RecentlyFollowing: Model {
 
     @Parent(key: "target_group_id")
     var target: Group
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
 }
@@ -199,6 +211,9 @@ final class UserFollowing: Model {
 
     @Parent(key: "target_user_id")
     var target: User
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
 }
@@ -214,6 +229,9 @@ final class UserBlocking: Model {
 
     @Parent(key: "target_user_id")
     var target: User
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
 }
@@ -234,6 +252,9 @@ final class LiveLike: Model {
 
     @Parent(key: "live_id")
     var live: Live
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 }
 
 final class UserFeed: Model {
