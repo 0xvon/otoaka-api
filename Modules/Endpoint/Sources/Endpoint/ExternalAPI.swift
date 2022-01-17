@@ -90,9 +90,9 @@ public struct EntryGroup: EndpointProtocol {
 public struct FetchLive: EndpointProtocol {
     public struct Request: Codable {
         public let name: String
-        public let from: Date
+        public let from: Date?
         
-        public init(name: String, from: Date) {
+        public init(name: String, from: Date?) {
             self.name = name
             self.from = from
         }

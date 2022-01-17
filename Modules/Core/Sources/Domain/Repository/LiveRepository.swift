@@ -10,7 +10,7 @@ public protocol LiveRepository {
         -> Domain.LiveDetail
     func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
     func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?>
-    func getLive(title: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?>
+    func getLive(title: String?, date: String?) -> EventLoopFuture<Domain.Live?>
     func updateStyle(id: Domain.Live.ID) -> EventLoopFuture<Void>
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
@@ -44,6 +44,7 @@ public protocol LiveRepository {
         page: Int, per: Int
     ) async throws -> Page<LiveFeed>
     func search(date: String) -> EventLoopFuture<[Domain.Live]>
+    func getLatestLiveDate(by groupId: Domain.Group.ID) async throws -> Date?
     func getLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<PostSummary>>
 }

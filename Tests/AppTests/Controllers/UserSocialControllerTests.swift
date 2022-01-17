@@ -598,6 +598,8 @@ class UserSocialControllerTests: XCTestCase {
         let userB = try appClient.createUser()
         let group = try appClient.createGroup(with: user)
         let groupY = try appClient.createGroup(with: user)
+        
+        // 4 lives from group
         let liveA = try appClient.createLive(
             hostGroup: group, style: .oneman(performer: group.id), with: user,
             date: dateFormatter.string(from: yesterday))
@@ -610,12 +612,16 @@ class UserSocialControllerTests: XCTestCase {
         let liveD = try appClient.createLive(
             hostGroup: groupY, style: .oneman(performer: group.id), with: user,
             date: dateFormatter.string(from: yesterday))
+        
+        // 2 lives from groupY
         let liveE = try appClient.createLive(
             hostGroup: groupY, style: .oneman(performer: groupY.id), with: user,
             date: dateFormatter.string(from: yesterday))
         let liveF = try appClient.createLive(
             hostGroup: groupY, style: .oneman(performer: groupY.id), with: user,
             date: dateFormatter.string(from: yesterday))
+        
+        // like all lives
         for l in [liveA, liveB, liveC, liveD, liveE, liveF] {
             try appClient.like(live: l, with: userB)
         }
@@ -624,12 +630,17 @@ class UserSocialControllerTests: XCTestCase {
             .GET, "user_social/frequently_watching_groups?userId=\(userB.user.id)&per=100&page=1",
             headers: appClient.makeHeaders(for: user)
         ) { res in
-            print(userB.user.id)
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(
                 Endpoint.FrequentlyWatchingGroups.Response.self)
+            
+            // group and groupY
             XCTAssertEqual(responseBody.items.count, 2)
+            
+            // get 4 lives from group
             XCTAssertEqual(responseBody.items[0].watchingCount, 4)
+            
+            // get 2 lives from groupY
             XCTAssertEqual(responseBody.items[1].watchingCount, 2)
         }
     }

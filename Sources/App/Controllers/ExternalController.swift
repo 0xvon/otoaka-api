@@ -74,8 +74,21 @@ struct ExternalController: RouteCollection {
             let liveRepository = Persistance.LiveRepository(db: req.db)
             let notificationService = makePushNotificationService(request: req)
             
+            // そのアーティストを取ってくる
             guard let group = try await groupRepository.search(name: input.name).get() else {
                 throw Error.artistNotFound
+            }
+            
+            let date: Date
+            // そのアーティストの最新のライブを1件取ってくる
+            let latestLiveDate = try await liveRepository.getLatestLiveDate(by: group.id)
+            
+            if latestLiveDate == nil {
+                // ライブがないなら30年前をfromに指定
+                date = Date(timeInterval: -60*60*24*365*30, since: Date())
+            } else {
+                // ライブがあるなら今日をfromに指定
+                date = Date()
             }
             
             // search artist
@@ -85,7 +98,12 @@ struct ExternalController: RouteCollection {
             var liveIds: [String] = []
             var page = 1
             while(true) {
-                let ids = try await searchLives(req: req, artistId: artistId, page: page, from: input.from)
+                let ids = try await searchLives(
+                    req: req,
+                    artistId: artistId,
+                    page: page,
+                    from: input.from ?? date
+                )
                 if ids.isEmpty { break }
                 liveIds += ids
                 page += 1

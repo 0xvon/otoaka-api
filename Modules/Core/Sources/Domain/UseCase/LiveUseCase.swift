@@ -34,7 +34,7 @@ public struct CreateLiveUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         try validateInput(request: request)
         let input = request.input
-        if let live = try await liveRepository.getLive(title: input.title, liveHouse: input.liveHouse)
+        if let live = try await liveRepository.getLive(title: input.title, date: input.date)
             .get()
         {
             // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
@@ -43,26 +43,6 @@ public struct CreateLiveUseCase: UseCase {
             return editted
         } else {
             let created = try await liveRepository.create(input: input).get()
-            switch created.style {
-            case .oneman(let performer):
-                let notification = PushNotification(message: "\(performer.name) のライブ情報が更新されました")
-                try await notificationService.publish(
-                    toGroupFollowers: performer.id, notification: notification
-                ).get()
-            case .battle(let performers), .festival(let performers):
-                try await withThrowingTaskGroup(of: Void.self) { group in
-                    for performer in performers {
-                        group.addTask {
-                            let notification = PushNotification(
-                                message: "\(performer.name) のライブ情報が更新されました")
-                            try await notificationService.publish(
-                                toGroupFollowers: performer.id, notification: notification
-                            ).get()
-                        }
-                    }
-                    try await group.waitForAll()
-                }
-            }
             return created
         }
     }

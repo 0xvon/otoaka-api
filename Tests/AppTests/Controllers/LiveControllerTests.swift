@@ -32,13 +32,13 @@ class LiveControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(Artist(part: "vocal")))
         let createdGroup = try appClient.createGroup(with: user)
         let title = "title_\(UUID.init().uuidString)"
-        let liveHouse = "livehouse_\(UUID.init().uuidString)"
+        let date = "date_\(UUID.init().uuidString)"
         let body = try! Stub.make(Endpoint.CreateLive.Request.self) {
             $0.set(\.title, value: title)
             $0.set(\.hostGroupId, value: createdGroup.id)
             $0.set(\.style, value: .oneman(performer: createdGroup.id))
-            $0.set(\.liveHouse, value: liveHouse)
-            $0.set(\.date, value: "date_\(UUID.init().uuidString)")
+            $0.set(\.liveHouse, value: "live_\(UUID.init().uuidString)")
+            $0.set(\.date, value: date)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
         var created: Live!
@@ -55,8 +55,8 @@ class LiveControllerTests: XCTestCase {
             $0.set(\.title, value: title)
             $0.set(\.hostGroupId, value: anotherGroup.id)
             $0.set(\.style, value: .oneman(performer: anotherGroup.id))
-            $0.set(\.liveHouse, value: liveHouse)
-            $0.set(\.date, value: "date_\(UUID.init().uuidString)")
+            $0.set(\.liveHouse, value: "live_\(UUID.init().uuidString)")
+            $0.set(\.date, value: date)
         }
         let anotherBodyData = try ByteBuffer(data: appClient.encoder.encode(anotherBody))
 
@@ -117,7 +117,7 @@ class LiveControllerTests: XCTestCase {
             $0.set(\.hostGroupId, value: hostGroup.id)
             $0.set(
                 \.style, value: .battle(performers: [participatingGroup.id, participatingGroup.id]))
-            $0.set(\.liveHouse, value: "livehouse_\(UUID.init().uuidString)")
+            $0.set(\.date, value: "date_\(UUID.init().uuidString)")
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
 
@@ -214,12 +214,13 @@ class LiveControllerTests: XCTestCase {
         let user = try appClient.createUser(role: .artist(.init(part: "vocal")))
         let userB = try appClient.createUser()
         let group = try appClient.createGroup(with: user)
-        let live = try appClient.createLive(hostGroup: group, with: user)
+        let title = "DEAD POP FESTIVAL_\(UUID.init().uuidString)"
+        let live = try appClient.createLive(hostGroup: group, with: user, title: title)
 
         let headers = appClient.makeHeaders(for: user)
 
         try app.test(
-            .GET, "lives/search?term=dead+pop&page=1&per=1", headers: headers
+            .GET, "lives/search?term=\(title.lowercased().addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)&page=1&per=1", headers: headers
         ) { res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let body = try res.content.decode(Endpoint.SearchLive.Response.self)

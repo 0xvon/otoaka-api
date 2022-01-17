@@ -228,10 +228,10 @@ public class LiveRepository: Domain.LiveRepository {
             }
     }
 
-    public func getLive(title: String?, liveHouse: String?) -> EventLoopFuture<Domain.Live?> {
+    public func getLive(title: String?, date: String?) -> EventLoopFuture<Domain.Live?> {
         Live.query(on: db)
             .filter(\.$title, .custom("LIKE"), "\(title ?? "hogehogehogehoge")")
-            .filter(\.$liveHouse, .custom("LIKE"), "%\(liveHouse ?? "hogehogehogehoge")%")
+            .filter(\.$date, .custom("LIKE"), "%\(date ?? "hogehogehogehoge")%")
             .first()
             .optionalFlatMap { [db] in
                 Domain.Live.translate(fromPersistance: $0, on: db)
@@ -439,6 +439,20 @@ public class LiveRepository: Domain.LiveRepository {
         return tickets.flatMapEach(on: db.eventLoop) { [db] in
             Domain.Ticket.translate(fromPersistance: $0, on: db)
         }
+    }
+    
+    public func getLatestLiveDate(by groupId: Domain.Group.ID) async throws -> Date? {
+        let live = try await Live.query(on: db)
+            .join(LivePerformer.self, on: \LivePerformer.$live.$id == \Live.$id)
+            .filter(LivePerformer.self, \.$group.$id == groupId.rawValue)
+            .sort(\.$date, .descending)
+            .first()
+        let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd"
+            return dateFormatter
+        }()
+        return live?.date.flatMap(dateFormatter.date(from:))
     }
 
     public func getLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int)
