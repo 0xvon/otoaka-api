@@ -4,6 +4,7 @@ import StubKit
 import XCTVapor
 
 @testable import App
+import XCTest
 
 class ExternalControllerTests: XCTestCase {
     var app: Application!
@@ -93,9 +94,16 @@ class ExternalControllerTests: XCTestCase {
 //        let group = try appClient.createGroup(with: user)
 //        let body = EntryGroup.Request(groupId: group.id)
 //        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+//        let header = appClient.makeHeaders(for: user)
 //
-//        try app.test(.POST, "external/entry_group", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+//        try app.test(.POST, "external/entry_group", headers: header, body: bodyData) { res in
 //            XCTAssertEqual(res.status, .ok, res.body.string)
+//        }
+//
+//        try app.test(.GET, "social_tips/social_tippable_groups", headers: header) { res in
+//            XCTAssertEqual(res.status, .ok, res.body.string)
+//            let groups = try res.content.decode(GetSocialTippableGroups.Response.self)
+//            XCTAssertGreaterThan(groups.count, 0)
 //        }
 //    }
     

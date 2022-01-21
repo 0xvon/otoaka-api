@@ -187,6 +187,20 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         )
     }
     
+    public func socialTippableGroups() async throws -> [Domain.Group] {
+        let groups = try await GroupEntry.query(on: db)
+            .sort(\.$entriedAt, .ascending)
+            .with(\.$group)
+            .all()
+        
+        var tippableGroups: [Domain.Group] = []
+        for groupEntry in groups {
+            let group = try await Domain.Group.translate(fromPersistance: groupEntry.group, on: db).get()
+            tippableGroups.append(group)
+        }
+        return tippableGroups
+    }
+    
     public func groupTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip> {
         var response: [Domain.GroupTip] = []
         struct Tip: Codable {

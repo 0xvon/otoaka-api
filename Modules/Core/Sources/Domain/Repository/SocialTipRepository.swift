@@ -12,6 +12,7 @@ public protocol SocialTipRepository {
     func high(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTip>
     func groupTipRanking(groupId: Group.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip>
     func userTipRanking(userId: User.ID, page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip>
+    func socialTippableGroups() async throws -> [Domain.Group]
     func userTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip>
     func groupTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip>
     func events(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTipEvent>

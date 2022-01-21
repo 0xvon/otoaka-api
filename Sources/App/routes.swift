@@ -46,4 +46,5 @@ func routes(
     try signedUp.register(collection: PointController())
     try signedUp.grouped(adminAuthenticator)
         .register(collection: ExternalController())
+//    try signedUp.register(collection: ExternalController())
 }

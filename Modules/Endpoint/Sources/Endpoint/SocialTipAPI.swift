@@ -131,6 +131,17 @@ public struct GetUserTipFeed: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+public struct GetSocialTippableGroups: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = [Group]
+    
+    public struct URI: CodableURL {
+        @StaticPath("social_tips", "social_tippable_groups") public var prefix: Void
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
 public struct GetEntriedGroups: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<GroupTip>
