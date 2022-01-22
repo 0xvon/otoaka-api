@@ -47,3 +47,26 @@ public struct GetUserProfileUseCase: UseCase {
         )
     }
 }
+
+public struct GetLiveInfoUseCase: UseCase {
+    public typealias Request = Endpoint.Live.ID
+    public typealias Response = GetLiveInfo.Response
+    public let eventLoop: EventLoop
+
+    public let liveRepository: LiveRepository
+
+    public init(liveRepository: LiveRepository, eventLoop: EventLoop) {
+        self.liveRepository = liveRepository
+        self.eventLoop = eventLoop
+    }
+
+    public func callAsFunction(_ request: Request) async throws -> Response {
+        guard let live = try await liveRepository.getLive(by: request).get() else { throw Error.liveNotFound }
+        let likeCount = try await liveRepository.likedCount(liveId: request)
+        return Response(live: live, likeCount: likeCount)
+    }
+    
+    public enum Error: Swift.Error {
+        case liveNotFound
+    }
+}

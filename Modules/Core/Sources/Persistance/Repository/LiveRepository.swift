@@ -481,4 +481,10 @@ public class LiveRepository: Domain.LiveRepository {
                 }
             }
     }
+    
+    public func likedCount(liveId: Domain.Live.ID) async throws -> Int {
+        return try await LiveLike.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue)
+            .count()
+    }
 }

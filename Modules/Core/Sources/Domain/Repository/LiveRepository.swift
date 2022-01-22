@@ -15,6 +15,7 @@ public protocol LiveRepository {
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
     >
+    func likedCount(liveId: Domain.Live.ID) async throws -> Int
 
     func reserveTicket(liveId: Domain.Live.ID, user: Domain.User.ID) -> EventLoopFuture<
         Void

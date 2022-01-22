@@ -88,6 +88,25 @@ class ExternalControllerTests: XCTestCase {
         }
     }
     
+    func testGetLiveInfo() throws {
+        let user = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let live = try appClient.createLive(hostGroup: group, with: user)
+        
+        // 2 users liked
+        let user_a = try appClient.createUser()
+        let user_b = try appClient.createUser()
+        _ = try appClient.like(live: live, with: user_a)
+        _ = try appClient.like(live: live, with: user_b)
+        
+        try app.test(.GET, "public/live_info/\(live.id)") { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetLiveInfo.Response.self)
+            XCTAssertEqual(responseBody.live.id, live.id)
+            XCTAssertEqual(responseBody.likeCount, 2)
+        }
+    }
+    
 //    func testEntryGroup() throws {
 //        let user = try appClient.createUser()
 //

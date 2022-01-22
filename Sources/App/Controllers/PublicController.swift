@@ -32,7 +32,22 @@ struct PublicController: RouteCollection {
                     userSocialRepository: repository, eventLoop: req.eventLoop)
                 return try await useCase(uri.username)
             })
+        try routes.on(endpoint: GetLiveInfo.self, use: injectProvider { req, uri, repository in
+            let liveRepository = Persistance.LiveRepository(db: req.db)
+            let useCase = GetLiveInfoUseCase(liveRepository: liveRepository, eventLoop: req.eventLoop)
+            return try await useCase(uri.liveId)
+        })
     }
 }
 
 extension GetUserProfile.Response: Content {}
+extension GetLiveInfo.Response: Content {}
+
+extension GetLiveInfoUseCase.Error: AbortError {
+    public var status: HTTPResponseStatus {
+        switch self {
+        case .liveNotFound:
+            return .notFound
+        }
+    }
+}
