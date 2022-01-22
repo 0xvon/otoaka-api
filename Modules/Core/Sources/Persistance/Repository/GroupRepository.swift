@@ -387,4 +387,11 @@ public class GroupRepository: Domain.GroupRepository {
         let entry = GroupEntry(groupId: groupId.rawValue)
         try await entry.create(on: db)
     }
+    
+    public func isEntried(groupId: Domain.Group.ID) -> EventLoopFuture<Bool> {
+        return GroupEntry.query(on: db)
+            .filter(\.$group.$id == groupId.rawValue)
+            .first()
+            .map { $0 != nil }
+    }
 }

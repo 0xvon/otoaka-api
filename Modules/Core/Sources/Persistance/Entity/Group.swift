@@ -290,13 +290,19 @@ extension Endpoint.GroupFeed {
             .filter(Live.self, \.$date < dateFormatter.string(from: Date()))
             .filter(LiveLike.self, \.$user.$id == selfUser.rawValue)
             .count()
+        let isEntried = GroupEntry.query(on: db)
+            .filter(\.$group.$id == entity.id!)
+            .first()
+            .map { $0 != nil }
         return Domain.Group.translate(fromPersistance: entity, on: db)
             .and(isFollowing)
             .and(followersCount)
             .and(watchingCount)
+            .and(isEntried)
             .map {
                 (
-                    $0.0.0,
+                    $0.0.0.0,
+                    $0.0.0.1,
                     $0.0.1,
                     $0.1,
                     $1
@@ -307,7 +313,8 @@ extension Endpoint.GroupFeed {
                     group: $0,
                     isFollowing: $1,
                     followersCount: $2,
-                    watchingCount: $3
+                    watchingCount: $3,
+                    isEntried: $4
                 )
             }
     }

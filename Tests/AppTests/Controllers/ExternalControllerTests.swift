@@ -105,6 +105,12 @@ class ExternalControllerTests: XCTestCase {
 //            let groups = try res.content.decode(GetSocialTippableGroups.Response.self)
 //            XCTAssertGreaterThan(groups.count, 0)
 //        }
+//
+//        try app.test(.GET, "groups/\(group.id)", headers: header) { res in
+//            XCTAssertEqual(res.status, .ok, res.body.string)
+//            let response = try res.content.decode(GetGroup.Response.self)
+//            XCTAssertTrue(response.isEntried)
+//        }
 //    }
     
 //    func testFetchLive() throws {

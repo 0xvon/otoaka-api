@@ -140,11 +140,31 @@ struct GroupController: RouteCollection {
         let followersCount = userSocialRepository.followersCount(selfGroup: uri.groupId)
         let watchingCount = userSocialRepository.watchingCount(
             selfGroup: uri.groupId, selfUser: user.id)
-        return group.and(isMember).and(isFollowing).and(followersCount).and(watchingCount).map {
-            ($0.0.0.0, $0.0.0.1, $0.0.1, $0.1, $1)
+        let isEntried = repository.isEntried(groupId: uri.groupId)
+        return group
+            .and(isMember)
+            .and(isFollowing)
+            .and(followersCount)
+            .and(watchingCount)
+            .and(isEntried)
+            .map {
+            (
+                $0.0.0.0.0,
+                $0.0.0.0.1,
+                $0.0.0.1,
+                $0.0.1,
+                $0.1,
+                $1
+            )
         }.map {
             Domain.GroupDetail(
-                group: $0, isMember: $1, isFollowing: $2, followersCount: $3, watchingCount: $4)
+                group: $0,
+                isMember: $1,
+                isFollowing: $2,
+                followersCount: $3,
+                watchingCount: $4,
+                isEntried: $5
+            )
         }
     }
 

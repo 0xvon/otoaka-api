@@ -248,16 +248,18 @@ public struct GroupFeed: Codable {
     public var isFollowing: Bool
     public var followersCount: Int
     public var watchingCount: Int
+    public var isEntried: Bool
 
     public subscript<T>(dynamicMember keyPath: KeyPath<Group, T>) -> T {
         group[keyPath: keyPath]
     }
 
-    public init(group: Group, isFollowing: Bool, followersCount: Int, watchingCount: Int) {
+    public init(group: Group, isFollowing: Bool, followersCount: Int, watchingCount: Int, isEntried: Bool) {
         self.group = group
         self.isFollowing = isFollowing
         self.followersCount = followersCount
         self.watchingCount = watchingCount
+        self.isEntried = isEntried
     }
 }
 
@@ -267,14 +269,16 @@ public struct GroupDetail: Codable {
     public var isFollowing: Bool
     public var followersCount: Int
     public var watchingCount: Int
+    public var isEntried: Bool
 
     public init(
-        group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int, watchingCount: Int
+        group: Group, isMember: Bool, isFollowing: Bool, followersCount: Int, watchingCount: Int, isEntried: Bool
     ) {
         self.group = group
         self.isMember = isMember
         self.isFollowing = isFollowing
         self.followersCount = followersCount
         self.watchingCount = watchingCount
+        self.isEntried = isEntried
     }
 }
