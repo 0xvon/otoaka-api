@@ -236,6 +236,78 @@ public class SocialTipRepository: Domain.SocialTipRepository {
         )
     }
     
+    public func dailyGroupTipRanking(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip> {
+        var response: [Domain.GroupTip] = []
+        struct Tip: Codable {
+            let group_id: UUID
+            let tip_sum: Int
+            let thrown_from: Date
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, group_id, min(thrown_at) as thrown_from \
+                from \(SocialTip.schema) \
+                where DATE_FORMAT(thrown_at, '%Y-%m-%d') > DATE_ADD(CURRENT_DATE, INTERVAL -2 DAY) \
+                group by group_id \
+                order by tip_sum desc \
+                limit \(String(per)) offset \(String((page - 1) * per))
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let group = try await Domain.Group.translate(
+                    fromPersistance: Group.find(tip.group_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum, from: tip.thrown_from))
+            }
+        }
+        return Domain.Page<GroupTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
+    }
+    
+    public func weeklyGroupTipRanking(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip> {
+        var response: [Domain.GroupTip] = []
+        struct Tip: Codable {
+            let group_id: UUID
+            let tip_sum: Int
+            let thrown_from: Date
+        }
+        
+        if let mysql = db as? SQLDatabase {
+            let tips = try await mysql.raw(
+                """
+                select sum(tip) as tip_sum, group_id, min(thrown_at) as thrown_from \
+                from \(SocialTip.schema) \
+                where DATE_FORMAT(thrown_at, '%Y-%m-%d') > DATE_ADD(CURRENT_DATE, INTERVAL -8 DAY) \
+                group by group_id \
+                order by tip_sum desc \
+                limit \(String(per)) offset \(String((page - 1) * per))
+                """
+            ).all(decoding: Tip.self)
+            
+            for tip in tips {
+                let group = try await Domain.Group.translate(
+                    fromPersistance: Group.find(tip.group_id, on: db)!,
+                    on: db
+                ).get()
+                response.append(Domain.GroupTip(group: group, tip: tip.tip_sum, from: tip.thrown_from))
+            }
+        }
+        return Domain.Page<GroupTip>(
+            items: response,
+            metadata: PageMetadata(
+                page: page, per: per, total: response.count
+            )
+        )
+    }
+    
     public func events(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTipEvent> {
         let yesterday = Date(timeInterval: -60*60*24, since: Date())
         let events = try await SocialTipEvent.query(on: db)

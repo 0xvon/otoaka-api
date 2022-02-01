@@ -162,7 +162,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
 
         if let mysql = db as? SQLDatabase {
             let watchingCounts = try await mysql.raw(
-                "select live_performers.group_id as group_id, count(*) as watching_count from live_performers inner join live_likes on live_performers.live_id = live_likes.live_id and live_likes.user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) inner join lives on lives.id = live_likes.live_id and lives.date < \"\(dateFormatter.string(from: Date()))\" group by live_performers.group_id order by watching_count desc limit \(String(per)) offset \(String((page - 1) * per))"
+                """
+                select live_performers.group_id as group_id, count(*) as watching_count \
+                from live_performers \
+                inner join live_likes on live_performers.live_id = live_likes.live_id \
+                and live_likes.user_id=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) \
+                inner join lives on lives.id = live_likes.live_id \
+                and lives.date < \"\(dateFormatter.string(from: Date()))\" \
+                group by live_performers.group_id \
+                order by watching_count desc \
+                limit \(String(per)) \
+                offset \(String((page - 1) * per))
+                """
             )
             .all(decoding: WatchingCount.self).get()
 
@@ -932,7 +943,15 @@ public class UserSocialRepository: Domain.UserSocialRepository {
         }()
         if let mysql = db as? SQLDatabase {
             return mysql.raw(
-                "select substring(lives.date, 1, 4) as year, live_likes.user_id as uid, count(*) as like_count from live_likes inner join lives on live_likes.live_id = lives.id group by substring(lives.date, 1, 4), live_likes.user_id having year <= \"\(dateFormatter.string(from: Date()))\" and uid=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) order by year asc"
+                """
+                select substring(lives.date, 1, 4) as year, live_likes.user_id as uid, count(*) as like_count \
+                from live_likes \
+                inner join lives on live_likes.live_id = lives.id \
+                group by substring(lives.date, 1, 4), live_likes.user_id \
+                having year <= \"\(dateFormatter.string(from: Date()))\" \
+                and uid=UNHEX(REPLACE('\(userId.rawValue.uuidString)', '-', '')) \
+                order by year asc
+                """
             )
             .all(decoding: LikeCount.self)
             .flatMap { [db] (count: [LikeCount]) -> EventLoopFuture<LiveTransition> in

@@ -1,6 +1,7 @@
 import NIO
 import Endpoint
 import DomainEntity
+import Foundation
 
 public protocol SocialTipRepository {
     func send(
@@ -15,6 +16,8 @@ public protocol SocialTipRepository {
     func socialTippableGroups() async throws -> [Domain.Group]
     func userTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.UserTip>
     func groupTipFeed(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip>
+    func dailyGroupTipRanking(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip>
+    func weeklyGroupTipRanking(page: Int, per: Int) async throws -> Domain.Page<Domain.GroupTip>
     func events(page: Int, per: Int) async throws -> Domain.Page<Domain.SocialTipEvent>
     func createEvent(request: CreateSocialTipEvent.Request) async throws -> Domain.SocialTipEvent
 }

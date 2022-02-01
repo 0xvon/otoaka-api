@@ -116,6 +116,18 @@ class SocialTipControllerTests: XCTestCase {
             let response = try res.content.decode(GetEntriedGroups.Response.self)
             XCTAssertGreaterThanOrEqual(response.items.count, 1)
         }
+        
+        try app.test(.GET, "social_tips/daily_group_ranking?page=1&per=10", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetDailyGroupRanking.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 1)
+        }
+        
+        try app.test(.GET, "social_tips/weekly_group_ranking?page=1&per=10", headers: header) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let response = try res.content.decode(GetDailyGroupRanking.Response.self)
+            XCTAssertGreaterThanOrEqual(response.items.count, 1)
+        }
     }
     
     func testGetHighTips() throws {

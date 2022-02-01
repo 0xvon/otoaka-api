@@ -142,12 +142,39 @@ public struct GetSocialTippableGroups: EndpointProtocol {
     public static var method: HTTPMethod = .get
 }
 
+// social tipランキング
 public struct GetEntriedGroups: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<GroupTip>
     
     public struct URI: CodableURL, PaginationQuery {
         @StaticPath("social_tips", "entried_groups") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetDailyGroupRanking: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupTip>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "daily_group_ranking") public var prefix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static var method: HTTPMethod = .get
+}
+
+public struct GetWeeklyGroupRanking: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<GroupTip>
+    
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("social_tips", "weekly_group_ranking") public var prefix: Void
         @Query public var page: Int
         @Query public var per: Int
         public init() {}
