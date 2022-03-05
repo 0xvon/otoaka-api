@@ -536,7 +536,8 @@ class UserSocialControllerTests: XCTestCase {
         let group = try appClient.createGroup(with: userA)
         let live = try appClient.createLive(hostGroup: group, with: userA)
 
-        // create 3 posts
+        // create 4 posts
+        _ = try appClient.createPost(with: userA, live: live)
         _ = try appClient.createPost(with: userB, live: live)
         _ = try appClient.createPost(with: userB, live: live)
         _ = try appClient.createPost(with: userC, live: live)
@@ -545,7 +546,7 @@ class UserSocialControllerTests: XCTestCase {
 
         try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: headers) { res in
             let responseBody = try res.content.decode(GetLivePosts.Response.self)
-            XCTAssertGreaterThanOrEqual(responseBody.items.count, 3)
+            XCTAssertGreaterThanOrEqual(responseBody.items.count, 1)
         }
     }
 

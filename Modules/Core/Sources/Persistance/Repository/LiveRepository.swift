@@ -460,6 +460,7 @@ public class LiveRepository: Domain.LiveRepository {
     {
         Post.query(on: db)
             .filter(\.$live.$id == liveId.rawValue)
+            .filter(\.$author.$id == userId.rawValue)
             .sort(\.$createdAt, .descending)
             .with(\.$comments)
             .with(\.$likes)
