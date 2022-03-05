@@ -448,9 +448,21 @@ public struct GetLikedLive: EndpointProtocol {
         @DynamicPath public var userId: User.ID
         @Query public var page: Int
         @Query public var per: Int
+        @Query public var sort: String?
         public init() {}
     }
     public static let method: HTTPMethod = .get
+}
+
+public enum LiveSortType: String, Codable {
+    case year, group
+    
+    public init(_ value: String?) {
+        switch value {
+        case "group": self = .group
+        default: self = .year
+        }
+    }
 }
 
 public struct GetLikedFutureLive: EndpointProtocol {

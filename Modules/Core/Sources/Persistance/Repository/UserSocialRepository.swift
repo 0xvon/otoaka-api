@@ -632,6 +632,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
 
     public func likedLive(
         userId: Domain.User.ID, selfUser: Domain.User.ID, series: Domain.LiveSeries = .all,
+        sort: Domain.LiveSortType,
         page: Int, per: Int
     ) -> EventLoopFuture<
         Domain.Page<Domain.LiveFeed>
@@ -641,7 +642,7 @@ public class UserSocialRepository: Domain.UserSocialRepository {
             dateFormatter.dateFormat = "yyyyMMdd"
             return dateFormatter
         }()
-        let live = Live.query(on: db)
+        var live = Live.query(on: db)
             .join(LiveLike.self, on: \LiveLike.$live.$id == \Live.$id)
             .filter(LiveLike.self, \.$user.$id == userId.rawValue)
         switch series {
@@ -667,11 +668,18 @@ public class UserSocialRepository: Domain.UserSocialRepository {
                     }
                 }
         case .past:
-            return
-                live
+            live = live
                 .filter(\.$date < dateFormatter.string(from: Date()))
-                .sort(\.$date, .descending)
-                .paginate(PageRequest(page: page, per: per))
+            switch sort {
+            case .group:
+                live = live
+                    .sort(\.$hostGroup.$id, .ascending)
+                    .sort(\.$date, .descending)
+            case .year:
+                live = live
+                    .sort(\.$date, .descending)
+            }
+            return live.paginate(PageRequest(page: page, per: per))
                 .flatMap { [db] in
                     Domain.Page<LiveFeed>.translate(page: $0, eventLoop: db.eventLoop) { live in
                         Domain.LiveFeed.translate(fromPersistance: live, selfUser: selfUser, on: db)

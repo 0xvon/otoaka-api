@@ -52,7 +52,10 @@ public protocol UserSocialRepository {
     func likeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func unlikeLive(userId: User.ID, liveId: Live.ID) -> EventLoopFuture<Void>
     func likedLive(
-        userId: Domain.User.ID, selfUser: Domain.User.ID, series: Domain.LiveSeries, page: Int,
+        userId: Domain.User.ID, selfUser: Domain.User.ID,
+        series: Domain.LiveSeries,
+        sort: Domain.LiveSortType,
+        page: Int,
         per: Int
     ) -> EventLoopFuture<Domain.Page<Domain.LiveFeed>>
     func likeUserFeed(userId: User.ID, feedId: UserFeed.ID) -> EventLoopFuture<Void>

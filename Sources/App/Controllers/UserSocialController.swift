@@ -175,17 +175,27 @@ struct UserSocialController: RouteCollection {
             endpoint: Endpoint.GetLikedLive.self,
             use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
+                let sort = LiveSortType(uri.sort)
                 return repository.likedLive(
-                    userId: uri.userId, selfUser: user.id, series: .past, page: uri.page,
-                    per: uri.per)
+                    userId: uri.userId,
+                    selfUser: user.id,
+                    series: .past,
+                    sort: sort,
+                    page: uri.page,
+                    per: uri.per
+                )
             })
         try routes.on(
             endpoint: Endpoint.GetLikedFutureLive.self,
             use: legacyInjectProvider { req, uri, repository in
                 let user = try req.auth.require(Domain.User.self)
                 return repository.likedLive(
-                    userId: uri.userId, selfUser: user.id, series: .future, page: uri.page,
-                    per: uri.per)
+                    userId: uri.userId,
+                    selfUser: user.id,
+                    series: .future, sort: .year,
+                    page: uri.page,
+                    per: uri.per
+                )
             })
         try routes.on(
             endpoint: LikeUserFeed.self,

@@ -34,7 +34,9 @@ public struct GetUserProfileUseCase: UseCase {
             userId: user.id, selfUser: user.id, page: 1, per: 50
         ).get().items
         async let schedule = userSocialRepository.likedLive(
-            userId: user.id, selfUser: user.id, series: .future, page: 1, per: 10
+            userId: user.id, selfUser: user.id,
+            series: .future, sort: .year,
+            page: 1, per: 10
         ).get().items
 
         return try await Response(

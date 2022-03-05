@@ -4,6 +4,7 @@ import StubKit
 import XCTVapor
 
 @testable import App
+import XCTest
 
 class UserSocialControllerTests: XCTestCase {
     var app: Application!
@@ -547,6 +548,38 @@ class UserSocialControllerTests: XCTestCase {
         try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: headers) { res in
             let responseBody = try res.content.decode(GetLivePosts.Response.self)
             XCTAssertGreaterThanOrEqual(responseBody.items.count, 1)
+        }
+    }
+    
+    func testGetLikedLive() throws {
+        let user = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let liveA = try appClient.createLive(
+            hostGroup: group, style: .oneman(performer: group.id), with: user,
+            date: "20000101")
+        let liveB = try appClient.createLive(
+            hostGroup: group, style: .oneman(performer: group.id), with: user,
+            date: "20000101")
+        let liveC = try appClient.createLive(
+            hostGroup: group, style: .oneman(performer: group.id), with: user,
+            date: "20000101")
+        let liveD = try appClient.createLive(
+            hostGroup: group, style: .oneman(performer: group.id), with: user,
+            date: "20000101")
+        for l in [liveA, liveB, liveC, liveD] { try appClient.like(live: l, with: user) }
+        
+        let headers = appClient.makeHeaders(for: user)
+        
+        try app.test(.GET, "user_social/liked_live/\(user.user.id)?page=1&per=100&sort=year", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetLikedLive.Response.self)
+            XCTAssertEqual(responseBody.items.count, 4)
+        }
+        
+        try app.test(.GET, "user_social/liked_live/\(user.user.id)?page=1&per=100&sort=group", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(GetLikedLive.Response.self)
+            XCTAssertEqual(responseBody.items.count, 4)
         }
     }
 
