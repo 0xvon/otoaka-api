@@ -287,6 +287,7 @@ public class UserRepository: Domain.UserRepository {
         let post = Post()
         post.$author.id = input.author.rawValue
         post.$live.id = input.live.rawValue
+        post.isPrivate = input.isPrivate
         post.text = input.text
 
         let created = post.create(on: db)
@@ -333,6 +334,7 @@ public class UserRepository: Domain.UserRepository {
         let post = Post.find(postId.rawValue, on: db).unwrap(orError: Error.postNotFound)
         let modified = post.map { (post) -> Post in
             post.$live.id = input.live.rawValue
+            post.isPrivate = input.isPrivate
             post.text = input.text
             return post
         }

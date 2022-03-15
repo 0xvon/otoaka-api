@@ -320,12 +320,13 @@ class AppClient {
             .POST, "user_social/unlike_user_feed", headers: makeHeaders(for: user), body: bodyData)
     }
 
-    func createPost(with user: AppUser, live: Live? = nil) throws -> Post {
+    func createPost(with user: AppUser, live: Live? = nil, isPrivate: Bool = false ) throws -> Post {
         let groupX = try self.createGroup(with: user)
         let groupY = try self.createGroup(with: user)
         let dummyLive = try self.createLive(hostGroup: groupX, with: user)
         let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
             $0.set(\.author, value: user.user.id)
+            $0.set(\.isPrivate, value: isPrivate)
             $0.set(\.groups, value: [groupX, groupY])
             $0.set(\.imageUrls, value: ["something", "something2"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
@@ -346,6 +347,7 @@ class AppClient {
         let body = try! Stub.make(Endpoint.CreatePost.Request.self) {
             $0.set(\.author, value: user.user.id)
             $0.set(\.groups, value: groups)
+            $0.set(\.isPrivate, value: false)
             $0.set(\.imageUrls, value: ["something", "something2"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
             $0.set(\.live, value: live?.id ?? dummyLive.id)
@@ -363,6 +365,7 @@ class AppClient {
     func editPost(with user: AppUser, post: Post) throws -> Post {
         let body = try! Stub.make(Endpoint.EditPost.Request.self) {
             $0.set(\.text, value: "Edited Post")
+            $0.set(\.isPrivate, value: false)
             $0.set(\.imageUrls, value: ["something3", "something4"])
             $0.set(\.tracks, value: [try! Stub.make(Endpoint.Track.self)])
             $0.set(\.live, value: post.live!.id)

@@ -238,6 +238,7 @@ public struct CreatePost: EndpointProtocol {
     public struct Request: Codable {
         public var author: User.ID
         public var live: Live.ID
+        public var isPrivate: Bool
         public var text: String
         public var tracks: [Track]
         public var groups: [Group]
@@ -246,6 +247,7 @@ public struct CreatePost: EndpointProtocol {
         public init(
             author: User.ID,
             live: Live.ID,
+            isPrivate: Bool,
             text: String,
             tracks: [Track],
             groups: [Group],
@@ -253,6 +255,7 @@ public struct CreatePost: EndpointProtocol {
         ) {
             self.author = author
             self.live = live
+            self.isPrivate = isPrivate
             self.text = text
             self.tracks = tracks
             self.groups = groups

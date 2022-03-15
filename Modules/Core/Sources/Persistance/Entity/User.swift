@@ -396,6 +396,9 @@ final class Post: Model {
 
     @Parent(key: "live_id")
     var live: Live
+    
+    @OptionalField(key: "is_private")
+    var isPrivate: Bool?
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -547,6 +550,7 @@ extension Endpoint.Post {
                     id: ID($0),
                     author: $1,
                     live: $2,
+                    isPrivate: entity.isPrivate ?? false,
                     text: entity.text,
                     tracks: $4,
                     groups: $5,

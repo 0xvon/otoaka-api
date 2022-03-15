@@ -157,6 +157,7 @@ public struct Post: Codable, Equatable {
     public var id: ID
     public var author: User
     public var live: Live?
+    public var isPrivate: Bool
     public var text: String
     public var tracks: [PostTrack]
     public var groups: [Group]
@@ -167,6 +168,7 @@ public struct Post: Codable, Equatable {
         id: Post.ID,
         author: User,
         live: Live?,
+        isPrivate: Bool,
         text: String,
         tracks: [PostTrack],
         groups: [Group],
@@ -176,6 +178,7 @@ public struct Post: Codable, Equatable {
         self.id = id
         self.author = author
         self.live = live
+        self.isPrivate = isPrivate
         self.text = text
         self.tracks = tracks
         self.groups = groups

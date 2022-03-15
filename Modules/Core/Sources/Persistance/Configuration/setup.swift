@@ -77,6 +77,8 @@ public func setupMigration(
         AddLivePerformerCreatedAt(), AddPointCreatedAt(),
         AddRecentlyFollowingCreatedAt(), AddUserBlockingCreatedAt(),
         AddUserFollowingCreatedAt(), AddUsernameCreatedAt(),
+        
+        addPostToIsPrivate(),
     ])
 
     try migrator.setupIfNeeded().flatMap {

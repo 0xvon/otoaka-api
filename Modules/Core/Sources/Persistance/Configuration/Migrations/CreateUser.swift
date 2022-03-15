@@ -472,3 +472,16 @@ struct CreateUsername: Migration {
             .delete()
     }
 }
+
+struct addPostToIsPrivate: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .field("is_private", .bool)
+            .update()
+    }
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Post.schema)
+            .deleteField("is_private")
+            .update()
+    }
+}

@@ -30,11 +30,14 @@ public struct CreatePostUserCase: LegacyUseCase {
     public func callAsFunction(_ request: Request) throws -> EventLoopFuture<Response> {
         let post = userRepository.createPost(for: request.input, authorId: request.user.id)
         return post.flatMap { post in
-            let notification = PushNotification(message: "\(request.user.name)がライブレポートを投稿しました")
-            return notificationService.publish(
-                toUserFollowers: request.user.id, notification: notification
-            )
-            .map { post }
+            if !post.isPrivate {
+                let notification = PushNotification(message: "\(request.user.name)がライブレポートを投稿しました")
+                return notificationService.publish(
+                    toUserFollowers: request.user.id, notification: notification
+                )
+                .map { post }
+            }
+            return eventLoop.makeSucceededFuture(post)
         }
     }
 }

@@ -270,6 +270,29 @@ class UserControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.id, feed.id)
         }
     }
+    
+    func testCreatePrivatePost() throws {
+        let userA = try appClient.createUser()
+        let group = try appClient.createGroup(with: userA)
+        let userB = try appClient.createUser()
+        let userC = try appClient.createUser()
+        let headers = appClient.makeHeaders(for: userA)
+        
+        let live = try appClient.createLive(hostGroup: group, with: userA)
+        _ = try appClient.createPost(with: userA, live: live)
+        _ = try appClient.createPost(with: userB, live: live)
+        _ = try appClient.createPost(with: userC, live: live, isPrivate: true)
+        
+        try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: headers) { res in
+            let responseBody = try res.content.decode(GetLivePosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 2)
+        }
+        
+        try app.test(.GET, "lives/\(live.id)/posts?page=1&per=100", headers: appClient.makeHeaders(for: userC)) { res in
+            let responseBody = try res.content.decode(GetLivePosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 3)
+        }
+    }
 
     func testCreatePost() throws {
         let user = try appClient.createUser()
