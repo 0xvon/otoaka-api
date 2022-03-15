@@ -202,6 +202,21 @@ public struct GetLivePosts: EndpointProtocol {
     public static let method: HTTPMethod = .get
 }
 
+public struct GetMyLivePosts: EndpointProtocol {
+    public typealias Request = Empty
+    public typealias Response = Page<PostSummary>
+
+    public struct URI: CodableURL, PaginationQuery {
+        @StaticPath("lives") public var prefix: Void
+        @DynamicPath public var liveId: Live.ID
+        @StaticPath("posts", "mine") public var suffix: Void
+        @Query public var page: Int
+        @Query public var per: Int
+        public init() {}
+    }
+    public static let method: HTTPMethod = .get
+}
+
 public struct GetLiveParticipants: EndpointProtocol {
     public typealias Request = Empty
     public typealias Response = Page<User>

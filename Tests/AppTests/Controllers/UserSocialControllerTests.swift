@@ -549,6 +549,11 @@ class UserSocialControllerTests: XCTestCase {
             let responseBody = try res.content.decode(GetLivePosts.Response.self)
             XCTAssertGreaterThanOrEqual(responseBody.items.count, 1)
         }
+        
+        try app.test(.GET, "lives/\(live.id)/posts/mine?page=1&per=100", headers: headers) { res in
+            let responseBody = try res.content.decode(GetMyLivePosts.Response.self)
+            XCTAssertEqual(responseBody.items.count, 1)
+        }
     }
     
     func testGetLikedLive() throws {

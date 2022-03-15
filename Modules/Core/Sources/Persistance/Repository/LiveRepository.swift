@@ -460,6 +460,33 @@ public class LiveRepository: Domain.LiveRepository {
     {
         Post.query(on: db)
             .filter(\.$live.$id == liveId.rawValue)
+            .sort(\.$createdAt, .descending)
+            .with(\.$comments)
+            .with(\.$likes)
+            .with(\.$imageUrls)
+            .with(\.$tracks)
+            .fields(for: Post.self)
+            .unique()
+            .paginate(PageRequest(page: page, per: per))
+            .flatMap { [db] in
+                Domain.Page.translate(page: $0, eventLoop: db.eventLoop) { post in
+                    return Domain.Post.translate(fromPersistance: post, on: db)
+                        .map {
+                            return Domain.PostSummary(
+                                post: $0, commentCount: post.comments.count,
+                                likeCount: post.likes.count,
+                                isLiked: post.likes.map { like in like.$user.$id.value! }.contains(
+                                    userId.rawValue))
+                        }
+                }
+            }
+    }
+    
+    public func getMyLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Domain.Page<Domain.PostSummary>>
+    {
+        Post.query(on: db)
+            .filter(\.$live.$id == liveId.rawValue)
             .filter(\.$author.$id == userId.rawValue)
             .sort(\.$createdAt, .descending)
             .with(\.$comments)

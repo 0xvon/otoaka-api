@@ -48,4 +48,6 @@ public protocol LiveRepository {
     func getLatestLiveDate(by groupId: Domain.Group.ID) async throws -> Date?
     func getLivePosts(liveId: Domain.Live.ID, userId: Domain.User.ID, page: Int, per: Int)
         -> EventLoopFuture<Page<PostSummary>>
+    func getMyLivePosts(liveId: Live.ID, userId: User.ID, page: Int, per: Int)
+        -> EventLoopFuture<Page<PostSummary>>
 }

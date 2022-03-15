@@ -96,6 +96,14 @@ struct LiveController: RouteCollection {
                     liveId: uri.liveId, userId: user.id, page: uri.page, per: uri.per
                 ).get()
             })
+        try routes.on(
+            endpoint: GetMyLivePosts.self,
+            use: injectProvider { req, uri, repository in
+                let user = try req.auth.require(Domain.User.self)
+                return try await repository.getMyLivePosts(
+                    liveId: uri.liveId, userId: user.id, page: uri.page, per: uri.per
+                ).get()
+            })
     }
 
     func create(req: Request, uri: CreateLive.URI, repository: Domain.LiveRepository) async throws
