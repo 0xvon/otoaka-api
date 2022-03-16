@@ -56,6 +56,24 @@ public struct EditLive: EndpointProtocol {
     public static let method: HTTPMethod = .post
 }
 
+public struct MergeLive: EndpointProtocol {
+    public struct Request: Codable {
+        public var liveId: Live.ID
+        public var lives: [Live.ID]
+        
+        public init(liveId: Live.ID, lives: [Live.ID]) {
+            self.liveId = liveId
+            self.lives = lives
+        }
+    }
+    public typealias Response = Empty
+    public struct URI: CodableURL {
+        @StaticPath("lives", "merge") public var prefix: Void
+        public init() {}
+    }
+    public static let method: HTTPMethod = .post
+}
+
 public struct ReplyPerformanceRequest: EndpointProtocol {
     public struct Request: Codable {
         public enum Reply: String, Codable {

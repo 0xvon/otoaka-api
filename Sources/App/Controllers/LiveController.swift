@@ -19,6 +19,11 @@ struct LiveController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         try routes.on(endpoint: Endpoint.CreateLive.self, use: injectProvider(create))
         try routes.on(endpoint: Endpoint.EditLive.self, use: injectProvider(edit))
+        try routes.on(endpoint: MergeLive.self, use: injectProvider { req, uri, repository in
+            let input = try req.content.decode(MergeLive.Request.self)
+            try await repository.merge(for: input.liveId, lives: input.lives)
+            return Empty()
+        })
         try routes.on(
             endpoint: Endpoint.GetLive.self,
             use: injectProvider { req, uri, repository in

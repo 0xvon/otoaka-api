@@ -41,41 +41,11 @@ class LiveControllerTests: XCTestCase {
             $0.set(\.date, value: date)
         }
         let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
-        var created: Live!
         try app.test(.POST, "lives", headers: appClient.makeHeaders(for: user), body: bodyData) {
             res in
             XCTAssertEqual(res.status, .ok, res.body.string)
             let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
             XCTAssertEqual(responseBody.title, body.title)
-            created = responseBody
-        }
-
-        let anotherGroup = try appClient.createGroup(with: user)
-        let anotherBody = try! Stub.make(Endpoint.CreateLive.Request.self) {
-            $0.set(\.title, value: title)
-            $0.set(\.hostGroupId, value: anotherGroup.id)
-            $0.set(\.style, value: .oneman(performer: anotherGroup.id))
-            $0.set(\.liveHouse, value: "live_\(UUID.init().uuidString)")
-            $0.set(\.date, value: date)
-        }
-        let anotherBodyData = try ByteBuffer(data: appClient.encoder.encode(anotherBody))
-
-        try app.test(
-            .POST, "lives", headers: appClient.makeHeaders(for: user), body: anotherBodyData
-        ) {
-            res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.CreateLive.Response.self)
-            XCTAssertEqual(responseBody.id, created.id)
-        }
-
-        try app.test(.GET, "lives/\(created.id)", headers: appClient.makeHeaders(for: user)) {
-            res in
-            XCTAssertEqual(res.status, .ok, res.body.string)
-            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
-            XCTAssertEqual(
-                Set([createdGroup.id, anotherGroup.id]),
-                Set(responseBody.live.style.performers.map(\.id)))
         }
     }
 
@@ -102,6 +72,30 @@ class LiveControllerTests: XCTestCase {
             XCTAssertEqual(responseBody.title, newTitle)
             XCTAssertEqual(responseBody.style.performers.count, 1)
             XCTAssertEqual(responseBody.style.performers.first?.id, groupY.id)
+        }
+    }
+    
+    func testMergeLive() throws {
+        let user = try appClient.createUser()
+        let userB = try appClient.createUser()
+        let group = try appClient.createGroup(with: user)
+        let liveA = try appClient.createLive(hostGroup: group, with: user)
+        let liveB = try appClient.createLive(hostGroup: group, with: user)
+        let liveC = try appClient.createLive(hostGroup: group, with: user)
+        
+        _ = try appClient.like(live: liveB, with: user)
+        _ = try appClient.like(live: liveC, with: user)
+        _ = try appClient.like(live: liveB, with: userB)
+        _ = try appClient.like(live: liveC, with: userB)
+        
+        let body = MergeLive.Request(
+            liveId: liveA.id,
+            lives: [liveB.id, liveC.id]
+        )
+        let bodyData = try ByteBuffer(data: appClient.encoder.encode(body))
+        
+        try app.test(.POST, "lives/merge", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
+            XCTAssertEqual(res.status, .ok)
         }
     }
 

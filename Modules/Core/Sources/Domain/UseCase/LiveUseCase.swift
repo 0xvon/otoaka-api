@@ -34,17 +34,8 @@ public struct CreateLiveUseCase: UseCase {
     public func callAsFunction(_ request: Request) async throws -> Response {
         try validateInput(request: request)
         let input = request.input
-        if let live = try await liveRepository.getLive(title: input.title, date: input.date)
-            .get()
-        {
-            // 同じ日程・ライブハウスのライブがあったらperformerとstyleだけ更新して返す
-            let editted = try await liveRepository.update(id: live.id, input: input).get()
-            try await liveRepository.updateStyle(id: live.id).get()
-            return editted
-        } else {
-            let created = try await liveRepository.create(input: input).get()
-            return created
-        }
+        let created = try await liveRepository.create(input: input).get()
+        return created
     }
 
     func validateInput(request: Request) throws {
@@ -89,19 +80,6 @@ public struct EditLiveUseCase: UseCase {
     }
 
     public func callAsFunction(_ request: Request) async throws -> Response {
-        //        guard case .artist = request.user.role else {
-        //            return eventLoop.makeFailedFuture(Error.fanCannotEditLive)
-        //        }
-        //        let precondition = live.map(\.live.hostGroup).flatMap { hostGroup in
-        //            groupRepository.isMember(
-        //                of: hostGroup.id, member: request.user.id
-        //            )
-        //        }
-        //        .flatMapThrowing {
-        //            guard $0 else { throw Error.isNotMemberOfHostGroup }
-        //            return
-        //        }
-
         return try await liveRepository.edit(id: request.id, input: request.input).get()
     }
 }

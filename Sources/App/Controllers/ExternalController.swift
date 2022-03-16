@@ -68,66 +68,63 @@ struct ExternalController: RouteCollection {
             return Empty()
         })
         try routes.on(endpoint: Endpoint.FetchLive.self, use: { req, uri in
-            let input = try req.content.decode(Endpoint.FetchLive.Request.self)
-            let user = try req.auth.require(Domain.User.self)
-            let groupRepository = Persistance.GroupRepository(db: req.db)
-            let liveRepository = Persistance.LiveRepository(db: req.db)
-            let notificationService = makePushNotificationService(request: req)
-            
-            // そのアーティストを取ってくる
-            guard let group = try await groupRepository.search(name: input.name).get() else {
-                throw Error.artistNotFound
-            }
-            
-            let date: Date
-            // そのアーティストの最新のライブを1件取ってくる
-            let latestLiveDate = try await liveRepository.getLatestLiveDate(by: group.id)
-            
-            if latestLiveDate == nil {
-                // ライブがないなら30年前をfromに指定
-                date = Date(timeInterval: -60*60*24*365*30, since: Date())
-            } else {
-                // ライブがあるなら今日をfromに指定
-                date = Date()
-            }
-            
-            // search artist
-            let artistId = try await searchArtist(req: req, groupName: input.name)
-            
-            // search lives
-            var liveIds: [String] = []
-            var page = 1
-            while(true) {
-                let ids = try await searchLives(
-                    req: req,
-                    artistId: artistId,
-                    page: page,
-                    from: input.from ?? date
-                )
-                if ids.isEmpty { break }
-                liveIds += ids
-                page += 1
-            }
-            
-            print(liveIds)
-            // get and create live
-            try await withThrowingTaskGroup(of: Void.self) { taskGroup in
-                for live in liveIds {
-                    let request = try await getLiveInfo(req: req, liveId: live, group: group)
-                    print(request)
-                    let useCase = CreateLiveUseCase(
-                        groupRepository: groupRepository,
-                        liveRepository: liveRepository,
-                        notificationService: notificationService,
-                        eventLoop: req.eventLoop
-                    )
-                    _ = try await useCase((user: user, input: request))
-                }
-                try await taskGroup.waitForAll()
-            }
-            
+            try await self.fetchLive(req: req)
             return Empty()
         })
+    }
+    
+    func fetchLive(
+        req: Request
+    ) async throws {
+        let input = try req.content.decode(Endpoint.FetchLive.Request.self)
+        let groupRepository = Persistance.GroupRepository(db: req.db)
+        let liveRepository = Persistance.LiveRepository(db: req.db)
+        
+        // そのアーティストを取ってくる
+        guard let group = try await groupRepository.search(name: input.name).get() else {
+            throw Error.artistNotFound
+        }
+        
+        let date: Date
+        // そのアーティストの最新のライブを1件取ってくる
+        let latestLiveDate = try await liveRepository.getLatestLiveDate(by: group.id)
+        
+        if latestLiveDate == nil {
+            // ライブがないなら30年前をfromに指定
+            date = Date(timeInterval: -60*60*24*365*30, since: Date())
+        } else {
+            // ライブがあるなら今日をfromに指定
+            date = Date()
+        }
+        
+        // search artist
+        let artistId = try await searchArtist(req: req, groupName: input.name)
+        
+        // search lives
+        var liveIds: [String] = []
+        var page = 1
+        while(true) {
+            let ids = try await searchLives(
+                req: req,
+                artistId: artistId,
+                page: page,
+                from: input.from ?? date
+            )
+            if ids.isEmpty { break }
+            liveIds += ids
+            page += 1
+        }
+        
+        print(liveIds)
+        // get and create live
+        try await withThrowingTaskGroup(of: Void.self) { taskGroup in
+            for live in liveIds {
+                let request = try await getLiveInfo(req: req, liveId: live, group: group)
+                print(request)
+                try await liveRepository.fetch(eventId: live, input: request)
+            }
+            try await taskGroup.waitForAll()
+        }
     }
     
     // アーティスト名からartistIdを取得

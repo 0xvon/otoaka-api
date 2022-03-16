@@ -4,14 +4,14 @@ import NIO
 
 public protocol LiveRepository {
     func create(input: CreateLive.Request) -> EventLoopFuture<Live>
-    func update(id: Live.ID, input: EditLive.Request) -> EventLoopFuture<Live>
     func edit(id: Domain.Live.ID, input: EditLive.Request) -> EventLoopFuture<Domain.Live>
+    func fetch(eventId: String, input: Endpoint.CreateLive.Request) async throws
+    func merge(for live: Live.ID, lives: [Live.ID]) async throws
     func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) async throws
         -> Domain.LiveDetail
     func getLive(by id: Domain.Live.ID) -> EventLoopFuture<Domain.Live?>
     func getLive(by piaEventCode: String) -> EventLoopFuture<Domain.Live?>
     func getLive(title: String?, date: String?) -> EventLoopFuture<Domain.Live?>
-    func updateStyle(id: Domain.Live.ID) -> EventLoopFuture<Void>
     func getParticipants(liveId: Domain.Live.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.User>
     >

@@ -56,71 +56,6 @@ public class LiveRepository: Domain.LiveRepository {
         .flatMap { [db] in Domain.Live.translate(fromPersistance: live, on: db) }
     }
 
-    public func updateStyle(id: Domain.Live.ID) -> EventLoopFuture<Void> {
-        let live = Live.find(id.rawValue, on: db)
-            .unwrap(orError: Error.liveNotFound)
-        let performerCount = LivePerformer.query(on: db)
-            .filter(\.$live.$id == id.rawValue)
-            .count()
-            .map { $0 > 1 }
-
-        return live.and(performerCount).flatMap { [db] (live, isPlural) -> EventLoopFuture<Void> in
-            live.style = isPlural ? .festival : .oneman
-            return live.save(on: db)
-        }
-    }
-
-    public func update(id: Domain.Live.ID, input: EditLive.Request)
-        -> EventLoopFuture<Domain.Live>
-    {
-        let live = Live.find(id.rawValue, on: db)
-            .unwrap(orError: Error.liveNotFound)
-
-        let style: LiveStyle
-        switch input.style {
-        case .oneman: style = .oneman
-        case .battle: style = .battle
-        case .festival: style = .festival
-        }
-        let modified = live.map { (live) -> Live in
-            live.title = input.title
-            live.style = style
-            live.price = input.price
-            live.artworkURL = input.artworkURL?.absoluteString
-            live.$hostGroup.id = input.hostGroupId.rawValue
-            live.liveHouse = input.liveHouse
-            live.date = input.date
-            live.endDate = input.endDate
-            live.openAtV2 = input.openAt
-            live.startAtV2 = input.startAt
-            live.piaEventCode = input.piaEventCode
-            live.piaReleaseUrl = input.piaReleaseUrl?.absoluteString
-            live.piaEventUrl = input.piaEventUrl?.absoluteString
-            return live
-        }
-        .flatMap { [db] live in
-            live.update(on: db).map { live }
-        }
-
-        let performers = input.style.performers.map { [db] performerId in
-            LivePerformer.query(on: db)
-                .filter(\.$live.$id == id.rawValue)
-                .filter(\.$group.$id == performerId.rawValue)
-                .first()
-                .unwrap(orElse: {
-                    let performer = LivePerformer()
-                    performer.$group.id = performerId.rawValue
-                    performer.$live.id = id.rawValue
-                    _ = performer.save(on: db)
-                    return performer
-                })
-        }
-        .flatten(on: db.eventLoop)
-
-        return modified.and(performers)
-            .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
-    }
-    
     public func edit(id: Domain.Live.ID, input: EditLive.Request) -> EventLoopFuture<Domain.Live> {
         let live = Live.find(id.rawValue, on: db)
             .unwrap(orError: Error.liveNotFound)
@@ -168,6 +103,56 @@ public class LiveRepository: Domain.LiveRepository {
 
         return modified.and(performers)
             .flatMap { [db] live, _ in Domain.Live.translate(fromPersistance: live, on: db) }
+    }
+    
+    public func fetch(eventId: String, input: Endpoint.CreateLive.Request) async throws {
+        // 1. 同じeventIdのライブを取得
+        let live = try await Live.query(on: db).filter(\.$piaEventCode == eventId).first()
+        if let live = live {
+            _ = try await self.edit(id: .init(live.id!), input: input).get()
+        } else {
+            _ = try await self.create(input: input).get()
+        }
+    }
+    
+    public func merge(for live: Domain.Live.ID, lives: [Domain.Live.ID]) async throws {
+        for liveId in lives {
+            // LiveLikeをマージ
+            let liveLikes = try await LiveLike.query(on: db).filter(\.$live.$id == liveId.rawValue)
+                .all()
+            
+            for like in liveLikes {
+                like.$live.id = live.rawValue
+                try await like.update(on: db)
+            }
+            
+            // Performerをマージ
+            let performers = try await LivePerformer.query(on: db)
+                .filter(\.$live.$id == liveId.rawValue)
+                .all()
+            
+            for performer in performers {
+                let isExists = try await LivePerformer.query(on: db)
+                    .filter(\.$live.$id == live.rawValue)
+                    .first()
+                if isExists == nil {
+                    performer.$live.id = live.rawValue
+                    try await performer.update(on: db)
+                }
+            }
+            
+            // Postをマージ
+            let posts = try await Post.query(on: db)
+                .filter(\.$live.$id == liveId.rawValue)
+                .all()
+            for post in posts {
+                post.$live.id = live.rawValue
+                try await post.update(on: db)
+            }
+            
+            // liveを削除
+            try await Live.find(liveId.rawValue, on: db)?.delete(on: db)
+        }
     }
 
     public func getLiveDetail(by id: Domain.Live.ID, selfUserId: Domain.User.ID) async throws
