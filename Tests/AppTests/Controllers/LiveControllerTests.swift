@@ -82,7 +82,9 @@ class LiveControllerTests: XCTestCase {
         let liveA = try appClient.createLive(hostGroup: group, with: user)
         let liveB = try appClient.createLive(hostGroup: group, with: user)
         let liveC = try appClient.createLive(hostGroup: group, with: user)
-        
+                
+        _ = try appClient.like(live: liveA, with: user)
+        _ = try appClient.like(live: liveA, with: userB)
         _ = try appClient.like(live: liveB, with: user)
         _ = try appClient.like(live: liveC, with: user)
         _ = try appClient.like(live: liveB, with: userB)
@@ -96,6 +98,13 @@ class LiveControllerTests: XCTestCase {
         
         try app.test(.POST, "lives/merge", headers: appClient.makeHeaders(for: user), body: bodyData) { res in
             XCTAssertEqual(res.status, .ok)
+        }
+        
+        try app.test(.GET, "lives/\(liveA.id)", headers: appClient.makeHeaders(for: user)) { res in
+            XCTAssertEqual(res.status, .ok, res.body.string)
+            let responseBody = try res.content.decode(Endpoint.GetLive.Response.self)
+            XCTAssertEqual(responseBody.likeCount, 2)
+            XCTAssertEqual(responseBody.live.style.performers.count, 4)
         }
     }
 

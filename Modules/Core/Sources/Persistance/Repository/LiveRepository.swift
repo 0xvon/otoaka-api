@@ -122,8 +122,13 @@ public class LiveRepository: Domain.LiveRepository {
                 .all()
             
             for like in liveLikes {
-                like.$live.id = live.rawValue
-                try await like.update(on: db)
+                let isLiked = try await LiveLike.query(on: db).filter(\.$live.$id == live.rawValue).filter(\.$user.$id == like.$user.id).first()
+                if isLiked == nil {
+                    like.$live.id = live.rawValue
+                    try await like.update(on: db)
+                } else {
+                    try await like.delete(force: true, on: db)
+                }
             }
             
             // Performerをマージ
@@ -132,13 +137,14 @@ public class LiveRepository: Domain.LiveRepository {
                 .all()
             
             for performer in performers {
-                let isExists = try await LivePerformer.query(on: db)
-                    .filter(\.$live.$id == live.rawValue)
-                    .first()
-                if isExists == nil {
+                let p = try await LivePerformer.query(on: db).filter(\.$live.$id == live.rawValue).filter(\.$group.$id == performer.$group.id).first()
+                if p == nil {
                     performer.$live.id = live.rawValue
                     try await performer.update(on: db)
+                } else {
+                    try await performer.delete(force: true, on: db)
                 }
+
             }
             
             // Postをマージ
@@ -151,7 +157,7 @@ public class LiveRepository: Domain.LiveRepository {
             }
             
             // liveを削除
-            try await Live.find(liveId.rawValue, on: db)?.delete(on: db)
+            try await Live.find(liveId.rawValue, on: db)?.delete(force: true, on: db)
         }
     }
 
