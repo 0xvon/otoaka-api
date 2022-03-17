@@ -1,6 +1,7 @@
 import Domain
 import FluentKit
 import Foundation
+import SQLKit
 
 public class GroupRepository: Domain.GroupRepository {
     private let db: Database
@@ -171,19 +172,31 @@ public class GroupRepository: Domain.GroupRepository {
     public func get(selfUser: Domain.User.ID, page: Int, per: Int) -> EventLoopFuture<
         Domain.Page<Domain.GroupFeed>
     > {
-        // 自分がフォローしてる人たちがフォローしてるアーティストを表示
-        let followings = Group.query(on: db)
-            .join(Following.self, on: \Group.$id == \Following.$target.$id)
-            .join(UserFollowing.self, on: \Following.$user.$id == \UserFollowing.$target.$id)
-            .filter(UserFollowing.self, \.$user.$id == selfUser.rawValue)
-            .fields(for: Group.self)
-            .sort(\.$id, .descending)
-            .unique()
+        // フォロワー多い順に表示
+        var response: EventLoopFuture<[Domain.GroupFeed]> = db.eventLoop.makeSucceededFuture([])
+        struct Ranking: Codable {
+            let target_group_id: UUID
+            let sum: Int
+        }
         
-        return followings.paginate(PageRequest(page: page, per: per)).flatMap { [db] in
-            Domain.Page.translate(page: $0, eventLoop: db.eventLoop) {
-                Domain.GroupFeed.translate(fromPersistance: $0, selfUser: selfUser, on: db)
+        if let mysql = db as? SQLDatabase {
+            let ranking = mysql.raw("""
+            SELECT target_group_id, count(id) as sum \
+            FROM \(Following.schema) \
+            GROUP BY target_group_id \
+            ORDER BY sum DESC \
+            limit \(String(per)) offset \(String((page - 1) * per))
+            """).all(decoding: Ranking.self)
+            
+            response = ranking.flatMapEach(on: db.eventLoop) { [db] in
+                return Group.find($0.target_group_id, on: db).flatMap {
+                    Endpoint.GroupFeed.translate(fromPersistance: $0!, selfUser: selfUser, on: db)
+                }
             }
+        }
+        
+        return response.map {
+            Domain.Page<GroupFeed>(items: $0, metadata: PageMetadata(page: page, per: per, total: $0.count))
         }
     }
 
