@@ -13,8 +13,8 @@ class UserSocialControllerTests: XCTestCase {
     override func setUp() {
         app = Application(.testing)
         DotEnvFile.load(path: dotEnvPath.path)
-        XCTAssertNoThrow(try configure(app))
         appClient = AppClient(application: app, authClient: Auth0Client(app))
+        XCTAssertNoThrow(try configure(app, authenticator: appClient.authenticator))
     }
 
     override func tearDown() {
